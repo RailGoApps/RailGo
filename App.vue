@@ -1,7 +1,7 @@
 <script>
-	const nauth = true;
-	const version = "1.0.3 Beta"
-	const version_number = 6
+	const nauth = false;
+	const version = "1.0.4 Update2"
+	const version_number = 10
 import {uniGet} from "./scripts/req";
 	// #ifdef APP
 	import { getSwitchList, switchIcons, restoreIcons } from "@/uni_modules/ima-icons";

@@ -164,87 +164,96 @@
 			<view v-if="selectIndex==1">
 				<uni-section title="担当" type="line" style="background-color: transparent;"
 					title-font-size="28rpx"></uni-section>
-				<view class="ux-bg-white ux-border-radius ux-padding"
+				<view class="ux-bg-white ux-border-radius"
 					v-if="(carData.carOwner || '')+(carData.runner || '')+(carData.car || '')!=''">
-					<view class="ux-flex ux-space-between">
-						<view class="ux-flex ux-align-items-center" v-if="carData.carOwner">
-							<view class="ux-pt-small">
-								<text class="ux-color-primary icon" style="font-size:60rpx;">&#xe7fd;</text>
-							</view>
-							<view class="ux-pl-small">
-								<text class="ux-text-small ux-opacity-5">
-									值乘单位
-								</text>
-								<br>
-								<text>
-									{{carData.runner || ''}}
-								</text>
-							</view>
+
+					<view v-if="carData.car, ['G','D','C','S'].includes(carData.numberKind)">
+						<view class="ux-flex ux-justify-content-center">
+							<image v-if="carImageUrl" :src="carImageUrl" @error="onImageError" mode="widthFix"
+								style="width:100%; height: auto; border-top-left-radius: 10rpx; border-top-right-radius: 10rpx; border-bottom-left-radius: 0; border-bottom-right-radius: 0;"></image>
 						</view>
-						<view class="ux-flex ux-align-items-center" v-if="carData.carOwner">
-							<view class="ux-pt-small">
-								<text class="ux-color-primary icon" style="font-size:60rpx;">&#xe570;</text>
-							</view>
-							<view class="ux-pl-small">
-								<text class="ux-text-small ux-opacity-5">
-									车辆归属
-								</text>
-								<br>
-								<text>
-									{{carData.carOwner || ''}}
-								</text>
-							</view>
+						<view v-if="carImageUrl" class="ux-flex ux-space-between ux-pt-small ux-pb-small ux-pl ux-pr ux-color-white"
+							:style="'background-color:'+cardColor" style="border-bottom-left-radius: 10rpx; border-bottom-right-radius: 10rpx;">
+							<text class="ux-text-small ux-bold">
+								{{carData.car || ''}}
+							</text>
+							<text class="ux-text-small ux-opacity-8">
+								图源：{{ imageUploaderUsername }}
+							</text>
 						</view>
 					</view>
-					<uv-divider v-if="(carData.carOwner || '')+(carData.runner || '')!=''" />
-					<view v-if="carData.car">
-						<view class="ux-flex ux-space-between">
-							<text class="ux-text-small ux-opacity-5">车型</text>
-							<text>{{carData.car || ''}}</text>
+					<view class="ux-padding">
+		
+						<view class="ux-flex ux-space-between" v-if="carData.runner || carData.carOwner">
+							<view class="ux-flex ux-align-items-center" v-if="carData.runner">
+								<text class="ux-color-primary icon" style="font-size:60rpx;">&#xe7fd;</text>
+								<view class="ux-pl-small">
+									<text class="ux-text-small ux-opacity-5">值乘单位</text><br>
+									<text>{{carData.runner || ''}}</text>
+								</view>
+							</view>
+							
+							<view class="ux-flex ux-align-items-center" v-if="carData.carOwner">
+								<text class="ux-color-primary icon" style="font-size:60rpx;">&#xe570;</text>
+								<view class="ux-pl-small">
+									<text class="ux-text-small ux-opacity-5">车辆归属</text><br>
+									<text>{{carData.carOwner || ''}}</text>
+								</view>
+							</view>
+							
+							<view class="ux-flex ux-align-items-center" v-if="carData.car, !['G','D','C','S'].includes(carData.numberKind)">
+								<text class="ux-color-primary icon" style="font-size:60rpx;">&#xe570;</text>
+								<view class="ux-pl-small">
+									<text class="ux-text-small ux-opacity-5">车型</text><br>
+									<text>{{carData.car || ''}}</text>
+								</view>
+							</view>
 						</view>
-						<view class="ux-flex ux-space-between ux-align-items-center">
-							<view>
-								<view class="ux-pr-small ux-flex ux-align-items-center ux-mt-small">
+
+						<uv-divider v-if="(carData.carOwner || '')+(carData.runner || '')!='',['G','D','C','S'].includes(carData.numberKind)" />
+
+						<view v-if="carData.car, ['G','D','C','S'].includes(carData.numberKind)" class="ux-mt-normal">
+							
+							<view class="ux-flex ux-flex-wrap ux-space-between">
+								<view class="ux-flex ux-align-items-center ux-mb-small" style="width: 48%;">
 									<text class="ux-color-primary icon" style="font-size:50rpx;">&#xe642;</text>
 									<view class="ux-pl-small ux-text-small">
-										<text>{{carMap[carData.car.replace(" 重联","")] ? carMap[carData.car.replace(" 重联","")][0] : ''}}节编组</text>
+										<text class="ux-opacity-5">编组</text><br/>
+										<text>{{carMap[carData.car.replace(" 重联","")] ? carMap[carData.car.replace(" 重联","")][0] : '-'}}节</text>&thinsp;
+										<text>{{carMap[carData.car.replace(" 重联","")] ? carMap[carData.car.replace(" 重联","")][1] : '-'}}</text>
 									</view>
 								</view>
-								<view class="ux-pr-small ux-flex ux-align-items-center ux-mt-small">
+								
+								<view class="ux-flex ux-align-items-center ux-mb-small" style="width: 48%;">
 									<text class="ux-color-primary icon" style="font-size:50rpx;">&#xe569;</text>
 									<view class="ux-pl-small ux-text-small">
-										<text>{{carMap[carData.car.replace(" 重联","")] ? carMap[carData.car.replace(" 重联","")][3] : ''}}km/h</text>
+										<text class="ux-opacity-5">速度</text><br/>
+										<text>{{carMap[carData.car.replace(" 重联","")] ? carMap[carData.car.replace(" 重联","")][3] : '-'}}km/h</text>
 									</view>
 								</view>
-								<view class="ux-pr-small ux-flex ux-align-items-center ux-mt-small">
-									<text class="ux-color-primary icon" style="font-size:50rpx;">&#xe5c3;</text>
-									<view class="ux-pl-small ux-text-small">
-										<text>{{carMap[carData.car.replace(" 重联","")] ? carMap[carData.car.replace(" 重联","")][1] : ''}}</text>
-									</view>
-								</view>
-								<view class="ux-pr-small ux-flex ux-align-items-center ux-mt-small">
+
+								
+								<view class="ux-flex ux-align-items-center ux-mb-small" style="width: 48%;">
 									<text class="ux-color-primary icon" style="font-size:50rpx;">&#xe556;</text>
 									<view class="ux-pl-small ux-text-small">
-										<text>{{carMap[carData.car.replace(" 重联","")] ? carMap[carData.car.replace(" 重联","")][2] : ''}}</text>
+										<text class="ux-opacity-5">餐车</text><br/>
+										<text>{{carMap[carData.car.replace(" 重联","")] ? carMap[carData.car.replace(" 重联","")][2] : '-'}}</text>
 									</view>
 								</view>
 							</view>
-							<view class="ux-mt-small">
-								<image v-if="carImageUrl" :src="carImageUrl" @error="onImageError" mode="aspectFit"
-									style="max-width:350rpx; height: 200rpx;overflow: hidden; border-radius: 500rpx;"></image>
+
+							<view v-if="['G','D','C'].includes(carData.numberKind)">
+								<br>
+								<navigator :url="'/pages/emu/result?keyword='+train">
+									<button class="ux-color-white ux-bg-primary" size="mini"
+										style="margin:none;width:100%;">
+										<view class="ux-flex ux-align-items-center ux-justify-content-center">
+											<text class="icon">&#xe570;</text>
+											&nbsp;查询具体担当信息
+										</view>
+									</button>
+								</navigator>
 							</view>
-						</view>
-						<view v-if="['G','D','C'].includes(carData.numberKind)">
-							<br>
-							<navigator :url="'/pages/emu/result?keyword='+train">
-								<button class="ux-color-white ux-bg-primary" size="mini"
-									style="margin:none;width:100%;">
-									<view class="ux-flex ux-align-items-center ux-justify-content-center">
-										<text class="icon">&#xe570;</text>
-										&nbsp;查询具体担当信息
-									</view>
-								</button>
-							</navigator>
 						</view>
 					</view>
 				</view>
@@ -342,7 +351,7 @@
 					numberKind: '',
 					numberFull: [],
 					type: '',
-					timetable: [], // 停台/检票口数据仍存储在这里
+					timetable: [], 
 					bureauName: '',
 					runner: '',
 					carOwner: '',
@@ -352,7 +361,7 @@
 				},
 				"colorMap": TRAIN_KIND_COLOR_MAP,
 				"carMap": CAR_PERFORMANCE,
-				"delay": [], // 正晚点数据
+				"delay": [], 
 				"title": '',
 				"date": "",
 				"train": "",
@@ -368,6 +377,7 @@
 				"selectIndex": 0,
 				"isOnlyOfflineMode": false,
 				"carImageUrl": "", 
+				"imageUploaderUsername": "暂缺图片", // NEW: For dynamic image source
 				
 				// 停台加载逻辑相关状态
 				"platformLoadThreshold": 10, 
@@ -378,7 +388,6 @@
 		computed: {
 			/**
 			 * 结合正晚点数据 (this.delay) 和停台/检票口数据 (this.carData.timetable)
-			 * 以便在正晚点表格中同时展示。
 			 */
 			combinedDelayData() {
 				if (!this.delay || this.delay.length === 0) {
@@ -691,6 +700,31 @@
 				}
 			},
 
+			/**
+			 * NEW: Fetch image source from JSON API
+			 */
+			async fetchImageSource() {
+				const carModel = this.carData.car ? this.carData.car.replace(' 重联', '') : null;
+				if (!carModel) return;
+
+				try {
+					const url = `https://tp.railgo.zenglingkun.cn/api/${encodeURIComponent(carModel)}.json`;
+					// 假设 uniGet 是用于网络请求的封装函数
+					const resp = await uniGet(url);
+
+					if (resp.data && resp.data.success && resp.data.data && resp.data.data.uploader_username) {
+						this.imageUploaderUsername = resp.data.data.uploader_username;
+					} else {
+						// Fallback if data is missing or success is false
+						this.imageUploaderUsername = '暂缺图片'; 
+					}
+				} catch (e) {
+					console.error("Failed to fetch image source JSON:", e);
+					// Fallback on network error
+					this.imageUploaderUsername = '暂缺图片'; 
+				}
+			},
+
 			fillInData: async function(mode) {
 
 				uni.showLoading({
@@ -880,6 +914,9 @@
 					} else {
 						this.carImageUrl = '';
 					}
+                    
+                    // NEW: Fetch image source metadata
+                    this.fetchImageSource();
 					// -------------------------------------------------------------------------
 
 					if (this.isOnlyOfflineMode) {

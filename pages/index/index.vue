@@ -57,34 +57,6 @@
 				</navigator>
 			</view>
 			<br>
-			<view class="ux-flex ux-rows ux-wrap ux-space-between">
-				<navigator class="ux-th ux-bg-white ux-border-radius-large ux-padding ux-mr-small"
-					style="flex:auto;width:1rpx;" hover-class="ux-tap" url="/pages/emu/query">
-					<text class="icon section-icon ux-color-orange1">&#xe570;</text>
-					<br>
-					<text class="ux-text">动车组</text>
-					<br>
-					<text class="ux-text-small ux-opacity-8">查询动车组配属和运行交路。</text>
-					<br>
-					<br>
-					<view class="ux-text-right ux-mr-small">
-						<text class="icon">&#xe5c8;</text>
-					</view>
-				</navigator>
-				<navigator class="ux-th ux-bg-white ux-border-radius-large ux-padding ux-ml-small"
-					style="flex:auto;width:1rpx;" hover-class="ux-tap" url="/pages/assignment/query" >
-					<text class="icon section-icon ux-color-purple">&#xeb3f;</text>
-					<br>
-					<text class="ux-text">配属</text>
-					<br>
-					<text class="ux-text-small ux-opacity-8">通过车型、车号查询动车组配属信息。</text>
-					<br>
-					<br>
-					<view class="ux-text-right ux-mr-small">
-						<text class="icon">&#xe5c8;</text>
-					</view>
-				</navigator>
-			</view><br>
 			<view class="ux-flex ux-rows ux-wrap ux-space-between">		
 				<navigator class="ux-th ux-bg-white ux-border-radius-large ux-padding ux-mr-small"
 					style="flex:auto;width:1rpx;" hover-class="ux-tap" url="/pages/speed/speed">
@@ -112,6 +84,21 @@
 						</view>
 					<text class="ux-text-small">施工中 请静候佳音</text>
 				</view>
+			</view><br>
+			<view class="ux-flex ux-rows ux-wrap ux-space-between">
+				<navigator class="ux-th ux-bg-white ux-border-radius-large ux-padding"
+					style="flex:auto;width:1rpx;" hover-class="ux-tap" url="/pages/emu/query">
+					<text class="icon section-icon ux-color-orange1">&#xe570;</text>
+					<br>
+					<text class="ux-text">动车组</text>
+					<br>
+					<text class="ux-text-small ux-opacity-8">查询动车组配属和运行交路。</text>
+					<br>
+					<br>
+					<view class="ux-text-right ux-mr-small">
+						<text class="icon">&#xe5c8;</text>
+					</view>
+				</navigator>
 			</view>
 		</view>
 		<br>

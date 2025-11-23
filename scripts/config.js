@@ -75,6 +75,7 @@ export const CAR_PERFORMANCE = {
 	"CR400BF-B": ["17", "8M9T", "9车 无座", "350", "/static/trainHead/CR400BF.png"],
 	"CR400BF-G": ["8", "4M4T", "5车 无座", "350", "/static/trainHead/CR400BF.png"],
 	"CR400BF-C": ["8", "4M4T", "5车 无座", "350", "/static/trainHead/CR400BF-C.png"],
+	"CR400BF-C “瑞雪迎春”": ["8", "4M4T", "5车 无座", "350", "/static/trainHead/CR400BF-C.png"],
 	"CR400BF-Z": ["8", "4M4T", "5车 无座", "350", "/static/trainHead/CR400BF-Z.png"],
 	"CR400BF-AZ": ["16", "8M8T", "9车 无座", "350", "/static/trainHead/CR400BF-Z.png"],
 	"CR400BF-BZ": ["17", "8M9T", "9车 无座", "350", "/static/trainHead/CR400BF-Z.png"],
