@@ -1,7 +1,7 @@
 <script>
 	const nauth = false;
-	const version = "1.0.4 Update2"
-	const version_number = 10
+	const version = "1.0.5"
+	const version_number = 11
 import {uniGet} from "./scripts/req";
 	// #ifdef APP
 	import { getSwitchList, switchIcons, restoreIcons } from "@/uni_modules/ima-icons";
@@ -105,6 +105,15 @@ import {uniGet} from "./scripts/req";
 		// #endif
 	}
 
+	// --- 【新增辅助函数：获取当前日期 YYYYMMDD】 ---
+	function getTodayDate() {
+	    const now = new Date();
+	    const year = now.getFullYear();
+	    const month = String(now.getMonth() + 1).padStart(2, '0');
+	    const day = String(now.getDate()).padStart(2, '0');
+	    return `${year}${month}${day}`;
+	}
+	
 	let firstBackTime = 0;
 	export default {
 		onLaunch: async function() {
@@ -217,7 +226,61 @@ import {uniGet} from "./scripts/req";
 
 
 		},
-		onShow: function() {},
+		onShow: function() {
+			// #ifdef APP
+			// 获取 Url Scheme 启动参数
+			const urlScheme = plus.runtime.arguments;
+			
+			if (urlScheme) {				
+				// 假设 Url Scheme 格式为: railgo://pagePath?param1=value1&param2=value2
+				const schemeRegex = /^railgo:\/\/([^\?]+)(\??.*)$/i;
+				const match = urlScheme.match(schemeRegex);
+				
+				if (match) {
+					let pagePath = match[1]; // /pages/train/trainResult
+					let queryString = match[2]; // ?keyword=G1&date=20251125 或 空字符串
+					
+					// 1. 检查 'date' 参数是否存在
+					const hasDate = queryString.includes('date=');
+					
+					if (!hasDate) {
+						// 2. 如果不存在，获取当前日期并添加
+						const todayDate = getTodayDate();
+						const newParam = `date=${todayDate}`;
+						
+						if (queryString === '') {
+							// 没有其他参数，直接加参
+							queryString = `?${newParam}`;
+						} else {
+							// 加参
+							queryString = `${queryString}&${newParam}`;
+						}
+						
+						console.log("Missing date parameter, added:", newParam);
+					}
+					
+					// 构造URL
+					const targetUrl = `/${pagePath}${queryString}`; // uni-app 页面路径需要以 / 开头
+					
+					console.log("Target URL for jump:", targetUrl);
+					
+					// jump
+					uni.reLaunch({
+						url: targetUrl,
+						fail: (res) => {
+							console.error("Url Scheme 跳转失败:", res);
+							uni.reLaunch({ url: '/pages/index/index' });
+						}
+					});
+				} else {
+					console.warn("Url Scheme 格式不符合 'railgo://pagePath' 规范:", urlScheme);
+				}
+				
+				// 清空参数，防止 App 从后台激活时重复处理旧参数
+				plus.runtime.arguments = '';
+			}
+			// #endif
+		},
 		onHide: function() {},
 		onLastPageBackPress: function() {
 			if (firstBackTime == 0) {

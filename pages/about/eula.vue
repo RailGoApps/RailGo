@@ -42,7 +42,7 @@
 				<br>
 				<p>继续使用本软件即视为您已阅读并同意上述条款。</p>
 				<br><br>
-				<p><strong>天津静海汇智卓创文化发展有限公司</strong></p>
+				<p><strong>AZ Studio</strong></p>
 				<br>
 				<br>
 			</text>

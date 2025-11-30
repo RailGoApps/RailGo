@@ -48,6 +48,13 @@
 						<text class="ux-text-small ux-color-grey1"><text class="icon">&#xe5c8;</text></text>
 					</view>
 				</navigator>
+				<navigator url="/pages/about/privacy"
+					class="ux-th ux-bg-white ux-border-radius-large ux-padding ux-padding ux-mt-small">
+					<view class="ux-flex ux-space-between">
+						<text class="ux-text-small">隐私政策</text>
+						<text class="ux-text-small ux-color-grey1"><text class="icon">&#xe5c8;</text></text>
+					</view>
+				</navigator>
 				<!-- #ifdef APP -->
 				<navigator url="/pages/about/individuation"
 					class="ux-th ux-bg-white ux-border-radius-large ux-padding ux-mt-small">
