@@ -168,6 +168,75 @@
 			<view class="ux-padding ux-text-center" v-if="topTabList[selectIndex] && topTabList[selectIndex].name === '路线'">
 				<text>暂未开放，敬请期待</text>
 			</view>
+			
+			<!-- 交通选项卡 -->
+			<view class="ux-pt" v-if="topTabList[selectIndex] && topTabList[selectIndex].name === '交通'">
+				<view v-if="trafficData && trafficData.tabList && trafficData.nodeList && trafficData.nodeList.length > 0" class="traffic-container">
+					<!-- 显示交通设施选项卡 -->
+					<view class="traffic-tabs">
+						<view 
+							v-for="(tab, index) in trafficData.tabList" 
+							:key="index"
+							class="traffic-tab"
+							:class="{ 'active': selectedTrafficTab === index || (selectedTrafficTab === 0 && index === 0) }"
+							@click="selectTrafficTab(index)"
+						>
+							{{ tab.tabName }}
+						</view>
+					</view>
+					
+					<!-- 显示交通设施详情 -->
+					<view class="traffic-content">
+						<template 
+							v-for="(node, index) in trafficData.nodeList" 
+							:key="index"
+						>
+							<view 
+								v-if="!trafficData.tabList[selectedTrafficTab] || node.nodeType === trafficData.tabList[selectedTrafficTab].tabType"
+								class="traffic-item ux-bg-white ux-border-radius ux-mt-small"
+							>
+								<view class="ux-padding">
+									<view class="ux-flex ux-space-between ux-align-items-center">
+										<view>
+											<text class="ux-h5">{{ node.nodeName }}</text>
+											<text class="ux-text-small ux-opacity-7 ux-ml-small">{{ node.typeName }}</text>
+											<br>
+											<text class="ux-text-small ux-opacity-6">{{ node.des }}</text>
+										</view>
+									</view>
+									
+									<!-- 显示子节点信息（如地铁线路、公交线路等） -->
+									<view v-if="node.nodeList && node.nodeList.length > 0" class="ux-mt-small">
+										<view class="ux-flex ux-wrap">
+											<view 
+												v-for="(subNode, subIndex) in node.nodeList" 
+												:key="subIndex"
+												class="sub-node-item"
+												:style="subNode.color ? 'background-color: ' + subNode.color + ';' : ''"
+											>
+												{{ subNode.nodeName }}
+											</view>
+										</view>
+									</view>
+								</view>
+							</view>
+						</template>
+					</view>
+				</view>
+
+				
+				<view v-else-if="trafficData === null" class="ux-padding ux-text-center">
+					<text>正在加载交通信息...</text>
+				</view>
+				
+				<view v-else-if="trafficData === false" class="ux-padding ux-text-center">
+					<text>暂无本站交通信息</text>
+				</view>
+				
+				<view v-else class="ux-padding ux-text-center">
+					<text>暂无交通信息</text>
+				</view>
+			</view>
 		</view>
 	<uni-popup ref="menu_sort" border-radius="10rpx 10rpx 0 0">
 		<view class="popup-content">
@@ -292,7 +361,7 @@
 					"行": "#459811",
 					"运": "#5499c7"
 				},
-				// 默认只包含“车次”和“路线”，如果为客运站则在 fillInData 中添加“大屏”
+				// 默认只包含“车次”和“路线”，如果为客运站则在 fillInData 中添加“大屏”和“交通”
 				topTabList: [{
 					name: '车次',
 				}, {
@@ -319,6 +388,8 @@
 				platformWicketMap: new Map(), 
 				platformWicketLoadingSet: new Set(), // 存储正在查询的 trainNumber_fullTime 键
 				// -------------------------------
+				trafficData: null, // 交通数据
+				selectedTrafficTab: 0, // 当前选中的交通选项卡
 			}
 		},
 		onLoad(options) {
@@ -427,16 +498,22 @@
 				if (success) {
 					// 1. 检查是否为客运站
 					const isPassengerStation = Array.isArray(this.data.type) && this.data.type.includes("客");
-                    // IMPORTANT: Reset topTabList to default before potentially adding '大屏'
+                    // IMPORTANT: Reset topTabList to default before potentially adding '大屏' and '交通'
                     this.topTabList = [{ name: '车次' }, { name: '路线' }];
                     
 					if (isPassengerStation) {
-						// 2. 如果是客运站，添加“大屏”tab到索引1（“车次”和“路线”之间）
+						// 2. 如果是客运站，添加"大屏"tab到索引1（"车次"和"路线"之间）
 						this.topTabList.splice(1, 0, { name: '大屏' });
+						// 3. 获取任意一个列车作为参数用于交通数据API
+						const trainForTraffic = this.trains.length > 0 ? this.trains[0].number : '';
+						if (trainForTraffic) {
+							// 添加"交通"tab到索引2（"大屏"之后）
+							this.topTabList.splice(2, 0, { name: '交通' });
+						}
 						uni.showLoading({
 							title: '加载大屏数据'
 						})
-						// 3. 异步获取大屏数据
+						// 4. 异步获取大屏数据
 						await this.getBigScreenData();
 						uni.hideLoading()
 						
@@ -459,6 +536,21 @@
 					if (this.displayedBigScreenData.length === 0 && this.bigScreenData.length > 0) {
 						this.currentDisplayIndex = 0;
 						this.loadMoreBigScreenData();
+					}
+				}
+				// NEW: 切换到交通时，加载交通数据（如果尚未加载）
+				if (this.topTabList[e.index].name === '交通') {
+					// 检查是否为客运站并有列车数据
+					const isPassengerStation = Array.isArray(this.data.type) && this.data.type.includes("客");
+					const trainForTraffic = this.trains.length > 0 ? this.trains[0].number : '';
+					if (isPassengerStation && trainForTraffic) {
+						// 只有当 trafficData 为 null（未尝试加载过）或 false（已知无数据）时才重新加载
+						if (this.trafficData === null || this.trafficData === false) {
+							this.getTrafficData();
+						}
+					} else {
+						// 如果不是客运站或没有列车数据，设置为false显示无数据提示
+						this.trafficData = false;
 					}
 				}
 			},
@@ -627,6 +719,72 @@
 				return 'white'; // 默认白色
 			},
 			// -------------------------------
+			// --- 获取交通数据的方法 ---
+			getTrafficData: async function() {
+				if (!this.data.name || !this.data.telecode) return; // 车站名或电报码不存在则不查询
+				
+				// 获取任意一个列车作为参数用于交通数据API
+				const trainForTraffic = this.trains.length > 0 ? this.trains[0].number : '';
+				if (!trainForTraffic) return; // 如果没有列车，则不显示交通选项卡
+				
+				uni.showLoading({
+					title: '加载交通信息'
+				});
+				
+				try {
+					const params = {
+						stationCode: this.data.telecode,
+						trainCode: trainForTraffic,
+						reqType: 'json'
+					};
+					console.log(params)
+					
+					// 使用 uniGet 方法请求12306的交通信息API
+					const response = await uniGet('https://mobile.12306.cn/wxxcx/openplatform-inner/miniprogram/wifiapps/appFrontEnd/v2/lounge/open-smooth-common/navigation/listInfo', { params });
+					
+					console.log("交通API响应:", response); // 调试信息
+					
+					// 先输出完整的响应数据结构以调试
+					console.log("完整API响应:", JSON.stringify(response, null, 2));
+					
+					// 根据API示例，正确的数据路径应该是 response.data.content.data
+					if (response && response.data && response.data.content && response.data.content.data) {
+						// 检查返回的数据是否具有正确的结构（tabList和nodeList）
+						const apiData = response.data.content.data;
+						if(apiData.tabList && apiData.nodeList && apiData.nodeList.length > 0) {
+							this.trafficData = apiData;
+							console.log("交通数据:", this.trafficData); // 调试信息
+						} else {
+							console.log("API返回的content.data结构不正确或无数据:", apiData);
+							// 如果API返回了正确的结构但没有数据，则显示"暂无信息"
+							this.trafficData = false;
+						}
+					} else {
+						console.log("API响应结构与预期不符:", response);
+						// 检查是否存在其他可能的结构
+						if(response && response.data) {
+							console.log("响应data字段的键:", Object.keys(response.data));
+						}
+						// API调用失败或其他错误，也显示无数据
+						this.trafficData = false;
+					}
+				} catch (error) {
+					console.error("交通数据加载失败", error);
+					this.trafficData = null;
+					uni.showToast({
+						title: '交通信息加载失败',
+						icon: 'none'
+					});
+				} finally {
+					uni.hideLoading();
+				}
+			},
+			
+			// --- 选择交通选项卡的方法 ---
+			selectTrafficTab: function(index) {
+				this.selectedTrafficTab = index;
+			},
+			
 			openSortMenu: function() {
 				this.$refs.menu_sort.open();
 			},
@@ -793,5 +951,50 @@
 
 	.dark-table .uni-table-th {
 		background-color: #1f3041 !important;
+	}
+	
+	.traffic-tabs {
+		display: flex;
+		background-color: #fff;
+		border-radius: 10rpx;
+		margin-top: 20rpx;
+		overflow: hidden;
+	}
+	
+	.traffic-tab {
+		flex: 1;
+		padding: 20rpx 10rpx;
+		text-align: center;
+		border-right: 1px solid #eee;
+		font-size: 28rpx;
+		color: #666;
+	}
+	
+	.traffic-tab:last-child {
+		border-right: none;
+	}
+	
+	.traffic-tab.active {
+		color: #114598;
+		font-weight: bold;
+		border-bottom: 4rpx solid #114598;
+	}
+	
+	.traffic-content {
+		margin-top: 20rpx;
+	}
+	
+	.traffic-item {
+		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+	}
+	
+	.sub-node-item {
+		display: inline-block;
+		padding: 10rpx 20rpx;
+		margin: 10rpx 10rpx 0 0;
+		border-radius: 30rpx;
+		font-size: 24rpx;
+		color: #fff;
+		background-color: #114598;
 	}
 </style>
