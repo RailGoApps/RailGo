@@ -390,6 +390,7 @@
 				// -------------------------------
 				trafficData: null, // 交通数据
 				selectedTrafficTab: 0, // 当前选中的交通选项卡
+				trafficDataLoaded: false, // 标记交通数据是否已加载
 			}
 		},
 		onLoad(options) {
@@ -544,8 +545,9 @@
 					const isPassengerStation = Array.isArray(this.data.type) && this.data.type.includes("客");
 					const trainForTraffic = this.trains.length > 0 ? this.trains[0].number : '';
 					if (isPassengerStation && trainForTraffic) {
-						// 只有当 trafficData 为 null（未尝试加载过）或 false（已知无数据）时才重新加载
-						if (this.trafficData === null || this.trafficData === false) {
+						// 只有当交通数据尚未加载时才加载
+						if (!this.trafficDataLoaded) {
+							this.trafficDataLoaded = true; // 标记为已加载
 							this.getTrafficData();
 						}
 					} else {
@@ -737,37 +739,27 @@
 						trainCode: trainForTraffic,
 						reqType: 'json'
 					};
-					console.log(params)
 					
-					// 使用 uniGet 方法请求12306的交通信息API
+					// 请求12306的交通信息API
 					const response = await uniGet('https://mobile.12306.cn/wxxcx/openplatform-inner/miniprogram/wifiapps/appFrontEnd/v2/lounge/open-smooth-common/navigation/listInfo', { params });
-					
-					console.log("交通API响应:", response); // 调试信息
-					
-					// 先输出完整的响应数据结构以调试
-					console.log("完整API响应:", JSON.stringify(response, null, 2));
-					
-					// 根据API示例，正确的数据路径应该是 response.data.content.data
+	
 					if (response && response.data && response.data.content && response.data.content.data) {
-						// 检查返回的数据是否具有正确的结构（tabList和nodeList）
+						// 检查返回的数据是否具有正确的结构
 						const apiData = response.data.content.data;
 						if(apiData.tabList && apiData.nodeList && apiData.nodeList.length > 0) {
 							this.trafficData = apiData;
-							console.log("交通数据:", this.trafficData); // 调试信息
 						} else {
-							console.log("API返回的content.data结构不正确或无数据:", apiData);
-							// 如果API返回了正确的结构但没有数据，则显示"暂无信息"
+							console.error("API返回的content.data结构不正确或无数据");
 							this.trafficData = false;
 						}
 					} else {
-						console.log("API响应结构与预期不符:", response);
-						// 检查是否存在其他可能的结构
+						console.error("API响应结构与预期不符");
 						if(response && response.data) {
 							console.log("响应data字段的键:", Object.keys(response.data));
 						}
-						// API调用失败或其他错误，也显示无数据
 						this.trafficData = false;
 					}
+					this.trafficDataLoaded = true;
 				} catch (error) {
 					console.error("交通数据加载失败", error);
 					this.trafficData = null;
