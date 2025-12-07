@@ -507,7 +507,9 @@
 						this.topTabList.splice(1, 0, { name: '大屏' });
 						// 3. 获取任意一个列车作为参数用于交通数据API
 						const trainForTraffic = this.trains.length > 0 ? this.trains[0].number : '';
-						if (trainForTraffic) {
+						// 仅在非仅离线模式下添加交通tab（因为交通数据需要网络请求12306 API）
+						// 当ol不为true时（即非仅离线模式）显示交通选项卡
+						if (trainForTraffic && uni.getStorageSync("ol") !== true) {
 							// 添加"交通"tab到索引2（"大屏"之后）
 							this.topTabList.splice(2, 0, { name: '交通' });
 						}

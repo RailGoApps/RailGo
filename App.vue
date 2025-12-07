@@ -1,8 +1,8 @@
 <script>
 	const nauth = false;
-	const version = "1.0.5"
-	const version_number = 11
-import {uniGet} from "./scripts/req";
+	const version = "1.0.6"
+	const version_number = 12
+	import {uniGet} from "./scripts/req";
 	// #ifdef APP
 	import { getSwitchList, switchIcons, restoreIcons } from "@/uni_modules/ima-icons";
 	// 引入 Ionic-Safe 插件
@@ -145,14 +145,35 @@ import {uniGet} from "./scripts/req";
 			}
 			// #endif
 			if (value) {
-				uni.setStorage({
-					key: 'version',
-					data: version_number
-				});
-				uni.setStorage({
-					key: 'versionText',
-					data: version
-				});
+				// 检查版本更新
+				const storedVersion = uni.getStorageSync('version');
+				const storedVersionText = uni.getStorageSync('versionText');
+				
+				if (storedVersion !== version_number) {
+					uni.setStorage({
+						key: 'version',
+						data: version_number
+					});
+					uni.setStorage({
+						key: 'versionText',
+						data: version
+					});
+					
+					uni.setStorage({
+						key: 'showUpdateWelcome',
+						data: true
+					});
+				} else {
+					uni.setStorage({
+						key: 'version',
+						data: version_number
+					});
+					uni.setStorage({
+						key: 'versionText',
+						data: version
+					});
+				}
+				
 				uni.setStorage({
 					key: 'NeedAuth',
 					data: nauth
@@ -280,6 +301,24 @@ import {uniGet} from "./scripts/req";
 				plus.runtime.arguments = '';
 			}
 			// #endif
+			
+			// 检查是否需要显示更新欢迎弹窗（移出APP条件编译）
+			const showUpdateWelcome = uni.getStorageSync('showUpdateWelcome');
+			const versionText = uni.getStorageSync('versionText');
+			
+			if (showUpdateWelcome && versionText) {
+				// 清除标记，确保只显示一次
+				uni.setStorage({
+					key: 'showUpdateWelcome',
+					data: false
+				});
+				
+				// 设置标记，让首页显示自定义弹窗
+				uni.setStorageSync('showCustomUpdatePopup', {
+					show: true,
+					version: versionText
+				});
+			}
 		},
 		onHide: function() {},
 		onLastPageBackPress: function() {
@@ -299,7 +338,12 @@ import {uniGet} from "./scripts/req";
 
 		},
 		onExit() {},
+		
+		methods: {
+			onExit() {}
 	}
+		}
+	
 </script>
 
 <style lang="scss">

@@ -52,7 +52,7 @@
 				updateLogs: [
 					{
 						version: "v1.0.6",
-						date: "2024-10-26",
+						date: "2025-12-03",
 						items: [
 							"Feature：车站查询新增车站周边交通信息"
 						]

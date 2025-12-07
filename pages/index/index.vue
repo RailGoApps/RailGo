@@ -106,9 +106,19 @@
 			<swiper-item v-for="(url, index) in bannerImages" :key="index">
 				<image :src="url" mode="widthFix" class="ux-border-radius-large" style="width: 100%;" @load="onImageLoad"></image>
 			</swiper-item>
-		</swiper>
-		<image v-else class="ux-border-radius-large" src="/static/overlay/index_banner_1.png" style="width:100%;" mode="widthFix"></image>
-	</view>
+		</swiper>
+		<image v-else class="ux-border-radius-large" src="/static/overlay/index_banner_1.png" style="width:100%;" mode="widthFix"></image>
+	</view>
+	
+	<!-- 更新欢迎弹窗 -->
+	<view v-if="showUpdatePopup" class="update-popup-overlay" @click="closeUpdatePopup">
+		<view class="update-popup" @click.stop="() => {}">
+			<view class="update-popup-content">
+				<text class="update-popup-title">🎉 欢迎使用新版本</text>
+				<text class="update-popup-message">欢迎来到 RailGo {{ updateVersion }} 版本<br>可去更新日志看看哦！</text>
+			</view>
+		</view>
+	</view>
 </template>
 
 <script>
@@ -183,7 +193,9 @@ import {uniGet} from "@/scripts/req.js";
 				query: 0,
 				items: ['暂无公告'],
 				bannerImages: [],
-				swiperHeight: '210rpx' // Initialize with a default height
+				swiperHeight: '210rpx', // Initialize with a default height
+				showUpdatePopup: false,
+				updateVersion: ''
 			};
 		},
 		mounted() {
@@ -199,6 +211,24 @@ import {uniGet} from "@/scripts/req.js";
 			// 鉴权
 			if (uni.getStorageSync("NeedAuth")) {
 				check()
+			}
+			
+			const navigateToUpdates = uni.getStorageSync('navigateToUpdates');
+			if (navigateToUpdates) {
+				uni.removeStorageSync('navigateToUpdates'); 
+				setTimeout(() => {
+					uni.navigateTo({
+						url: '/pages/about/UpdateInfo'
+					});
+				}, 300);
+			}
+			
+			// 检查是否需要显示更新欢迎弹窗
+			const customPopupData = uni.getStorageSync('showCustomUpdatePopup');
+			if (customPopupData && customPopupData.show) {
+				uni.removeStorageSync('showCustomUpdatePopup'); // 清除标记
+				this.showUpdatePopup = true;
+				this.updateVersion = customPopupData.version;
 			}
 		},
 		methods: {
@@ -248,6 +278,17 @@ import {uniGet} from "@/scripts/req.js";
 					const newHeight = (screenWidth * height) / width;
 					this.swiperHeight = `${newHeight}px`;
 				}
+			},
+			
+			closeUpdatePopup() {
+				this.showUpdatePopup = false;
+			},
+			
+			goToUpdateLog() {
+				this.showUpdatePopup = false;
+				uni.navigateTo({
+					url: '/pages/about/UpdateInfo'
+				});
 			}
 		}
 	};
@@ -326,6 +367,65 @@ import {uniGet} from "@/scripts/req.js";
 			display: flex;
 			align-items: center;
 			justify-content: center;
-		}
-	}
+		}
+	}
+	
+	/* 更新欢迎弹窗样式 */
+	.update-popup-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-color: rgba(0, 0, 0, 0.5);
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		z-index: 9999;
+	}
+	
+	.update-popup {
+		width: 80%;
+		max-width: 500rpx;
+		background: #fff;
+		border-radius: 20rpx;
+		overflow: hidden;
+		animation: popupScaleIn 0.3s ease-out;
+	}
+	
+	@keyframes popupScaleIn {
+		0% {
+			transform: scale(0.7);
+			opacity: 0;
+		}
+		100% {
+			transform: scale(1);
+			opacity: 1;
+		}
+	}
+	
+	.update-popup-content {
+		padding: 40rpx;
+		text-align: center;
+	}
+	
+	.update-popup-header {
+		margin-bottom: 20rpx;
+	}
+	
+	.update-popup-title {
+		font-size: 36rpx;
+		font-weight: bold;
+		color: #114598;
+		display: block;
+	}
+	
+	.update-popup-body {
+		margin: 30rpx 0;
+	}
+	.update-popup-message {
+		font-size: 28rpx;
+		color: #333;
+		line-height: 1.5;
+	}
 </style>
