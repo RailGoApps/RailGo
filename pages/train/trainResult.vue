@@ -243,16 +243,28 @@
 							</view>
 
 							<view v-if="['G','D','C'].includes(carData.numberKind)">
-								<br>
-								<navigator :url="'/pages/emu/result?keyword='+train">
-									<button class="ux-color-white ux-bg-primary" size="mini"
-										style="margin:none;width:100%;">
-										<view class="ux-flex ux-align-items-center ux-justify-content-center">
-											<text class="icon">&#xe570;</text>
-											&nbsp;查询具体担当信息
-										</view>
-									</button>
-								</navigator>
+							    <br>
+							    <view class="ux-flex ux-align-items-center">
+							        
+							        <navigator :url="'/pages/emu/result?keyword='+train" style="flex: 1; margin-right: 10rpx;">
+							            <button class="ux-color-white ux-bg-primary" size="mini" style="width:100%;">
+							                <view class="ux-flex ux-align-items-center ux-justify-content-center">
+							                    <text class="icon" style="font-size: 24rpx;">&#xe570;</text>
+							                    <text style="margin-left: 8rpx;">查询担当</text>
+							                </view>
+							            </button>
+							        </navigator>
+							
+							        <navigator :url="'/pages/train/TrainPics?train='+train" style="flex: 1; margin-left: 10rpx;">
+							            <button class="ux-color-white ux-bg-primary" size="mini" style="width:100%;">
+							                <view class="ux-flex ux-align-items-center ux-justify-content-center">
+							                    <text class="icon" style="font-size: 24rpx;">&#xe570;</text>
+							                    <text style="margin-left: 8rpx;">座位图</text>
+							                </view>
+							            </button>
+							        </navigator>
+							        
+							    </view>
 							</view>
 						</view>
 					</view>

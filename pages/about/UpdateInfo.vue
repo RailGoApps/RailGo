@@ -51,6 +51,13 @@
 				nowIcon: uni.getStorageSync("nowIcon") || 'crh',
 				updateLogs: [
 					{
+						version: "v1.0.7",
+						date: "2025-12-21",
+						items: [
+							"Feature：新增座位图显示功能"
+						]
+					},
+					{
 						version: "v1.0.6",
 						date: "2025-12-03",
 						items: [

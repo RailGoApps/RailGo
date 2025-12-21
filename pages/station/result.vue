@@ -165,9 +165,9 @@
 				</view>
 
 			</view>
-			<view class="ux-padding ux-text-center" v-if="topTabList[selectIndex] && topTabList[selectIndex].name === '路线'">
+			<!-- <view class="ux-padding ux-text-center" v-if="topTabList[selectIndex] && topTabList[selectIndex].name === '路线'">
 				<text>暂未开放，敬请期待</text>
-			</view>
+			</view> -->
 			
 			<!-- 交通选项卡 -->
 			<view class="ux-pt" v-if="topTabList[selectIndex] && topTabList[selectIndex].name === '交通'">
@@ -500,8 +500,8 @@
 					// 1. 检查是否为客运站
 					const isPassengerStation = Array.isArray(this.data.type) && this.data.type.includes("客");
                     // IMPORTANT: Reset topTabList to default before potentially adding '大屏' and '交通'
-                    this.topTabList = [{ name: '车次' }, { name: '路线' }];
-                    
+                    // this.topTabList = [{ name: '车次' }, { name: '路线' }];
+                    this.topTabList = [{ name: '车次' }];
 					if (isPassengerStation) {
 						// 2. 如果是客运站，添加"大屏"tab到索引1（"车次"和"路线"之间）
 						this.topTabList.splice(1, 0, { name: '大屏' });

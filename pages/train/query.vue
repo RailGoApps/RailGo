@@ -35,7 +35,11 @@
 								type="text" 
 								class="ux-form-input" 
 								placeholder="车次号码" 
-								style="width:100%;margin:0 0;"
+								:style="{
+									width: '100%',
+									margin: '0 0',
+									pointerEvents: isCustomKeyboardEnabled ? 'none' : 'auto'
+								}" 
 								:value="keyword" 
 								:disabled="isCustomKeyboardEnabled" 
 								@input="e => keyword = e.detail.value"/>
@@ -139,8 +143,8 @@
 				<view class="key letter-key" style="grid-row: 2; grid-column: 2;" @touchstart="onLetterClick('K')"><text>K</text></view>
 				
 				<view class="key number-key" style="grid-row: 2; grid-column: 3;" @touchstart="onNumberClick(4)"><text>4</text></view>
-				<view class="key number-key" style="grid-row: 2; grid-column: 4;" @touchstart="onNumberClick(5)"><text>5</text></view>
 				<view class="key number-key" style="grid-row: 2; grid-column: 5;" @touchstart="onNumberClick(6)"><text>6</text></view>
+				<view class="key number-key" style="grid-row: 2; grid-column: 4;" @touchstart="onNumberClick(5)"><text>5</text></view>
 				
 				<view class="key letter-key" style="grid-row: 3; grid-column: 1;" @touchstart="onLetterClick('L')"><text>L</text></view>
 				<view class="key letter-key" style="grid-row: 3; grid-column: 2;" @touchstart="onLetterClick('T')"><text>T</text></view>
@@ -169,26 +173,17 @@
 
 <script>
 	import {
-		query
-	} from "@/scripts/jsonDB.js";
-	import {
 		doQuery,
 	} from "@/scripts/sqlite.js";
-	import {
-		KEYS_STRUCT_STATIONS,
-		KEYS_STRUCT_TRAINS
-	} from "@/scripts/config.js";
-	import {
-		toRaw
-	} from "@vue/reactivity";
 	import {
 		TRAIN_KIND_COLOR_MAP
 	} from "@/scripts/config.js";
 	import {
 		uniGet
 	} from "../../scripts/req";
-	
-	// import TrainKeyboard from '/pages/train/keyboard.vue';
+    import {
+		toRaw
+	} from "@vue/reactivity";
 	
 	export default {
 		data() {
@@ -210,12 +205,9 @@
 				"isVague": false,
 				"isNetworkMode": false,
 				"showKeyboard": false,
-				// 新增状态：控制当前是否处于自定义键盘模式
 				"isCustomKeyboardEnabled": true, 
-				// 新增：用于长按删除的计时器
 				deleteTimer: null,
-				longPressThreshold: 500, // 500ms for long press
-                // 移除 lastLetterClickTarget，改为全局替换
+				longPressThreshold: 500,
 			}
 		},
 		onShow() {
@@ -247,63 +239,44 @@
 				this.stsSelectionB = selectionB.name;
 			}
 			
-			// 每次 onShow 时，恢复为自定义键盘模式
 			this.isCustomKeyboardEnabled = true;
 			this.showKeyboard = false;
 		},
 		methods: {
-			// 键盘
 			isLetter(char) { return /^[A-Z]$/i.test(char); },
-			
-			// 修正：字母点击逻辑 - 全局替换所有部分的第一个字母
 			onLetterClick(letter) {
-				// 逻辑立即执行，实现无延迟输入
 				let currentNumber = this.keyword;
 				let parts = currentNumber.split('/');
 				let updatedParts = [];
                 
-                // 遍历所有部分（例如：G1017 和 G1020）
 				parts.forEach(part => {
 					if (part.length === 0) {
-                        // 如果部分为空，直接插入字母 (例如: "1017/" + "G" -> "1017/G")
 						updatedParts.push(letter);
 					} else if (this.isLetter(part.charAt(0))) {
-                        // 如果第一个字符是字母，则替换它 (例如: "G1017" + "D" -> "D1017")
 						updatedParts.push(letter + part.substring(1));
 					} else {
-                        // 如果第一个字符不是字母 (是数字)，则在前面插入字母 (例如: "1017" + "G" -> "G1017")
 						updatedParts.push(letter + part);
 					}
 				});
-				
 				this.keyword = updatedParts.join('/');
 			},
-			
 			onNumberClick(number) { 
-				// 逻辑立即执行，实现无延迟输入
 				this.keyword = this.keyword + String(number);
 			},
-			
 			onDelete() {
 				if (this.keyword.length > 0) {
 					this.keyword = this.keyword.substring(0, this.keyword.length - 1);
 				}
 			},
-			
-			// 长按删除清空
 			onLongPressDelete() {
 				this.keyword = "";
-				// 清除定时器
 				if (this.deleteTimer) {
 					clearTimeout(this.deleteTimer);
 					this.deleteTimer = null;
 				}
 			},
-			
-			// 处理长按事件 (touchstart/touchend 保持不变)
 			deleteTouchStart() {
 				this.deleteTimer = setTimeout(() => {
-					// 达到长按阈值时执行清空操作
 					if (this.keyword.length > 0) {
 						this.keyword = "";
 					}
@@ -311,15 +284,12 @@
 				}, this.longPressThreshold);
 			},
 			deleteTouchEnd() {
-				// 如果在长按阈值内抬起，则清除定时器，避免触发长按操作
 				if (this.deleteTimer) {
 					clearTimeout(this.deleteTimer);
 					this.deleteTimer = null;
 				}
 			},
-			
 			showTrainKeyboard: function() {
-				// 只有在自定义键盘启用时才显示自定义键盘
 				if (this.isCustomKeyboardEnabled) {
 					this.showKeyboard = true;
 				}
@@ -327,16 +297,11 @@
 			hideTrainKeyboard: function() {
 				this.showKeyboard = false;
 			},
-			
-			// 新增方法：切换到系统键盘
 			toggleSystemKeyboard: function() {
-				// 1. 隐藏自定义键盘
 				this.showKeyboard = false;
-				// 2. 禁用自定义键盘模式，解除 input 的 disabled 属性
 				this.isCustomKeyboardEnabled = false;
-				// 此时 input 允许聚焦，系统键盘会弹出
+				// 此时 input 的 pointer-events 变为 auto，即可正常点击聚焦
 			},
-			
 			back: function() {
 				uni.navigateBack()
 			},
@@ -356,11 +321,9 @@
 				} else {
 					let url = "/pages/train/stsResult?from=" + uni.getStorageSync("train_sts_fieldA").telecode +
 						"&to=" + uni.getStorageSync("train_sts_fieldB").telecode + "&date=" + this.date;
-
 					if (this.isVague) {
 						url += "&city=true";
 					}
-
 					uni.navigateTo({
 						url: url
 					});
@@ -442,7 +405,6 @@
 
 
 <style scoped>
-/* 仿12306键盘样式 */
 .train-keyboard {
   position: fixed; 
   bottom: 0;
@@ -450,7 +412,6 @@
   right: 0;
   width: 100%;
   z-index: 9999; 
-  
   background-color: #f7f7f7; 
   padding: 0; 
   box-sizing: border-box;
@@ -459,7 +420,6 @@
   padding-bottom: constant(safe-area-inset-bottom);
   padding-bottom: env(safe-area-inset-bottom);
 }
-
 .confirm-area {
     width: 100%;
     display: flex;
@@ -491,8 +451,6 @@
   font-weight: bold;
   box-sizing: border-box; 
   background-color: #fff; 
-  /* 【优化】：移除 transition，实现瞬间的视觉反馈（无延迟动画） */
-  /* transition: background-color 0.08s ease; */
   border-right: 1rpx solid #e0e0e0;
   border-bottom: 1rpx solid #e0e0e0;
 }
@@ -503,15 +461,12 @@
 .key[style*='grid-column: 5'] {
     border-right: none !important;
 }
-
 .key[style*='grid-row: 4'] {
     border-bottom: none !important;
 }
-
 .letter-key {
     color: #114598; 
 }
-
 .delete-key {
     background-color: #d1d5db; 
     color: #4b5563;
