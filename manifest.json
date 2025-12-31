@@ -2,8 +2,8 @@
     "name" : "RailGo",
     "appid" : "__UNI__1A91000",
     "description" : "一个现代化的专业铁路查询工具",
-    "versionName" : "1.0.7",
-    "versionCode" : 22,
+    "versionName" : "1.0.7.1",
+    "versionCode" : 24,
     "transformPx" : false,
     /* 5+App特有相关 */
     "app-plus" : {
@@ -90,6 +90,14 @@
                         "spotlight@2x" : "unpackage/res/icons/80x80.png",
                         "spotlight@3x" : "unpackage/res/icons/120x120.png"
                     }
+                }
+            },
+            "splashscreen" : {
+                "androidStyle" : "default",
+                "android" : {
+                    "hdpi" : "static/splash-480.png",
+                    "xhdpi" : "static/splash-720.png",
+                    "xxhdpi" : "static/splash-1080.png"
                 }
             }
         },

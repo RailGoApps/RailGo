@@ -1,0 +1,1483 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Word.Document"?>
+<w:wordDocument xmlns:w="http://schemas.microsoft.com/office/word/2003/wordml" xmlns:aml="http://schemas.microsoft.com/aml/2001/core" xmlns:dt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w10="urn:schemas-microsoft-com:office:word" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:sl="http://schemas.openxmlformats.org/schemaLibrary/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:mv="http://macVmlSchemaUri" mc:Ignorable="mv wp14 w14 wp15 w15 w16se w16cid w16 w16cex w16sdtdh w16acc w16dr w16kcb w16ldt w16qtc w16ttl w16tox w16ttx w16bpt w16dgm w16gear w16chart w16chartp w16chartt w16time w16r3d w16sp w16evo w16tvo w16moto w16loc w16olctx w16dv w16fdg w16doga w16dodh w16doac w16doat w16dosq w16lsp w16sni w16odtt w16pfd w16mcp w16nfc w16pnlh w16mgs w16nld w16lsd w16dodx w16xsl w16qsz w16aln w16als w16smt w16p15 w16p16 w16kac w16nmr w16rwh w16dgg w16dgd w16dgf w16dgc w16dgb w16dga w16dg w16sps w16spt w16spc w16spcl w16spcm w16spcs w16spct w16spcu w16spcv w16spcw w16spcx w16spcy w16spcz w16spc1 w16spc2 w16spc3 w16spc4 w16spc5 w16spc6 w16spc7 w16spc8 w16spc9 w16spc10 w16spc11 w16spc12 w16spc13 w16spc14 w16spc15 w16spc16 w16spc17 w16spc18 w16spc19 w16spc20 w16spc21 w16spc22 w16spc23 w16spc24 w16spc25 w16spc26 w16spc27 w16spc28 w16spc29 w16spc30 w16spc31 w16spc32 w16spc33 w16spc34 w16spc35 w16spc36 w16spc37 w16spc38 w16spc39 w16spc40 w16spc41 w16spc42 w16spc43 w16spc44 w16spc45 w16spc46 w16spc47 w16spc48 w16spc49 w16spc50 w16spc51 w16spc52 w16spc53 w16spc54 w16spc55 w16spc56 w16spc57 w16spc58 w16spc59 w16spc60 w16spc61 w16spc62 w16spc63 w16spc64 w16spc65 w16spc66 w16spc67 w16spc68 w16spc69 w16spc70 w16spc71 w16spc72 w16spc73 w16spc74 w16spc75 w16spc76 w16spc77 w16spc78 w16spc79 w16spc80 w16spc81 w16spc82 w16spc83 w16spc84 w16spc85 w16spc86 w16spc87 w16spc88 w16spc89 w16spc90 w16spc91 w16spc92 w16spc93 w16spc94 w16spc95 w16spc96 w16spc97 w16spc98 w16spc99 w16spc100">
+  <w:ignoreElements w:val="http://schemas.microsoft.com/office/word/2008/wordml"/>
+  <w:docPr>
+    <w:view w:val="print"/>
+    <w:zoom w:percent="100"/>
+    <w:doNotEmbedSystemFonts/>
+    <w:proofState w:spelling="clean" w:grammar="clean"/>
+    <w:defaultTabStop w:val="720"/>
+    <w:drawingGridHorizontalSpacing w:val="360"/>
+    <w:drawingGridVerticalSpacing w:val="360"/>
+    <w:displayHorizontalDrawingGridEvery w:val="0"/>
+    <w:displayVerticalDrawingGridEvery w:val="2"/>
+    <w:characterSpacingControl w:val="doNotCompress"/>
+    <w:savePreviewPicture/>
+    <w:rsids>
+      <w:rsidRoot w:val="00000000"/>
+      <w:rsid w:val="00000000"/>
+    </w:rsids>
+    <w:mathPr>
+      <w:mathFont w:val="Cambria Math"/>
+      <w:brkBin w:val="before"/>
+      <w:brkBinSub w:val="&#45;-"/>
+      <w:smallFrac w:val="off"/>
+      <w:dispDef/>
+      <w:lMargin w:val="1134"/>
+      <w:rMargin w:val="1134"/>
+      <w:spacing w:val="284"/>
+      <w:indent w:val="0"/>
+      <w:wrap w:val="around"/>
+      <w:flyMarginWidth w:val="0"/>
+      <w:flyMarginHeight w:val="0"/>
+      <w:flyMarginLeft w:val="0"/>
+      <w:flyMarginTop w:val="0"/>
+      <w:vertAnchor w:val="page"/>
+      <w:horzAnchor w:val="margin"/>
+      <w:tblInd w:val="0"/>
+      <w:lnNumType w:start="0"/>
+      <w:binFtrs w:val="2"/>
+      <w:txtFldNumFormat w:val="0"/>
+      <w:lnRestart w:val="0"/>
+      <w:dnxFldNumFormat w:val="0"/>
+      <w:sectPr/>
+      <w:footer/>
+      <w:footnotePr/>
+      <w:endnotePr/>
+    </w:mathPr>
+  </w:docPr>
+  <w:body>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>RailGo-UniApp 用户手册</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>版本 1.0</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>发布日期: 2025年12月11日</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:spacing w:after="0" w:before="240" w:line="240" w:line-rule="auto"/>
+        <w:rPr>
+          <w:b/>
+          <w:sz w:val="28"/>
+          <w:sz-cs w:val="28"/>
+        </w:rPr>
+      </w:pPr>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:spacing w:before="240" w:after="0" w:line="240" w:line-rule="auto"/>
+        <w:rPr>
+          <w:b/>
+          <w:sz w:val="28"/>
+          <w:sz-cs w:val="28"/>
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:b/>
+          <w:sz w:val="28"/>
+          <w:sz-cs w:val="28"/>
+        </w:rPr>
+        <w:t>目录</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="1"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>1. 项目概述</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="1"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>2. 功能模块介绍</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:ind w:left="720"/>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>2.1 车次查询</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:ind w:left="720"/>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>2.2 车站查询</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:ind w:left="720"/>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>2.3 实时测速</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:ind w:left="720"/>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>2.4 动车组查询</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:ind w:left="720"/>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>2.5 雷达功能</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="1"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>3. 使用指南</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="1"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>4. 技术架构</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="1"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>5. 附录</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:spacing w:after="0" w:before="240" w:line="240" w:line-rule="auto"/>
+        <w:rPr>
+          <w:b/>
+          <w:sz w:val="28"/>
+          <w:sz-cs w:val="28"/>
+        </w:rPr>
+      </w:pPr>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:spacing w:after="0" w:before="240" w:line="240" w:line-rule="auto"/>
+        <w:rPr>
+          <w:b/>
+          <w:sz w:val="28"/>
+          <w:sz-cs w:val="28"/>
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:b/>
+          <w:sz w:val="28"/>
+          <w:sz-cs w:val="28"/>
+        </w:rPr>
+        <w:t>1. 项目概述</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>RailGo 是一个现代化的专业铁路查询工具，基于 uni-app 框架开发，支持多端部署（包括移动端、小程序、H5等）。该应用提供车次查询、车站信息、实时测速、动车组信息等多项铁路相关服务。项目使用 Vue 3 作为主要框架，结合 FirstUI 组件库构建用户界面，并通过 SQLite 数据库存储本地数据。</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t xml:space="preserve">应用名称: RailGo</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t xml:space="preserve">版本: 1.0.5</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t xml:space="preserve">开发框架: uni-app (Vue 3)</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t xml:space="preserve">UI 组件库: FirstUI</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t xml:space="preserve">数据库: SQLite (移动端) / Flask API (H5端)</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t xml:space="preserve">后端 API: Flask (Python)</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t xml:space="preserve">网络请求: 自定义 axios 适配器</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t xml:space="preserve">状态管理: uni-app 原生存储</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t xml:space="preserve">主题色: #114598 (蓝色)</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:spacing w:after="0" w:before="240" w:line="240" w:line-rule="auto"/>
+        <w:rPr>
+          <w:b/>
+          <w:sz w:val="28"/>
+          <w:sz-cs w:val="28"/>
+        </w:rPr>
+      </w:pPr>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:spacing w:after="0" w:before="240" w:line="240" w:line-rule="auto"/>
+        <w:rPr>
+          <w:b/>
+          <w:sz w:val="28"/>
+          <w:sz-cs w:val="28"/>
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:b/>
+          <w:sz w:val="28"/>
+          <w:sz-cs w:val="28"/>
+        </w:rPr>
+        <w:t>2. 功能模块介绍</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>2.1 车次查询</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>功能描述: 提供列车时刻表、开行日等信息的查询服务，支持按车次号或出发站-到达站两种方式进行查询。</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>主要功能:</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="2"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>车次查询: 输入车次号（如G1202、D101等）查询详细时刻表信息</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="2"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>站站查询: 输入出发站和到达站查询可选车次</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="2"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>自定义键盘: 专为车次输入设计的虚拟键盘，支持字母和数字输入</w:t>
+      </w:r>
+    </p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="2"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>智能预选: 根据输入自动推荐可能的车次</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>[图片：车次查询界面]</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>2.2 车站查询</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>功能描述: 提供车站通过车次、线路等信息的查询服务，支持按车站名称进行查询。</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>主要功能:</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="3"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>车站信息查询: 查询指定车站的列车通过信息</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="3"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>车站选择器: 智能车站选择界面，支持模糊匹配</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>[图片：车站查询界面]</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>2.3 实时测速</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>功能描述: 使用设备GPS功能进行实时速度测试，提供精确的速度、经纬度和半球信息。</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>主要功能:</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="4"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>实时速度显示: 以km/h为单位显示当前移动速度</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="4"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>高精度模式: 可切换高精度/普通精度定位模式</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="4"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>地理信息显示: 显示当前经纬度坐标和所在的半球</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="4"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>速度平滑算法: 采用滚动平均算法减少速度波动</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>[图片：实时测速界面]</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>2.4 动车组查询</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>功能描述: 查询动车组配属信息和运行交路，支持车次/车组号查询和车型/车号查询两种模式。</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>主要功能:</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="5"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>担当查询: 查询车次对应的动车组信息</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="5"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>配属查询: 查询动车组的配属信息</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="5"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>车组模糊查询: 支持不完整车组号的模糊匹配</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="5"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>重连车组合并: 自动合并显示重联运行的动车组</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>[图片：动车组查询界面]</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>2.5 雷达功能</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>功能描述: （开发中）实时预测附近经过的列车，基于地理位置信息进行预测分析。</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>当前状态: 功能尚在开发中，暂不可用</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>[图片：雷达功能界面（施工中）]</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:spacing w:after="0" w:before="240" w:line="240" w:line-rule="auto"/>
+        <w:rPr>
+          <w:b/>
+          <w:sz w:val="28"/>
+          <w:sz-cs w:val="28"/>
+        </w:rPr>
+      </w:pPr>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:spacing w:after="0" w:before="240" w:line="240" w:line-rule="auto"/>
+        <w:rPr>
+          <w:b/>
+          <w:sz w:val="28"/>
+          <w:sz-cs w:val="28"/>
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:b/>
+          <w:sz w:val="28"/>
+          <w:sz-cs w:val="28"/>
+        </w:rPr>
+        <w:t>3. 使用指南</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>3.1 首次使用</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>首次启动应用时，系统会引导用户完成OOBE（开箱体验）流程，包括：</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="6"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>欢迎界面: 介绍应用基本功能</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="6"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>用户协议: 阅读并接受用户协议</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="6"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>身份验证: 完成用户身份验证</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="6"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>网络配置: 选择离线或在线模式</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>3.2 主要功能使用流程</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>车次查询流程:</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="7"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>在主页点击"车次"按钮</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="7"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>选择"车次"或"站站"查询模式</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="7"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>输入查询条件并选择日期</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="7"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>点击"查询"按钮获取结果</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>车站查询流程:</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="8"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>在主页点击"车站"按钮</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="8"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>选择要查询的车站</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="8"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>点击"查询"按钮获取结果</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>实时测速使用:</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="9"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>在主页点击"实时测速"按钮</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="9"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>系统将自动获取GPS定位并显示实时速度</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="9"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>可通过右上角按钮切换高精度/普通精度模式</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>动车组查询流程:</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="10"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>在主页点击"动车组"按钮</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="10"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>选择"担当"或"配属"查询模式</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="10"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>输入查询条件</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="10"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>点击"查询"按钮获取结果</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:spacing w:after="0" w:before="240" w:line="240" w:line-rule="auto"/>
+        <w:rPr>
+          <w:b/>
+          <w:sz w:val="28"/>
+          <w:sz-cs w:val="28"/>
+        </w:rPr>
+      </w:pPr>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:spacing w:after="0" w:before="240" w:line="240" w:line-rule="auto"/>
+        <w:rPr>
+          <w:b/>
+          <w:sz w:val="28"/>
+          <w:sz-cs w:val="28"/>
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:b/>
+          <w:sz w:val="28"/>
+          <w:sz-cs w:val="28"/>
+        </w:rPr>
+        <w:t>4. 技术架构</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>4.1 前端架构</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>RailGo-UniApp采用uni-app框架构建，支持多端部署。主要技术栈包括：</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="11"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>框架: Vue 3 + uni-app</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="11"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>UI组件库: FirstUI</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="11"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>状态管理: uni-app原生存储机制</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="11"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>网络请求: 自定义axios适配器</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>4.2 后端架构</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>后端采用Flask框架构建API服务，主要技术栈包括：</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="12"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>框架: Flask (Python)</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="12"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>依赖: Flask==2.3.3, Flask-CORS==4.0.0, Werkzeug==2.3.7</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="12"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>数据库: SQLite</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="12"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>API接口: 提供车次查询、站点查询、数据更新等功能</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>4.3 数据存储</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>应用支持离线和在线两种模式的数据存储：</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="13"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>APP端: 使用SQLite进行本地数据存储</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="13"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>H5端: 通过Flask API与后端进行数据交互</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="13"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>统一接口: 使用scripts/sqlite.js统一处理数据库操作</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:spacing w:after="0" w:before="240" w:line="240" w:line-rule="auto"/>
+        <w:rPr>
+          <w:b/>
+          <w:sz w:val="28"/>
+          <w:sz-cs w:val="28"/>
+        </w:rPr>
+      </w:pPr>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:pPr>
+        <w:spacing w:after="0" w:before="240" w:line="240" w:line-rule="auto"/>
+        <w:rPr>
+          <w:b/>
+          <w:sz w:val="28"/>
+          <w:sz-cs w:val="28"/>
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:b/>
+          <w:sz w:val="28"/>
+          <w:sz-cs w:val="28"/>
+        </w:rPr>
+        <w:t>5. 附录</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>5.1 版本变更历史</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>当前版本: 1.0.5</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>5.2 鉴权机制</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>应用采用基于版本和用户凭证的鉴权机制，通过API接口验证用户权限，确保应用的安全性。</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>5.3 开发约定</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>组件规范: 项目采用FirstUI组件库，通过easycom规范自动引入组件，无需手动注册。</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>网络请求: 通过scripts/req.js中封装的uniGet和uniPost方法进行网络请求，模拟axios的使用方式。</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>存储管理: 使用uni-app的uni.getStorageSync和uni.setStorage方法进行本地数据存储和管理。</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>5.4 构建与运行</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>环境要求:</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>Node.js 14+</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>HBuilderX 或其他支持 uni-app 的开发工具</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>运行命令:</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>开发模式:</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>npm run dev:mp-weixin  // 微信小程序</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>npm run dev:app        // App</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>npm run dev:h5         // H5</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>构建命令:</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>npm run build:mp-weixin  // 微信小程序</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>npm run build:app        // App</w:t>
+      </w:r>
+    </w:p>
+    <w:p wsp:rsidR="00000000" wsp:rsidRDefault="00000000">
+      <w:r>
+        <w:rPr>
+          <w:lang w:val="en-US"/>
+        </w:rPr>
+        <w:t>npm run build:h5         // H5</w:t>
+      </w:r>
+    </w:p>
+  </w:body>
+</w:wordDocument>

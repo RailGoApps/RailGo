@@ -51,6 +51,13 @@
 				nowIcon: uni.getStorageSync("nowIcon") || 'crh',
 				updateLogs: [
 					{
+						version: "v1.0.7.1",
+						date: "2025-12-23",
+						items: [
+							"Feature：站到站查询新增复兴号、智能动车组徽章显示，以及显示车型"
+						]
+					},
+					{
 						version: "v1.0.7",
 						date: "2025-12-21",
 						items: [

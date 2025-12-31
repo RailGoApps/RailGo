@@ -52,14 +52,26 @@
 							</text>
 						</view>
 						<view class="ux-text-center">
-							<text class="consolas" style="font-size:40rpx;">
-								{{item.numberKind + item.numberFull.join("/").replace(item.numberKind, "").replace(item.numberKind, "")}}
-							</text>
-							<br>
+							<view class="ux-flex ux-align-items-center ux-justify-content-center">
+								<text class="consolas" style="font-size:40rpx;">
+									{{item.numberKind + item.numberFull.join("/").replace(item.numberKind, "").replace(item.numberKind, "")}}
+								</text>
+								<view v-if="getFuxingColor(item.car)" 
+									:style="{backgroundColor: getFuxingColor(item.car)}"
+									style="width: 32rpx; height: 32rpx; line-height: 32rpx; border-radius: 4rpx; margin-left: 8rpx; display: flex; align-items: center; justify-content: center;">
+									<text style="color: white; font-size: 20rpx; font-weight: bold;">复</text>
+								</view>
+								<view v-if="isSmartTrain(item.car)" 
+									style="background-color: #FFD700; width: 32rpx; height: 32rpx; line-height: 32rpx; border-radius: 4rpx; margin-left: 4rpx; display: flex; align-items: center; justify-content: center;">
+									<text style="color: #432c00; font-size: 20rpx; font-weight: bold;">智</text>
+								</view>
+							</view>
 							<view style="border-top: 0.1rpx solid #757575;width:30vw;margin: 5rpx 0;"></view>
-							<text class="ux-text-small ux-opacity-5">
-								{{item.passTime}}
-							</text>
+							
+							<view class="ux-flex ux-justify-content-center ux-align-items-center ux-opacity-5">
+								<text class="ux-text-small">{{item.passTime}}</text>
+								<text v-if="item.car" class="consolas ux-ml-small ux-opacity-9" style="font-size: 24rpx;">{{item.car}}</text>
+							</view>
 						</view>
 						<view>
 							<view class="ux-flex ux-align-items-start">
@@ -170,23 +182,11 @@
 </template>
 
 <script>
-	import {
-		queryMainKey
-	} from "@/scripts/jsonDB.js";
-	import {
-		doQuery,
-	} from "@/scripts/sqlite.js";
-	import {
-		toRaw
-	} from "@vue/reactivity";
-	import {
-		KEYS_STRUCT_STATIONS,
-		KEYS_STRUCT_TRAINS,
-		TRAIN_KIND_COLOR_MAP
-	} from "@/scripts/config.js";
-	import {
-		uniGet
-	} from "@/scripts/req";
+	import { queryMainKey } from "@/scripts/jsonDB.js";
+	import { doQuery } from "@/scripts/sqlite.js";
+	import { toRaw } from "@vue/reactivity";
+	import { KEYS_STRUCT_STATIONS, KEYS_STRUCT_TRAINS, TRAIN_KIND_COLOR_MAP } from "@/scripts/config.js";
+	import { uniGet } from "@/scripts/req";
 
 	export default {
 		data() {
@@ -200,32 +200,17 @@
 				"colorMap": TRAIN_KIND_COLOR_MAP,
 				"sortState": "departure",
 				"filterTypeState": "GDCZTK12345678SLY",
-				// 1. 新增 isVague 状态，用于判断是否开启同城查询
 				"isVague": false 
 			}
 		},
 		onLoad(options) {
 			this.from = options.from;
 			this.to = options.to;
-			this.error = "";
 			this.date = options.date;
-			// 2. 根据 options.city 参数设置 isVague 状态
 			this.isVague = options.city === 'true'; 
-			
 			const c = uni.getStorageSync("search");
-			uni.setStorage({
-				key: 'search',
-				data: c + 1
-			});
-			try {
-				this.fillInData();
-			} catch (error) {
-				uni.setStorage({
-					"key": "DBerror",
-					"data": error.message
-				})
-			}
-
+			uni.setStorage({ key: 'search', data: c + 1 });
+			this.fillInData();
 		},
 		onShow() {
 			// #ifdef APP
@@ -233,235 +218,103 @@
 			// #endif
 		},
 		methods: {
-			back: function() {
-				uni.navigateBack()
+			back: function() { uni.navigateBack() },
+			getFuxingColor: function(car) {
+				if (!car) return null;
+				const match = car.match(/^CR(\d+)/);
+				if (!match) return null;
+				const num = parseInt(match[1]);
+				if (num === 400 || num === 450) return '#e53935';
+				if (num === 300 || num === 350) return '#fb8c00';
+				if (num === 200 || num === 250) return '#43a047';
+				return '#fbc02d';
+			},
+			isSmartTrain: function(car) {
+				if (!car) return false;
+				const smartModels = [
+					'CR400AF-S', 'CR400AF-Z', 'CR400AF-AS', 'CR400AF-AE', 
+					'CR400AF-BS', 'CR400BF-BS', 'CR400BF-S'
+				];
+				return smartModels.some(model => car.includes(model));
 			},
 			fillInData: async function() {
 				const mode = uni.getStorageSync("mode");
 				if (mode == "network") {
-					// --- 在线模式逻辑 (已添加同城查询支持) ---
 					try {
-						uni.showLoading({
-							title: "加载中"
-						});
-						
-						// 4.1. 构造基础 URL
+						uni.showLoading({ title: "加载中" });
 						let apiUrl = `https://data.railgo.zenglingkun.cn/api/train/sts_query?from=${this.from}&to=${this.to}&date=${this.date}`;
-
-						// 4.2. 如果开启了同城查询，则添加 city=true 参数
-						if (this.isVague) {
-							apiUrl += "&city=true";
-						}
-						
+						if (this.isVague) apiUrl += "&city=true";
 						const resp = await uniGet(apiUrl);
-						const result = resp.data;
-
-						if (result.error) {
+						if (resp.data.error) {
 							uni.hideLoading();
-							const c = uni.getStorageSync("search");
-							uni.setStorage({
-								key: 'search',
-								data: c - 1
-							});
 							this.$refs.error_noky.open();
 							return;
 						}
-
-						this.data = result;
+						this.data = resp.data;
 						this.showData = this.data;
-						this.radioSortChange({
-							detail: {
-								value: "departure"
-							}
-						});
-
-						if (toRaw(this.data).length == 0) {
-							uni.hideLoading();
-							const c = uni.getStorageSync("search");
-							uni.setStorage({
-								key: 'search',
-								data: c - 1
-							});
-							this.$refs.error_nosuch.open();
-							return;
-						}
+						this.radioSortChange({ detail: { value: "departure" } });
 						uni.hideLoading();
-
-					} catch (error) {
-						uni.hideLoading();
-						console.error("数据加载失败", error);
-						const c = uni.getStorageSync("search");
-						uni.setStorage({
-							key: 'search',
-							data: c - 1
-						});
-						uni.showToast({
-							title: "加载失败",
-							duration: 1000
-						});
-					}
+					} catch (e) { uni.hideLoading(); }
 				} else {
-					// --- 离线模式逻辑 (保持原有点对点查询) ---
 					try {
-						uni.showLoading({
-							title: "加载中"
-						});
-						// 离线模式继续只执行点对点查询
-						let fromStn = toRaw(await doQuery("SELECT trainList FROM stations WHERE telecode='" + this.from +
-							"'", ["trainList"]))[0];
-						let toStn = toRaw(await doQuery("SELECT trainList FROM stations WHERE telecode='" + this.to + "'",
-							["trainList"]))[0];
-						
-						// !!! 警告：这里 trainList 仍然可能是一个 JSON 字符串而不是数组，
-						// !!! 但根据您的要求，我没有修复离线模式的 trainList 解析问题。
-						// !!! 离线模式代码如下：
-						
-						if (fromStn.trainList.length == 0 || toStn.trainList.length == 0) {
-							uni.hideLoading();
-							this.$refs.error_noky.open();
-							return;
-						}
-
-						let d = [];
+						uni.showLoading({ title: "加载中" });
+						let fromStn = toRaw(await doQuery("SELECT trainList FROM stations WHERE telecode='" + this.from + "'", ["trainList"]))[0];
+						let toStn = toRaw(await doQuery("SELECT trainList FROM stations WHERE telecode='" + this.to + "'", ["trainList"]))[0];
+						if (!fromStn || !toStn) { uni.hideLoading(); this.$refs.error_noky.open(); return; }
 						let all = toRaw(await doQuery(
-							"SELECT code, number, numberFull, numberKind, timetable, rundays FROM trains WHERE number IN ('" +
-							fromStn.trainList
-							.filter((i) => {
-								return toStn.trainList.includes(i)
-							}).join("','") + "')", ["code", "number", "numberFull", "numberKind", "timetable",
-								"rundays"
-							]));
-
+							"SELECT code, number, numberFull, numberKind, timetable, rundays, car FROM trains WHERE number IN ('" +
+							fromStn.trainList.filter(i => toStn.trainList.includes(i)).join("','") + "')", 
+							["code", "number", "numberFull", "numberKind", "timetable", "rundays", "car"]
+						));
 						all.forEach((k) => {
-							let fromPos = -1;
-							let toPos = -1;
-							if (!k.rundays.includes(this.date)) {
-								return;
+							let fromPos = -1; let toPos = -1;
+							if (!k.rundays.includes(this.date)) return;
+							for (let i = 0; i < k.timetable.length; i++) {
+								if (k.timetable[i].stationTelecode == this.from) fromPos = i;
+								if (k.timetable[i].stationTelecode == this.to) { toPos = i; break; }
 							}
-							for (var i = 0; i < k.timetable.length; i++) {
-								if (k.timetable[i].stationTelecode == this.from) {
-									fromPos = i;
-								}
-								if (k.timetable[i].stationTelecode == this.to) {
-									toPos = i;
-									break;
-								}
-							}
-							if (fromPos != -1) {
-								k.fromPos = fromPos;
-								k.toPos = toPos;
-								k.showFlag = true;
-								k.passTime = this.calculateTimeDifference(k.timetable[k.fromPos].depart, k
-									.timetable[k.toPos].arrive, k.timetable[k.toPos].day - k.timetable[k
-										.fromPos].day);
+							if (fromPos != -1 && toPos != -1) {
+								k.fromPos = fromPos; k.toPos = toPos;
+								k.passTime = this.calculateTimeDifference(k.timetable[k.fromPos].depart, k.timetable[k.toPos].arrive, k.timetable[k.toPos].day - k.timetable[k.fromPos].day);
 								this.data.push(k);
 							}
-						}, this);
-
+						});
 						this.showData = this.data;
-						this.radioSortChange({
-							detail: {
-								value: "departure"
-							}
-						});
-
-						if (toRaw(this.data).length == 0) {
-							uni.hideLoading();
-							this.$refs.error_nosuch.open();
-							return;
-						}
+						this.radioSortChange({ detail: { value: "departure" } });
 						uni.hideLoading();
-
-					} catch (error) {
-						uni.hideLoading();
-						// 注意：plus.nativeUI.alert 仅在 H5+ 或 App 平台可用
-						if (typeof plus !== 'undefined' && plus.nativeUI) {
-							plus.nativeUI.alert(error);
-						}
-						console.error("数据加载失败", error);
-						uni.showToast({
-							title: "加载失败",
-							duration: 1000
-						});
-					}
+					} catch (e) { uni.hideLoading(); }
 				}
 			},
-
 			calculateTimeDifference: function(startTime, endTime, daysLater) {
-				const parseTime = (timeStr) => {
-					const [hours, minutes] = timeStr.split(':').map(Number);
-					return {
-						hours,
-						minutes
-					};
-				};
-				const start = parseTime(startTime);
-				const end = parseTime(endTime);
-				const startTotalMinutes = start.hours * 60 + start.minutes;
-				const endTotalMinutes = end.hours * 60 + end.minutes + (daysLater * 24 * 60);
-				let differenceMinutes = endTotalMinutes - startTotalMinutes;
-				if (differenceMinutes < 0) differenceMinutes += 24 * 60;
-				const hours = Math.floor(differenceMinutes / 60);
-				const minutes = differenceMinutes % 60;
-				return `${hours}h${minutes.toString().padStart(2, '0')}m`;
+				const [sH, sM] = startTime.split(':').map(Number);
+				const [eH, eM] = endTime.split(':').map(Number);
+				let diff = (eH * 60 + eM + (daysLater * 1440)) - (sH * 60 + sM);
+				return `${Math.floor(diff / 60)}h${(diff % 60).toString().padStart(2, '0')}m`;
 			},
-			openSortMenu: function() {
-				this.$refs.menu_sort.open();
-			},
-			openFilterMenu: function() {
-				this.$refs.menu_filter.open();
-			},
+			openSortMenu: function() { this.$refs.menu_sort.open(); },
+			openFilterMenu: function() { this.$refs.menu_filter.open(); },
 			radioSortChange: function(e) {
 				this.sortState = e.detail.value;
-				switch (e.detail.value) {
-					case "speed":
-						this.showData = this.data.sort((a, b) => {
-							if (a.passTime > b.passTime) {
-								return 1;
-							}
-							if (a.passTime < b.passTime) {
-								return -1;
-							}
-							return 0;
-						});
-						break;
-
-					case "departure":
-						this.showData = this.data.sort((a, b) => {
-							if (a.timetable[a.fromPos].depart > b.timetable[b.fromPos].depart) {
-								return 1;
-							}
-							if (a.timetable[a.fromPos].depart < b.timetable[b.fromPos].depart) {
-								return -1;
-							}
-							return 0;
-						});
-						break;
-
-					case "arrival":
-						this.showData = this.data.sort((a, b) => {
-							// 比较到达时间 + 跨天数
-							const aArrive = this.timeToMinutes(a.timetable[a.toPos].arrive) + (a.timetable[a.toPos].day * 1440);
-							const bArrive = this.timeToMinutes(b.timetable[b.toPos].arrive) + (b.timetable[b.toPos].day * 1440);
-							return aArrive - bArrive;
-						});
-						break;
-
-					default:
-						console.log("WHAT THE FUCK R U DOING?");
+				if (this.sortState === "speed") {
+					this.showData = this.data.sort((a, b) => a.passTime > b.passTime ? 1 : -1);
+				} else if (this.sortState === "departure") {
+					this.showData = this.data.sort((a, b) => a.timetable[a.fromPos].depart > b.timetable[b.fromPos].depart ? 1 : -1);
+				} else if (this.sortState === "arrival") {
+					this.showData = this.data.sort((a, b) => {
+						const aT = this.timeToMinutes(a.timetable[a.toPos].arrive) + (a.timetable[a.toPos].day * 1440);
+						const bT = this.timeToMinutes(b.timetable[b.toPos].arrive) + (b.timetable[b.toPos].day * 1440);
+						return aT - bT;
+					});
 				}
-				this.$refs.menu_sort.close();
+				if(this.$refs.menu_sort) this.$refs.menu_sort.close();
 			},
-			timeToMinutes(timeStr) {
-				if (!timeStr) return 0;
-				const [hours, minutes] = timeStr.split(':').map(Number);
-				return hours * 60 + minutes;
+			timeToMinutes: function(t) {
+				const [h, m] = t.split(':').map(Number);
+				return h * 60 + m;
 			},
 			radioFilterChange: function(e) {
 				this.filterTypeState = e.detail.value.join("");
-				this.showData = this.data.filter((i) => {
-					return e.detail.value.join("").includes(i.number.charAt(0));
-				});
+				this.showData = this.data.filter(i => e.detail.value.includes(i.number.charAt(0)));
 			}
 		}
 	}
