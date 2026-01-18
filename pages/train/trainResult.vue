@@ -626,39 +626,50 @@
 				}
 			},
 
-			/**
-			 * 计算实际到达/发车时间 (HH:mm)
-			 */
-			calculateActualTime: function(estimatedTime, delayStatus, delayTime) {
-				if (!estimatedTime || estimatedTime === '-' || delayStatus === null || delayStatus === undefined) {
-					return '-';
-				}
-				if (typeof delayTime !== 'number' || isNaN(delayTime) || delayTime === null) {
-					return '-';
-				}
-				if (delayStatus === 'ON_TIME' || delayTime === 0) {
-					return estimatedTime;
-				}
-
-				const parts = estimatedTime.split(':');
-				let hours = parseInt(parts[0]);
-				let minutes = parseInt(parts[1]);
-
-				let totalMinutes = hours * 60 + minutes + delayTime;
-
-				const minutesInDay = 24 * 60;
-				let finalMinutes = totalMinutes % minutesInDay;
-				if (finalMinutes < 0) {
-					finalMinutes += minutesInDay; 
-				}
-
-				let finalHours = Math.floor(finalMinutes / 60);
-				let finalMin = finalMinutes % 60;
-
-				const formattedHours = String(finalHours).padStart(2, '0');
-				const formattedMinutes = String(finalMin).padStart(2, '0');
-
-				return `${formattedHours}:${formattedMinutes}`;
+			/**
+			 * 计算实际到达/发车时间 (HH:mm)
+			 */
+			calculateActualTime: function(estimatedTime, delayStatus, delayTime) {
+				if (!estimatedTime || estimatedTime === '-' || delayStatus === null || delayStatus === undefined) {
+					return '-';
+				}
+				if (typeof delayTime !== 'number' || isNaN(delayTime) || delayTime === null) {
+					return '-';
+				}
+				if (delayStatus === 'ON_TIME' || delayTime === 0) {
+					return estimatedTime;
+				}
+
+				const parts = estimatedTime.split(':');
+				let hours = parseInt(parts[0]);
+				let minutes = parseInt(parts[1]);
+
+				// 根据状态调整时间：早点需要减去时间，晚点需要加上时间
+				let adjustedDelayTime = delayTime;
+				if (delayStatus === 'EARLY') {
+					// 早点：实际时间是预计时间减去延迟时间（延迟时间为负值或需要转为负值）
+					// 根据API规范，早点delayTime应为负值，但若为正值则转为负值
+					adjustedDelayTime = delayTime > 0 ? -delayTime : delayTime;
+				} else if (delayStatus === 'DELAY') {
+					// 晚点：实际时间是预计时间加上延迟时间（延迟时间应为正值）
+					adjustedDelayTime = delayTime < 0 ? -delayTime : delayTime;
+				}
+
+				let totalMinutes = hours * 60 + minutes + adjustedDelayTime;
+
+				const minutesInDay = 24 * 60;
+				let finalMinutes = totalMinutes % minutesInDay;
+				if (finalMinutes < 0) {
+					finalMinutes += minutesInDay; 
+				}
+
+				let finalHours = Math.floor(finalMinutes / 60);
+				let finalMin = finalMinutes % 60;
+
+				const formattedHours = String(finalHours).padStart(2, '0');
+				const formattedMinutes = String(finalMin).padStart(2, '0');
+
+				return `${formattedHours}:${formattedMinutes}`;
 			},
 
 			/**

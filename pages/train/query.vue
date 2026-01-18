@@ -110,13 +110,33 @@
 					@change="vague" :checked="isVague"/>
 				<text class="va">查询同城车站</text>
 			</view>
-			<br v-if="selectIndex==0">
+						<br v-if="selectIndex==0">
 			<button type="primary" style="background-color:#114598;color:#ffffff;" hover-class="ux-tap"
 				@click="jumpToResult()">查询</button>
 			<br>
+
 			<view class="ux-text-center ux-padding-small ux-mb ux-h6"
 				style="background-color:#e9eef5;border:1px solid #114598;border-radius:10rpx;color:#114598;">
 				<text class="ux-bold">信息仅供参考 请以铁路运营企业实际运用为准</text>
+			</view>
+			<br>
+			<!-- 历史记录 -->
+			<view v-if="trainHistory && trainHistory.length > 0" class="ux-mb-small">
+				<view class="ux-flex ux-space-between ux-align-items-center ux-mb-small">
+					<text class="ux-h6 ux-bold">历史记录</text>
+					<text class="ux-text-small ux-color-primary" style="color: #114598;" @click="clearHistory">清空</text>
+				</view>
+			
+				<view class="history-list">
+					<view v-for="(item, index) in trainHistory" :key="index" class="history-item" 
+						  @click="selectFromHistory(item.trainNumber)">
+						<view class="ux-flex ux-align-items-center ux-justify-content-center ux-text-center"
+							  style="padding: 10rpx 20rpx; background-color: #f0f5ff; border-radius: 30rpx; margin: 10rpx 10rpx 0 0; border: 1px solid #d0ddf0;">
+							<text class="ux-text-small" style="color: #114598; font-weight: 500;">{{item.trainNumber}}</text>
+						</view>
+					</view>
+				</view>
+			
 			</view>
 			<br>
 			<view class="ux-flex ux-row ux-justify-content-center">
@@ -206,6 +226,7 @@
 				"isNetworkMode": false,
 				"showKeyboard": false,
 				"isCustomKeyboardEnabled": true, 
+				"trainHistory": [],
 				deleteTimer: null,
 				longPressThreshold: 500,
 			}
@@ -238,6 +259,9 @@
 				this.stsSelectionA = selectionA.name;
 				this.stsSelectionB = selectionB.name;
 			}
+			
+			// 加载历史记录
+			this.trainHistory = uni.getStorageSync('trainHistory') || [];
 			
 			this.isCustomKeyboardEnabled = true;
 			this.showKeyboard = false;
@@ -315,6 +339,8 @@
 						});
 						return;
 					}
+					// 保存到历史记录
+					this.saveToHistory(this.keyword);
 					uni.navigateTo({
 						url: "/pages/train/trainResult?keyword=" + this.keyword + "&date=" + this.date
 					});
@@ -376,6 +402,8 @@
 				this.keyword = ph;
 				this.placeholderCollapsed = true;
 				this.hideTrainKeyboard();
+				// 保存到历史记录
+				this.saveToHistory(ph);
 			},
 			swapSts: function(e) {
 				let selectionA = uni.getStorageSync("train_sts_fieldA");
@@ -391,6 +419,47 @@
 			},
 			vague: function(e) {
 				this.isVague = e.detail.value;
+			},
+			
+			// 保存到历史记录
+			saveToHistory: function(trainNumber) {
+				if (!trainNumber) return;
+				// 先移除已存在的相同记录（避免重复）
+				this.trainHistory = this.trainHistory.filter(item => item.trainNumber !== trainNumber);
+			
+				// 添加新记录到数组开头
+				const newHistoryItem = {
+					trainNumber: trainNumber.toUpperCase(),
+					date: this.today, // 使用当前选择的日期
+					timestamp: Date.now() // 添加时间戳用于排序
+				};
+				this.trainHistory.unshift(newHistoryItem);
+				// 限制历史记录数量为10条
+				if (this.trainHistory.length > 10) {
+					this.trainHistory = this.trainHistory.slice(0, 10);
+				}
+				
+				// 保存到本地存储
+				uni.setStorageSync('trainHistory', this.trainHistory);
+			},
+			
+			// 从历史记录中选择车次
+			selectFromHistory: function(trainNumber) {
+				this.keyword = trainNumber;
+			},
+			
+			// 清除历史记录
+			clearHistory: function() {
+				uni.showModal({
+					title: '确认清除',
+					content: '确定要清除所有历史记录吗？',
+					success: (res) => {
+						if (res.confirm) {
+							this.trainHistory = [];
+							uni.removeStorageSync('trainHistory');
+						}
+					}
+				});
 			}
 		},
 		watch: {
@@ -477,5 +546,18 @@
 }
 .icon-x {
     font-size: 40rpx;
+}
+/* 历史记录项目样式 */
+.history-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+.history-item {
+  transition: all 0.2s ease;
+}
+.history-item:active {
+  transform: scale(0.95);
+  opacity: 0.7;
 }
 </style>

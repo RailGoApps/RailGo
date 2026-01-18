@@ -2,8 +2,8 @@
     "name" : "RailGo",
     "appid" : "__UNI__1A91000",
     "description" : "一个现代化的专业铁路查询工具",
-    "versionName" : "1.7.3 Build 10703",
-    "versionCode" : 26,
+    "versionName" : "1.7.4 Build 10704",
+    "versionCode" : 27,
     "transformPx" : false,
     /* 5+App特有相关 */
     "app-plus" : {

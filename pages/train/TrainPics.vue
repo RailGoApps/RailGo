@@ -21,6 +21,7 @@
 					<view class="ux-flex ux-align-items-center ux-space-between">
 						<view>
 							<text class="ux-h4 ux-bold">{{coachData.trainStyle}}</text><br/>
+							<text class="ux-text-small ux-color-grey">今日担当 {{coachData.carCode}}</text>
 
 						</view>
 						<view class="ux-text-right">
@@ -101,7 +102,6 @@
 							reqType: 'form'
 						}
 					});
-
 					// 根据你提供的返回格式解析
 					if (res.data && res.data.content && res.data.content.data) {
 						this.coachData = res.data.content.data;

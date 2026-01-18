@@ -51,6 +51,15 @@
 				nowIcon: uni.getStorageSync("nowIcon") || 'crh',
 				updateLogs: [
 					{
+						version: "v1.7.4 (10704)",
+						date: "2026-01-18",
+						items: [
+							"Feature：列车正晚点卡片",
+							"Feature：列车查询历史记录",
+							"Feature：车型图页显示车组号"
+						]
+					},
+					{
 						version: "v1.7.3 (10703)",
 						date: "2026-01-14",
 						items: [
