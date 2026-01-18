@@ -103,62 +103,52 @@
 					</button>
 				</view>
 
-				<uni-table style="border:none">
-					<uni-tr style="border:none">
-						<uni-th style="border:none" align="center">车站</uni-th>
-						<uni-th style="border:none" align="center">状态</uni-th>
-						<uni-th style="border:none" align="center">预计到达<br>发车</uni-th>
-						<uni-th style="border:none" align="center">实际到达<br>发车</uni-th>
-						<uni-th style="border:none" align="center">停站</uni-th>
-						<uni-th style="border:none" align="center">日期</uni-th>
-						<uni-th style="border:none" width="60" align="center">停台</uni-th>
-						<uni-th style="border:none" width="80" align="center">检票口</uni-th>
-					</uni-tr>
-					<uni-tr v-for="(item,index) in combinedDelayData" :key="index" style="border:none" hover-class="ux-bg-grey5">
-						<uni-td style="border:none" align="center">
-							<view class="ux-flex ux-align-items-center ux-justify-content-center">
-								<text>{{item.stationName || ''}}</text>
-							</view>
-						</uni-td>
-						<uni-td style="border:none" align="center"
-							:style="getDelayStatusColor(item.delayMinutes, item.status)">
-							{{formatDelayStatus(item.delayMinutes, item.status)}}
-						</uni-td>
-						<uni-td style="border:none" align="center">{{item.arrivalTime || '-'}}<br>{{item.departureTime ||
-							'-'}}</uni-td>
-						<uni-td style="border:none" align="center">
-							{{calculateActualTime(item.arrivalTime, item.delayMinutes, item.status)}}
-							<br>
-							{{calculateActualTime(item.departureTime, item.delayMinutes, item.status)}}
-						</uni-td>
-						<uni-td style="border:none" align="center">{{item.stopMinutes === null || item.stopMinutes ===
-							undefined ? '-' : item.stopMinutes + "'"}}</uni-td>
-						<uni-td style="border:none" align="center">{{item.arrivalDate || ''}}</uni-td>
-						
-						<uni-td style="border:none" align="center">
-							<view v-if="item.platform">{{item.platform}}</view>
-							<button v-else-if="item.platform === null && showLoadAllButton" 
-								@click="loadPlatformByStationName(item.stationName)" 
-								size="mini" type="primary" 
-								style="margin: 0; padding: 0 5px; font-size: 10px; line-height: 20px;">
-								查询
-							</button>
-							<view v-else>-</view>
-						</uni-td>
-						<uni-td style="border:none" align="center">
-							<view v-if="item.wicket">{{item.wicket}}</view>
-							<view v-else>-</view>
-						</uni-td>
-					</uni-tr>
-					<uni-tr v-if="delay.length === 0" style="border:none">
-						<uni-td style="border:none" colspan="8" align="center" v-if="isOnlyOfflineMode == false"> 暂无正晚点信息或加载失败
-						</uni-td>
-						<uni-td style="border:none" colspan="8" align="center" class="ux-color-gray"
-							v-if="isOnlyOfflineMode">
-							仅离线模式下无法使用该功能
-						</uni-td>
-					</uni-tr>
-				</uni-table>
+				<view v-for="(item,index) in combinedDelayData" :key="index" class="ux-bg-white ux-border-radius ux-mt-small">
+					<view class="ux-flex">
+						<view style="border-bottom-left-radius: 10rpx; border-top-left-radius:10rpx; width: 12rpx;"
+							:style="getDelayStatusBackground(item.delayStatusCode)">
+						</view>
+						<view class="ux-flex ux-space-between ux-pt ux-pl ux-pr ux-align-items-center" style="width: 100%;">
+							<text class="ux-bold" style="font-size: 32rpx;">{{item.stationName || ''}}</text>
+							<text :style="getDelayStatusColor(item.delayStatusCode, item.delayTime)" class="ux-bold" style="font-size: 28rpx;">
+								{{formatDelayStatus(item.delayStatusCode, item.delayTime)}}
+							</text>
+						</view>
+					</view>
+					<view class="ux-pl ux-pr ux-pb">
+						<view class="ux-flex ux-space-between ux-mt-small">
+							<text class="ux-text-small ux-opacity-7">预计时间</text>
+							<text class="ux-text-small">{{item.arrivalTime || '-'}}/{{item.departureTime || '-'}}</text>
+						</view>
+						<view class="ux-flex ux-space-between ux-mt">
+							<text class="ux-text-small ux-opacity-7">实际时间</text>
+							<text class="ux-text-small">{{calculateActualTime(item.arrivalTime, item.delayStatusCode, item.delayTime)}}/{{calculateActualTime(item.departureTime, item.delayStatusCode, item.delayTime)}}</text>
+						</view>
+						<view class="ux-flex ux-space-between ux-mt">
+							<text class="ux-text-small ux-opacity-7" v-if="item.stopMinutes !== null && item.stopMinutes !== undefined">停站时间</text>
+							<text class="ux-text-small" v-if="item.stopMinutes !== null && item.stopMinutes !== undefined">{{item.stopMinutes}}'</text>
+						</view>
+						<view class="ux-flex ux-space-between ux-mt">
+							<text class="ux-text-small ux-opacity-7">停台/检票口</text>
+							<text class="ux-text-small">
+								<text v-if="item.platform">{{item.platform}}</text>
+								<button v-else-if="item.platform === null && showLoadAllButton" 
+									@click="loadPlatformByStationName(item.stationName)" 
+									size="mini" type="primary" 
+									style="margin: 0; padding: 0 5px; font-size: 10px; line-height: 20px; display: inline;">
+									查询
+								</button>
+								<text v-else>-</text>
+								<text v-if="item.wicket">/{{item.wicket}}</text>
+							</text>
+						</view>
+					</view>
+				</view>
+
+				<view v-if="delay.length === 0" class="ux-bg-white ux-border-radius ux-padding ux-text-center">
+					<text v-if="isOnlyOfflineMode" class="ux-color-gray">仅离线模式下无法使用该功能</text>
+					<text v-else>暂无正晚点信息或加载失败</text>
+				</view>
 			</view>
 
 			<view v-if="selectIndex==1">
@@ -400,7 +390,7 @@
 		},
 		computed: {
 			/**
-			 * 结合正晚点数据 (this.delay) 和停台/检票口数据 (this.carData.timetable)
+			 * 结合正晚点数据 (this.delay) 和时刻表数据 (this.carData.timetable)
 			 */
 			combinedDelayData() {
 				if (!this.delay || this.delay.length === 0) {
@@ -408,9 +398,12 @@
 				}
 
 				const timetableMap = new Map();
-				// 建立车站名到停台/检票口信息的映射
+				// 建立车站名到时刻表信息的映射，包含时间等信息
 				this.carData.timetable.forEach((item, index) => {
 					timetableMap.set(item.station, {
+						arrive: item.arrive,
+						depart: item.depart,
+						day: item.day,
 						platform: item.platform,
 						wicket: item.wicket,
 						// 存储索引，用于单点查询时定位
@@ -420,19 +413,27 @@
 
 				// 合并数据
 				return this.delay.map(delayItem => {
-					const platformWicketInfo = timetableMap.get(delayItem.stationName);
-					if (platformWicketInfo) {
+					const timetableInfo = timetableMap.get(delayItem.stationName);
+					if (timetableInfo) {
 						return {
 							...delayItem,
-							platform: platformWicketInfo.platform,
-							wicket: platformWicketInfo.wicket,
+							// 从时刻表获取时间信息
+							arrivalTime: timetableInfo.arrive,
+							departureTime: timetableInfo.depart,
+							arrivalDate: timetableInfo.day,
+							platform: timetableInfo.platform,
+							wicket: timetableInfo.wicket,
+							stopMinutes: delayItem.stopMinutes, // 保留从API获取的停站时间
 							// 携带索引以便于单点查询
-							_index: platformWicketInfo.index
+							_index: timetableInfo.index
 						};
 					}
-					// 即使找不到匹配，也返回原始 delayItem，但停台/检票口字段为 null
+					// 即使找不到匹配，也返回原始 delayItem，但时间等字段为 null
 					return {
 						...delayItem,
+						arrivalTime: null,
+						departureTime: null,
+						arrivalDate: null,
 						platform: null,
 						wicket: null,
 						_index: -1 
@@ -628,14 +629,14 @@
 			/**
 			 * 计算实际到达/发车时间 (HH:mm)
 			 */
-			calculateActualTime: function(estimatedTime, delayMinutes, status) {
-				if (!estimatedTime || estimatedTime === '-' || status === null || status === undefined) {
+			calculateActualTime: function(estimatedTime, delayStatus, delayTime) {
+				if (!estimatedTime || estimatedTime === '-' || delayStatus === null || delayStatus === undefined) {
 					return '-';
 				}
-				if (typeof delayMinutes !== 'number' || isNaN(delayMinutes) || delayMinutes === null) {
+				if (typeof delayTime !== 'number' || isNaN(delayTime) || delayTime === null) {
 					return '-';
 				}
-				if (status === 1 && delayMinutes === 0) {
+				if (delayStatus === 'ON_TIME' || delayTime === 0) {
 					return estimatedTime;
 				}
 
@@ -643,7 +644,7 @@
 				let hours = parseInt(parts[0]);
 				let minutes = parseInt(parts[1]);
 
-				let totalMinutes = hours * 60 + minutes + delayMinutes;
+				let totalMinutes = hours * 60 + minutes + delayTime;
 
 				const minutesInDay = 24 * 60;
 				let finalMinutes = totalMinutes % minutesInDay;
@@ -663,18 +664,18 @@
 			/**
 			 * 根据状态判断并返回状态文本
 			 */
-			formatDelayStatus: function(delayMinutes, status) {
-				if (delayMinutes === null || status === null || delayMinutes === undefined || status === undefined) {
+			formatDelayStatus: function(delayStatus, delayTime) {
+				if (delayStatus === null || delayStatus === undefined) {
 					return '-';
 				}
-				if (status === 1 && delayMinutes === 0) {
+				if (delayStatus === 'ON_TIME' || delayTime === 0) {
 					return '正点';
 				}
-				if (status === 3 && delayMinutes < 0) {
-					return `早点${Math.abs(delayMinutes)}分`;
+				if (delayStatus === 'EARLY') {
+					return `早点${Math.abs(delayTime)}分`;
 				}
-				if (status === 2 && delayMinutes > 0) {
-					return `晚点${delayMinutes}分`;
+				if (delayStatus === 'DELAY') {
+					return `晚点${delayTime}分`;
 				}
 				return '-';
 			},
@@ -682,14 +683,27 @@
 			/**
 			 * 根据状态返回对应的 CSS 颜色
 			 */
-			getDelayStatusColor: function(delayMinutes, status) {
-				if (status === 3 && delayMinutes < 0) {
+			getDelayStatusColor: function(delayStatus, delayTime) {
+				if (delayStatus === 'EARLY' && delayTime !== 0) {
 					return 'color: #27ae60; font-weight: bold;';
 				}
-				if (status === 2 && delayMinutes > 0) {
+				if (delayStatus === 'DELAY' && delayTime > 0) {
 					return 'color: #c0392b; font-weight: bold;';
 				}
-				return '';
+				return 'color: #606266; font-weight: bold;'; // 正点时使用灰色
+			},
+
+			/**
+			 * 根据状态返回对应的背景色
+			 */
+			getDelayStatusBackground: function(delayStatus) {
+				if (delayStatus === 'EARLY') {
+					return 'background-color: #27ae60;';
+				}
+				if (delayStatus === 'DELAY') {
+					return 'background-color: #c0392b;';
+				}
+				return 'background-color: #114598;'; // 默认正点颜色
 			},
 
 			/**
@@ -963,22 +977,13 @@
 					// **正晚点数据加载逻辑**
 					let delayLoadSuccess = false;
 					if (loadSuccess && this.carData.timetable.length > 0) {
-						const timetable = this.carData.timetable;
-						const fromStation = timetable[0].station;
-						const toStation = timetable[timetable.length - 1].station;
-
-						if (fromStation && toStation && this.date) {
+						if (this.train && this.date) {
 							uni.showLoading({
 								title: '加载正晚点数据'
 							}) // [2] 正晚点加载开始
 							try {
-								const delayResp = await uniPost(
-									'https://delay.data.railgo.zenglingkun.cn/api/trainDetails/queryTrainDelayDetails', {
-										date: this.date,
-										trainNumber: this.train,
-										fromStationName: fromStation,
-										toStationName: toStation
-									}
+								const delayResp = await uniGet(
+									`https://rg-api.zenglingkun.cn/api/v2/getTrainDelayAll?trainNum=${encodeURIComponent(this.train)}`
 								);
 								if (delayResp.data && Array.isArray(delayResp.data.data)) {
 									this.delay = delayResp.data.data;
