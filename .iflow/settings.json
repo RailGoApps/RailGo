@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "'docx-edit-server'": {
+      "command": "uvx",
+      "args": [
+        "--python",
+        "3.12.7",
+        "iflow-mcp_docx-edit-server@latest",
+        "--workspace-path",
+        "."
+      ]
+    }
+  }
+}

@@ -51,7 +51,7 @@
 			<br>
 			
 			<view v-if="selectIndex === 0" class="ux-padding-small ux-mb ux-h6 ux-text-center info-box">
-				<text>本功能支持车组模糊查询及未来车次查询功能<br>支持重连车组合并展示<br></text>
+				<text>本功能支持车组模糊查询及未来车次查询功能<br>支持重联车组合并展示<br></text>
 				<text class="ux-bold">信息仅供参考，请以铁路运营企业实际运用为准</text><br>
 				<text class="ux-bold">仅离线模式不可用该功能</text>
 			</view>
@@ -128,7 +128,7 @@
 				});
 			},
 			inputData: function(e) {
-				this.keyword = e.detail.value;
+				this.keyword = e.detail.value.toUpperCase();
 			},
 		}
 	}

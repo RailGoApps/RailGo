@@ -9,47 +9,53 @@
 			<br>
 			<text class="ux-h2">更新管理</text>
 		</view>
+		
 		<view class="ux-padding">
-			<uni-section style="background-color:#eeeeee;margin-left:-1.2vh;" type="line" title="软件本体" title-font-size="34rpx"></uni-section>
-			
-			<view v-if="loading" class="card">
-				<text class="card-title ux-text-center">{{ statusMessage }}</text><br><br>
-				<view class="indeterminate-progress-container ux-progress-mt">
-					<view class="indeterminate-progress-bar"></view>
-				</view>
-			</view>
-			
-			<view v-else class="card">
-				<view class="ux-flex ux-align-items-center ux-space-between ux-pb-small">
-					<view>
-						<text class="card-title">{{ appUpdateStatusText }}</text>
-						<view v-if="hasAppUpdate" class="card-subtitle">快去更新吧</view>
-						<view v-else-if="isBeta" class="card-subtitle">您正在使用测试版软件</view>
-						<view v-else class="card-subtitle">已是最新</view>
+			<block v-if="isAndroid">
+				<uni-section style="background-color:#eeeeee;margin-left:-1.2vh;" type="line" title="软件本体" title-font-size="34rpx"></uni-section>
+				
+				<view v-if="loading" class="card">
+					<text class="card-title ux-text-center">{{ statusMessage }}</text><br><br>
+					<view class="indeterminate-progress-container ux-progress-mt">
+						<view class="indeterminate-progress-bar"></view>
 					</view>
-					<text class="status-icon" :class="hasAppUpdate ? 'has-update-color' : 'no-update-color'">
-						{{ hasAppUpdate ? '&#xe05e;' : '&#xe834;' }}
-					</text>
 				</view>
 				
-				<view class="line-divider"></view>
+				<view v-else class="card">
+					<view class="ux-flex ux-align-items-center ux-space-between ux-pb-small">
+						<view>
+							<text class="card-title">{{ appUpdateStatusText }}</text>
+							<view v-if="hasAppUpdate" class="card-subtitle">快去更新吧</view>
+							<view v-else-if="isBeta" class="card-subtitle">您正在使用测试版软件</view>
+							<view v-else class="card-subtitle">已是最新</view>
+						</view>
+						<text class="status-icon" :class="hasAppUpdate ? 'has-update-color' : 'no-update-color'">
+							{{ hasAppUpdate ? '&#xe05e;' : '&#xe834;' }}
+						</text>
+					</view>
+					
+					<view class="line-divider"></view>
+					
+					<view class="version-row">
+						<text class="label-bold">当前版本</text>
+						<text class="version-value">{{ currentAppVersionText }}</text>
+					</view>
+					<view v-if="hasAppUpdate" class="version-row">
+						<text class="label-bold">最新版本</text>
+						<text class="version-value">{{ latestAppVersionText }}</text>
+					</view>
+				</view>
 				
-				<view class="version-row">
-					<text class="label-bold">当前版本</text>
-					<text class="version-value">{{ currentAppVersionText }}</text>
-				</view>
-				<view v-if="hasAppUpdate" class="version-row">
-					<text class="label-bold">最新版本</text>
-					<text class="version-value">{{ latestAppVersionText }}</text>
-				</view>
-			</view>
-			
-			<button v-if="hasAppUpdate" class="ux-button-primary ux-mt-large" @click="gotoDownloadApp">立即更新软件</button>
-			<button v-else-if="isBeta" class="ux-button-disabled ux-mt-large" disabled>测试版本</button>
-			<button v-else class="ux-button-disabled ux-mt-large" disabled>软件已是最新</button>
-			<br>				<uv-divider text="·" :hairline="false"></uv-divider>
+				<button v-if="hasAppUpdate" class="ux-button-primary ux-mt-large" @click="gotoDownloadApp">立即更新软件</button>
+				<button v-else-if="isBeta" class="ux-button-disabled ux-mt-large" disabled>测试版本</button>
+				<button v-else class="ux-button-disabled ux-mt-large" disabled>软件已是最新</button>
+				
+				<br>
+				<uv-divider text="·" :hairline="false"></uv-divider>
+			</block>
 
 			<uni-section style="background-color:#eeeeee;margin-left:-1.2vh;" type="line" title="数据库" title-font-size="34rpx"></uni-section>
+			
 			<view v-if="loading" class="card">
 				<text class="card-title ux-text-center">{{ statusMessage }}</text><br><br>
 				<view class="indeterminate-progress-container ux-progress-mt">
@@ -82,29 +88,24 @@
 			
 			<button v-if="hasDbUpdate" class="ux-button-primary ux-mt-large" @click="gotoDownload">立即更新数据库</button>
 			<button v-else class="ux-button-disabled ux-mt-large" disabled>数据库已是最新</button>
-
 		</view>
 	</view>
 </template>
 
 <script>
-import {uniGet} from "@/scripts/req.js";
+import { uniGet } from "@/scripts/req.js";
 	
 	export default {
 		data() {
 			return {
 				loading: true,
 				statusMessage: "正在检查更新...",
-
-				// 数据库更新状态
 				hasDbUpdate: false,
 				currentDbVersion: 0,
 				currentDbVersionText: "",
 				latestDbVersion: 0,
 				latestDbVersionText: "",
 				updateStatusText: "",
-
-				// 软件更新状态
 				hasAppUpdate: false,
 				isBeta: false,
 				currentAppVersion: 0,
@@ -112,7 +113,17 @@ import {uniGet} from "@/scripts/req.js";
 				latestAppVersion: 0,
 				latestAppVersionText: "",
 				appUpdateStatusText: "",
-				
+			}
+		},
+		computed: {
+			// 核心判断：是否为安卓
+			isAndroid() {
+				// #ifdef APP-PLUS
+				return uni.getSystemInfoSync().platform === 'android';
+				// #endif
+				// #ifndef APP-PLUS
+				return false; // H5或小程序默认不显示APP更新
+				// #endif
 			}
 		},
 		async onShow() {
@@ -126,33 +137,24 @@ import {uniGet} from "@/scripts/req.js";
 				this.loading = true;
 				this.statusMessage = "正在检查更新...";
 				
-				// 获取本地数据库版本号
 				this.currentDbVersion = parseInt(uni.getStorageSync("offlineDataVersion")) || 0;
 				this.currentDbVersionText = uni.getStorageSync("offlineDataVersionText") || "未知版本";
-				
-				// 获取本地软件版本号
 				this.currentAppVersion = parseInt(uni.getStorageSync("version")) || 0;
 				this.currentAppVersionText = uni.getStorageSync("versionText") || "未知版本";
 
 				try {
-					// 请求服务器获取最新版本信息
 					const finalInfoResponse = await uniGet("https://api.state.railgo.zenglingkun.cn/api/v1/info");
 					
 					if (finalInfoResponse.status === 200 && finalInfoResponse.data) {
 						const data = finalInfoResponse.data;
 
-						// --- 数据库更新逻辑 ---
+						// 数据库逻辑
 						this.latestDbVersion = parseInt(data.latest_db);
 						this.latestDbVersionText = data.db;
-						if (this.latestDbVersion > this.currentDbVersion) {
-							this.hasDbUpdate = true;
-							this.updateStatusText = "发现新版本数据库";
-						} else {
-							this.hasDbUpdate = false;
-							this.updateStatusText = "已是最新版本";
-						}
+						this.hasDbUpdate = this.latestDbVersion > this.currentDbVersion;
+						this.updateStatusText = this.hasDbUpdate ? "发现新版本数据库" : "已是最新版本";
 						
-						// --- 软件更新逻辑 ---
+						// 软件本体逻辑（虽然非安卓不显示，但逻辑保留以维持数据完整性）
 						this.latestAppVersion = parseInt(data.latest_pack);
 						this.latestAppVersionText = data.pack;
 						
@@ -163,7 +165,7 @@ import {uniGet} from "@/scripts/req.js";
 						} else if (this.latestAppVersion < this.currentAppVersion) {
 							this.hasAppUpdate = false;
 							this.isBeta = true;
-							this.appUpdateStatusText = "哇塞！";
+							this.appUpdateStatusText = "测试版本";
 						} else {
 							this.hasAppUpdate = false;
 							this.isBeta = false;
@@ -171,84 +173,30 @@ import {uniGet} from "@/scripts/req.js";
 						}
 
 					} else {
-						throw new Error("获取版本信息失败");
+						throw new Error("获取失败");
 					}
 				} catch (e) {
-					console.error("检查更新时发生错误:", e);
-					this.statusMessage = "检查更新失败: " + (e.message || '未知错误');
-					this.updateStatusText = "检查失败";
-					this.appUpdateStatusText = "检查失败";
-					this.hasDbUpdate = false;
-					this.hasAppUpdate = false;
+					this.statusMessage = "检查更新失败";
 				} finally {
 					this.loading = false;
 				}
 			},
 			gotoDownload() {
-				uni.navigateTo({
-					url: '/pages/oobe/download'
-				});
+				uni.navigateTo({ url: '/pages/oobe/download' });
 			},
 			async gotoDownloadApp() {
-				// 检查是否在 App 环境，否则给出提示
-				if (typeof plus === 'undefined') {
-					uni.showModal({
-						title: '提示',
-						content: '此功能仅支持原生App环境，请尝试手动复制链接到浏览器。',
-						showCancel: false
-					});
-					return;
-				}
-
-				uni.showLoading({
-					title: '正在获取下载地址...',
-					mask: true
-				});
+				// 仅限安卓执行此方法
+				if (!this.isAndroid) return;
 				
-				let downloadUrl = '';
+				uni.showLoading({ title: '正在获取下载地址...', mask: true });
 				try {
-					// 请求 API 获取下载链接
-					const downloadResponse = await uniGet("https://api.state.railgo.zenglingkun.cn/api/v1/url/pack/android");
-					if (downloadResponse.status === 200 && downloadResponse.data && downloadResponse.data.url) {
-						downloadUrl = downloadResponse.data.url;
-					} else {
-						throw new Error("下载地址获取失败");
+					const res = await uniGet("https://api.state.railgo.zenglingkun.cn/api/v1/url/pack/android");
+					uni.hideLoading();
+					if (res.data && res.data.url) {
+						plus.runtime.openURL(res.data.url);
 					}
 				} catch (e) {
 					uni.hideLoading();
-					uni.showModal({
-						title: '获取失败',
-						content: `无法获取下载地址，请稍后再试。错误信息：${e.message}`,
-						showCancel: false
-					});
-					return;
-				}
-				
-				uni.hideLoading();
-				
-				// 使用 plus.runtime.openURL() 直接跳转到系统浏览器下载
-				if (downloadUrl) {
-					uni.showToast({
-						title: '即将跳转浏览器下载',
-						icon: 'none',
-						duration: 2000
-					});
-
-					// 调用plus.runtime.openURL，在App端会使用系统浏览器打开链接
-					plus.runtime.openURL(downloadUrl, (res) => {
-						// 失败回调
-						uni.showModal({
-							title: '跳转失败',
-							content: `无法打开浏览器，请手动复制以下链接下载：\n${downloadUrl}`,
-							showCancel: false
-						});
-					});
-				} else {
-					uni.showModal({
-						title: '错误',
-						content: '未能获取有效的下载链接。',
-						showCancel: false
-					});
 				}
 			}
 		}

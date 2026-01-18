@@ -389,8 +389,9 @@
 				"selectIndex": 0,
 				"isOnlyOfflineMode": false,
 				"carImageUrl": "", 
+				"defaultImageUrl": "",
 				"imageUploaderUsername": "暂缺图片", // NEW: For dynamic image source
-				
+				"isImageLoading": true,
 				// 停台加载逻辑相关状态
 				"platformLoadThreshold": 10, 
 				"allPlatformWicketLoaded": false, 
@@ -695,46 +696,63 @@
 			 * 图片加载失败时的处理函数，实现 Fallback 逻辑
 			 */
 			onImageError: function(e) {
-				const primaryUrlPrefix = 'https://tp.railgo.zenglingkun.cn/api/';
-
-				if (this.carImageUrl && this.carImageUrl.startsWith(primaryUrlPrefix)) {
-					const carModel = this.carData.car ? this.carData.car.replace(' 重联', '') : null;
-
-					if (carModel && this.carMap[carModel] && this.carMap[carModel][4]) {
-						this.carImageUrl = this.carMap[carModel][4];
-						console.warn(`Image load failed for primary URL. Falling back to: ${this.carImageUrl}`);
-					} else {
-						this.carImageUrl = '';
-					}
-				} else {
-					this.carImageUrl = '';
-					console.error(`Image load failed for fallback URL. Image removed.`);
-				}
+			    const carModel = this.carData.car ? this.carData.car.replace(' 重联', '') : null;
+			    
+			    // 如果当前加载的是 JSON 里的图片且失败了，尝试切换到默认 PNG 接口
+			    if (this.carImageUrl !== this.defaultImageUrl && this.defaultImageUrl) {
+			        this.carImageUrl = this.defaultImageUrl;
+			        return;
+			    }
+			
+			    // 如果默认 PNG 也失败了，尝试使用本地 config.js 里的兜底图
+			    if (carModel && this.carMap[carModel] && this.carMap[carModel][4]) {
+			        this.carImageUrl = this.carMap[carModel][4];
+			    } else {
+			        this.carImageUrl = '';
+			    }
+			    console.error("All image sources failed.");
 			},
 
 			/**
 			 * NEW: Fetch image source from JSON API
 			 */
 			async fetchImageSource() {
-				const carModel = this.carData.car ? this.carData.car.replace(' 重联', '') : null;
-				if (!carModel) return;
-
-				try {
-					const url = `https://tp.railgo.zenglingkun.cn/api/${encodeURIComponent(carModel)}.json`;
-					// 假设 uniGet 是用于网络请求的封装函数
-					const resp = await uniGet(url);
-
-					if (resp.data && resp.data.success && resp.data.data && resp.data.data.uploader_username) {
-						this.imageUploaderUsername = resp.data.data.uploader_username;
-					} else {
-						// Fallback if data is missing or success is false
-						this.imageUploaderUsername = '暂缺图片'; 
-					}
-				} catch (e) {
-					console.error("Failed to fetch image source JSON:", e);
-					// Fallback on network error
-					this.imageUploaderUsername = '暂缺图片'; 
-				}
+			    const carModel = this.carData.car ? this.carData.car.replace(' 重联', '') : null;
+			    if (!carModel) {
+			        this.isImageLoading = false;
+			        return;
+			    }
+			
+			    // 设置默认的备用地址（原有的 .png 接口）
+			    this.defaultImageUrl = `https://tp.railgo.zenglingkun.cn/api/${encodeURIComponent(carModel)}.png`;
+			
+			    try {
+			        const url = `https://tp.railgo.zenglingkun.cn/api/${encodeURIComponent(carModel)}.json`;
+			        const resp = await uniGet(url);
+			
+			        if (resp.data && resp.data.success && resp.data.data) {
+			            // 优先使用 JSON 中的 image_url
+			            if (resp.data.data.image_url) {
+			                this.carImageUrl = resp.data.data.image_url;
+			            } else {
+			                // 如果 JSON 成功但没返回 image_url，走默认 PNG
+			                this.carImageUrl = this.defaultImageUrl;
+			            }
+			            // 更新上传者信息
+			            this.imageUploaderUsername = resp.data.data.uploader_username || '匿名';
+			        } else {
+			            // JSON 接口返回 success: false
+			            this.carImageUrl = this.defaultImageUrl;
+			            this.imageUploaderUsername = '暂缺图片';
+			        }
+			    } catch (e) {
+			        // 网络请求失败（如 404），走默认 PNG
+			        console.warn("JSON metadata not found, using default png.");
+			        this.carImageUrl = this.defaultImageUrl;
+			        this.imageUploaderUsername = '暂缺图片';
+			    } finally {
+			        this.isImageLoading = false;
+			    }
 			},
 
 			fillInData: async function(mode) {
@@ -928,7 +946,12 @@
 					}
                     
                     // NEW: Fetch image source metadata
-                    this.fetchImageSource();
+                    if (this.carData.car) {
+                        this.fetchImageSource();
+                    } else {
+                        this.carImageUrl = '';
+                        this.isImageLoading = false;
+                    }
 					// -------------------------------------------------------------------------
 
 					if (this.isOnlyOfflineMode) {

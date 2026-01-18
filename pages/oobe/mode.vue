@@ -111,7 +111,7 @@
 					this.$refs.next_add.open();
 					// #endif
 				} else {
-					uni.navigateTo({
+					uni.reLaunch({
 						url: '/pages/index/index'
 					})
 				}

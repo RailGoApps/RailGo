@@ -55,7 +55,8 @@
 						<text class="ux-text-small ux-color-grey1"><text class="icon">&#xe5c8;</text></text>
 					</view>
 				</navigator>
-				<!-- #ifdef APP -->
+				<!-- #ifndef APP-HARMONY  -->
+				<!-- #ifndef H5  -->
 				<navigator url="/pages/about/individuation"
 					class="ux-th ux-bg-white ux-border-radius-large ux-padding ux-mt-small">
 					<view class="ux-flex ux-space-between">
@@ -64,8 +65,8 @@
 								class="icon">&#xe5c8;</text></text>
 					</view>
 				</navigator>
-				<!-- #endif -->
-				<!-- #ifdef APP -->
+				<!-- #endif --><!-- #endif -->
+				<!-- #ifndef H5  -->
 				<navigator url="/pages/about/mode"
 					class="ux-th ux-bg-white ux-border-radius-large ux-padding ux-mt-small">
 					<view class="ux-flex ux-space-between">

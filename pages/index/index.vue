@@ -1,5 +1,5 @@
 <template>
-	<view class="ux-bg-primary" style="height:  var(--status-bar-height);">&nbsp;</view>
+	<view class="ux-bg-primary" style="height:  var(--status-bar-height);">&nbsp;</view>
 	<view class="ux-padding ux-bg-grey5" style="min-height: 100vh;">
 		<view class="ux-flex ux-space-between ux-align-items-center">
 			<view>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</view>
@@ -10,18 +10,20 @@
 				</navigator>
 			</view>
 		</view>
-		<br>
-		<text class="ux-pl-small ux-opacity-6 ux-text-small">{{this.title}}</text>
+
 		<view class="ux-border-radius-large notice">
+			<!-- 公告栏，提供官方通知，文字（公益）广告 -->
 			<view class="left">
-				<text class="icon ux-color-primary">&#xe0b9;</text>
-				<text class="text">&nbsp;公告</text>
+				<text class="icon" :class="[isWarning ? 'ux-color-red' : 'ux-color-primary']">&#xe0b9;</text>
+				<text class="text" :class="{'text-ad': isAdTitle, 'text-red': isWarning}">
+					&nbsp;{{ noticeTitle }}
+				</text>
 			</view>
 			<view class="center">
-				<swiper vertical autoplay interval="2500" duration="300" circular>
-					<swiper-item v-for="(item, index) in items" :key="index" style="font-size: 24rpx;"
-						class="ux-pl-small ux-opacity-8">
-						{{ item }}
+				<swiper vertical autoplay interval="3000" duration="300" circular @change="onNoticeChange">
+					<swiper-item v-for="(item, index) in items" :key="index"
+						class="ux-pl-small ux-opacity-8 notice-item-text">
+						{{ formatNoticeContent(item) }}
 					</swiper-item>
 				</swiper>
 			</view>
@@ -36,8 +38,7 @@
 					<text class="ux-text">车次</text>
 					<br>
 					<text class="ux-text-small ux-opacity-8">查询时刻、开行日等信息。</text>
-					<br>
-					<br>
+					<br><br>
 					<view class="ux-text-right ux-mr-small">
 						<text class="icon">&#xe5c8;</text>
 					</view>
@@ -49,8 +50,7 @@
 					<text class="ux-text">车站</text>
 					<br>
 					<text class="ux-text-small ux-opacity-8">查询通过车次、线路等信息。</text>
-					<br>
-					<br>
+					<br><br>
 					<view class="ux-text-right ux-mr-small">
 						<text class="icon">&#xe5c8;</text>
 					</view>
@@ -65,8 +65,7 @@
 					<text class="ux-text">实时测速</text>
 					<br>
 					<text class="ux-text-small ux-opacity-8">实时使用GPS进行速度测试。</text>
-					<br>
-					<br>
+					<br><br>
 					<view class="ux-text-right ux-mr-small">
 						<text class="icon">&#xe5c8;</text>
 					</view>
@@ -78,10 +77,8 @@
 					<text class="ux-text">雷达</text>
 					<br>
 					<text class="ux-text-small ux-opacity-8">实时预测附近经过的列车。</text>
-					<br>
-					<br>
-					<view class="ux-text-right ux-mr-small">
-						</view>
+					<br><br>
+					<view class="ux-text-right ux-mr-small"></view>
 					<text class="ux-text-small">施工中 请静候佳音</text>
 				</view>
 			</view><br>
@@ -93,8 +90,7 @@
 					<text class="ux-text">动车组</text>
 					<br>
 					<text class="ux-text-small ux-opacity-8">查询动车组配属和运行交路。</text>
-					<br>
-					<br>
+					<br><br>
 					<view class="ux-text-right ux-mr-small">
 						<text class="icon">&#xe5c8;</text>
 					</view>
@@ -102,238 +98,92 @@
 			</view>
 		</view>
 		<br>
+		<!-- 图片广告 -->
 		<swiper v-if="bannerImages.length > 0" class="ux-border-radius-large" :style="{height: swiperHeight}" indicator-dots circular autoplay>
 			<swiper-item v-for="(url, index) in bannerImages" :key="index">
 				<image :src="url" mode="widthFix" class="ux-border-radius-large" style="width: 100%;" @load="onImageLoad"></image>
 			</swiper-item>
-		</swiper>
-		<image v-else class="ux-border-radius-large" src="/static/overlay/index_banner_1.png" style="width:100%;" mode="widthFix"></image>
-	</view>
-	
-	<!-- 更新欢迎弹窗 -->
-	<view v-if="showUpdatePopup" class="update-popup-overlay" @click="closeUpdatePopup">
-		<view class="update-popup" @click.stop="() => {}">
-			<view class="update-popup-content">
-				<text class="update-popup-title">🎉 欢迎使用新版本</text>
-				<text class="update-popup-message">欢迎来到 RailGo {{ updateVersion }} 版本<br>可去更新日志看看哦！</text>
-			</view>
-		</view>
-	</view>
+		</swiper>
+		<image v-else class="ux-border-radius-large" src="/static/overlay/index_banner_1.png" style="width:100%;" mode="widthFix"></image>
+	</view>
 </template>
 
 <script>
-	// 导入本地 JSON 文件
-	import hitokotoData from '@/static/i.json';
+	import { uniGet } from "@/scripts/req.js";
 
-	async function check() {
-		if (uni.getStorageSync("jqok")) {
-			return
-		}
-		try {
-			const Response = await uniGet("https://center.zenglingkun.cn/beta/api/check/" + uni.getStorageSync(
-				'version') + "?userid=" + uni.getStorageSync('qq') + "&key=" + uni.getStorageSync('key'));
-			if (Response.data.valid) {
-				uni.setStorageSync("AuthTime", new Date().getTime())
-				console.log("鉴权成功")
-				uni.showToast({
-					title: '鉴权成功',
-					position: 'bottom',
-				})
-				uni.setStorage({
-					key: 'jqok',
-					data: true
-				});
-			} else {
-				uni.showToast({
-					title: '鉴权无效',
-					position: 'bottom',
-				})
-				uni.setStorageSync("oobe", false)
-				uni.reLaunch({
-					url: '/pages/oobe/welcome'
-				})
-			}
-
-		} catch (error) {
-			if (checkTime(uni.getStorageSync("AuthTime"), new Date().getTime())) {
-				uni.showToast({
-					title: '鉴权超时，请重新鉴权',
-					position: 'bottom',
-				})
-				uni.setStorageSync("oobe", false)
-				uni.reLaunch({
-					url: '/pages/oobe/welcome'
-				})
-			} else {
-				console.log("无网络但未超时")
-				uni.showToast({
-					title: '离线鉴权成功',
-					position: 'bottom',
-				})
-			}
-		}
-	}
-import {uniGet} from "@/scripts/req.js";
-	import {
-		loadDB
-	} from "@/scripts/sqlite.js";
-	import {
-		doQuery,
-	} from "@/scripts/sqlite.js";
-	import {
-		KEYS_STRUCT_STATIONS,
-		KEYS_STRUCT_TRAINS
-	} from "@/scripts/config.js";
 	export default {
-		// Railgo Code
 		data() {
 			return {
-				title: '海内存知己，天涯若比邻。', // 默认值
-				visit: 0,
-				query: 0,
 				items: ['暂无公告'],
+				currentIndex: 0,
 				bannerImages: [],
-				swiperHeight: '210rpx', // Initialize with a default height
-				showUpdatePopup: false,
-				updateVersion: ''
+				swiperHeight: '210rpx'
 			};
 		},
+		computed: {
+			activeItem() {
+				return this.items[this.currentIndex] || '';
+			},
+			noticeTitle() {
+				if (this.activeItem.startsWith('[AD]')) return '广告';
+				if (this.activeItem.startsWith('[PSAD]')) return '公益广告';
+				return '公告';
+			},
+			isAdTitle() {
+				return this.activeItem.startsWith('[PSAD]');
+			},
+			isWarning() {
+				return this.activeItem.startsWith('[WAR]');
+			}
+		},
 		mounted() {
-			this.setHitokoto();
 			this.fetchRemoteData();
 		},
-		onShow() {
-			// #ifdef APP
-			plus.navigator.setStatusBarBackground('#114598');
-			plus.navigator.setFullscreen(false);
-			plus.navigator.showSystemNavigation();
-			// #endif
-			// 鉴权
-			if (uni.getStorageSync("NeedAuth")) {
-				check()
-			}
-			
-			const navigateToUpdates = uni.getStorageSync('navigateToUpdates');
-			if (navigateToUpdates) {
-				uni.removeStorageSync('navigateToUpdates'); 
-				setTimeout(() => {
-					uni.navigateTo({
-						url: '/pages/about/UpdateInfo'
-					});
-				}, 300);
-			}
-			
-			// 检查是否需要显示更新欢迎弹窗
-			const customPopupData = uni.getStorageSync('showCustomUpdatePopup');
-			if (customPopupData && customPopupData.show) {
-				uni.removeStorageSync('showCustomUpdatePopup'); // 清除标记
-				this.showUpdatePopup = true;
-				this.updateVersion = customPopupData.version;
-			}
-		},
 		methods: {
-			setHitokoto() {
-				const maxAttempts = 20;
-				for (let i = 0; i < maxAttempts; i++) {
-					const randomIndex = Math.floor(Math.random() * hitokotoData.length);
-					const hitokoto = hitokotoData[randomIndex].hitokoto;
-
-					if (hitokoto.length <= 18) {
-						this.title = hitokoto;
-						return;
-					}
-				}
-				this.title = '海内存知己，天涯若比邻。';
+			formatNoticeContent(content) {
+				if (!content) return '';
+				return content.replace(/^\[AD\]|^\[PSAD\]|^\[WAR\]/, '');
 			},
-
+			onNoticeChange(e) {
+				this.currentIndex = e.detail.current;
+			},
 			async fetchRemoteData() {
 				try {
-					const statsResponse = await uniGet('https://api.state.railgo.zenglingkun.cn/state');
-					this.visit = statsResponse.data.visits;
-					this.query = statsResponse.data.queries;
-
 					const noticeResponse = await uniGet("https://api.state.railgo.zenglingkun.cn/notice");
-					this.items = noticeResponse.data;
-
+					if (noticeResponse.data && noticeResponse.data.length > 0) {
+						this.items = noticeResponse.data;
+					}
 					const picResponse = await uniGet("https://api.state.railgo.zenglingkun.cn/pic");
 					this.bannerImages = picResponse.data;
-
-					await uniGet("https://api.state.railgo.zenglingkun.cn/visit");
 				} catch (error) {
-					console.error('Error fetching remote data:', error);
-					this.visit = 0;
-					this.query = 0;
-					this.items = ['暂无公告'];
-					this.bannerImages = [];
+					console.error('Fetch error:', error);
 				}
 			},
 			onImageLoad(e) {
-				// We only need to set the height once for the first image
-				if (this.swiperHeight === '210rpx' && this.bannerImages.length > 0) {
-					const {
-						width,
-						height
-					} = e.detail;
-					const screenWidth = uni.getSystemInfoSync().windowWidth;
-					const newHeight = (screenWidth * height) / width;
-					this.swiperHeight = `${newHeight}px`;
-				}
-			},
-			
-			closeUpdatePopup() {
-				this.showUpdatePopup = false;
-			},
-			
-			goToUpdateLog() {
-				this.showUpdatePopup = false;
-				uni.navigateTo({
-					url: '/pages/about/UpdateInfo'
-				});
+				const { width, height } = e.detail;
+				const screenWidth = uni.getSystemInfoSync().windowWidth;
+				this.swiperHeight = `${(screenWidth * height) / width}px`;
 			}
 		}
 	};
 </script>
 
 <style lang="scss">
-	.section-icon {
-		font-size: 50rpx;
-	}
-
-	.main {
-		.box {
-			background: #ffffff;
-			box-sizing: border-box;
-			font-family: "钉钉进步体";
-			overflow: hidden;
-
-			.desc {
-				margin-left: 23px;
-				font-size: 14px;
-				position: absolute;
-				margin-top: -5px;
-			}
-
-			.data {
-				margin-left: 23px;
-				font-size: 13px;
-				position: absolute;
-				margin-top: 13px;
-				color: gray
-			}
-		}
-	}
+	.ux-color-red { color: #B71C1C !important; }
+	.section-icon { font-size: 50rpx; }
 
 	.notice {
 		width: 100%;
 		height: 80rpx;
 		line-height: 80rpx;
-		background: #f9f9f9;
-		margin: 0 auto;
+		background: #fdfdfd;
 		margin-top: 10px;
 		display: flex;
+		overflow: hidden;
 
 		.left {
-			width: 140rpx;
+			min-width: 140rpx;
+			padding: 0 10rpx;
 			display: flex;
 			align-items: center;
 			justify-content: center;
@@ -342,90 +192,35 @@ import {uniGet} from "@/scripts/req.js";
 				color: #114598;
 				font-weight: 600;
 				font-size: 28rpx;
+				white-space: nowrap;
+				
+				&.text-ad {
+					font-size: 22rpx;
+				}
+				&.text-red {
+					color: #ff4d4f;
+				}
 			}
 		}
 
 		.center {
 			flex: 1;
+			overflow: hidden;
 
 			swiper {
 				height: 100%;
 
-				&-item {
+				.notice-item-text {
 					height: 100%;
-					font-size: 30rpx;
+					font-size: 24rpx;
 					color: #666;
 					overflow: hidden;
 					white-space: nowrap;
-					text-overflow: ellipsis;
+					text-overflow: ellipsis; 
+					display: flex;
+					align-items: center;
 				}
 			}
 		}
-
-		.right {
-			width: 70rpx;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-		}
-	}
-	
-	/* 更新欢迎弹窗样式 */
-	.update-popup-overlay {
-		position: fixed;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		background-color: rgba(0, 0, 0, 0.5);
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		z-index: 9999;
-	}
-	
-	.update-popup {
-		width: 80%;
-		max-width: 500rpx;
-		background: #fff;
-		border-radius: 20rpx;
-		overflow: hidden;
-		animation: popupScaleIn 0.3s ease-out;
-	}
-	
-	@keyframes popupScaleIn {
-		0% {
-			transform: scale(0.7);
-			opacity: 0;
-		}
-		100% {
-			transform: scale(1);
-			opacity: 1;
-		}
-	}
-	
-	.update-popup-content {
-		padding: 40rpx;
-		text-align: center;
-	}
-	
-	.update-popup-header {
-		margin-bottom: 20rpx;
-	}
-	
-	.update-popup-title {
-		font-size: 36rpx;
-		font-weight: bold;
-		color: #114598;
-		display: block;
-	}
-	
-	.update-popup-body {
-		margin: 30rpx 0;
-	}
-	.update-popup-message {
-		font-size: 28rpx;
-		color: #333;
-		line-height: 1.5;
-	}
+	}
 </style>

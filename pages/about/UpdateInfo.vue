@@ -51,6 +51,24 @@
 				nowIcon: uni.getStorageSync("nowIcon") || 'crh',
 				updateLogs: [
 					{
+						version: "v1.7.3 (10703)",
+						date: "2026-01-14",
+						items: [
+							"Feature：公告栏说明文本动态修改",
+							"Fixed: OOBE进行完毕后还可回退",
+							"Changed: 移除古诗一言"
+						]
+					},
+					{
+						version: "v1.7.2 (10702)",
+						date: "2026-01-11",
+						items: [
+							"Feature：动车组查询字母自动大写",
+							"Changed：修改版本号命名方式",
+							"Changed：修改列车图片获取方式"
+						]
+					},
+					{
 						version: "v1.0.7.1",
 						date: "2025-12-23",
 						items: [

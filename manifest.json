@@ -2,8 +2,8 @@
     "name" : "RailGo",
     "appid" : "__UNI__1A91000",
     "description" : "一个现代化的专业铁路查询工具",
-    "versionName" : "1.0.7.1",
-    "versionCode" : 24,
+    "versionName" : "1.7.3 Build 10703",
+    "versionCode" : 26,
     "transformPx" : false,
     /* 5+App特有相关 */
     "app-plus" : {
@@ -12,7 +12,7 @@
         "compilerVersion" : 3,
         "splashscreen" : {
             "alwaysShowBeforeRender" : true,
-            "waiting" : true,
+            "waiting" : false,
             "autoclose" : true,
             "delay" : 0
         },
@@ -50,7 +50,12 @@
             /* ios打包配置 */
             "ios" : {
                 "dSYMs" : false,
-                "urltypes" : "railgo"
+                "urltypes" : "railgo",
+                "privacyDescription" : {
+                    "NSLocationWhenInUseUsageDescription" : "用于测速",
+                    "NSLocationAlwaysUsageDescription" : "用于测速",
+                    "NSLocationAlwaysAndWhenInUseUsageDescription" : "用于测速"
+                }
             },
             /* SDK配置 */
             "sdkConfigs" : {
@@ -98,28 +103,14 @@
                     "hdpi" : "static/splash-480.png",
                     "xhdpi" : "static/splash-720.png",
                     "xxhdpi" : "static/splash-1080.png"
-                }
+                },
+                "iosStyle" : "common"
             }
         },
         "uniStatistics" : {
             "enable" : true
         },
-        "nativePlugins" : {
-            "Ionic-Safe" : {
-                "__plugin_info__" : {
-                    "name" : "Android 安卓安全插件禁止截屏获取安装包SHA1动态调试",
-                    "description" : "Android 安卓安全插件,禁止截屏、获取签名证书SHA1、获取安装包SHA1",
-                    "platforms" : "Android",
-                    "url" : "https://ext.dcloud.net.cn/plugin?id=2857",
-                    "android_package_name" : "com.azstudio.railgo",
-                    "ios_bundle_id" : "com.azstudio.railgo",
-                    "isCloud" : true,
-                    "bought" : 1,
-                    "pid" : "2857",
-                    "parameters" : {}
-                }
-            }
-        }
+        "nativePlugins" : {}
     },
     /* 快应用特有相关 */
     "quickapp" : {},

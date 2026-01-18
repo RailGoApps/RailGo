@@ -1,13 +1,14 @@
 <script>
 	const nauth = false;
-	const version = "1.0.7.1"
-	const version_number = 14
+	const version = "1.7.3 Build 10703"
+	const version_number = 16
 	import {uniGet} from "./scripts/req";
-	// #ifdef APP
-	import { getSwitchList, switchIcons, restoreIcons } from "@/uni_modules/ima-icons";
-	// 引入 Ionic-Safe 插件
+	// #ifndef H5
+	// #ifndef APP-HARMONY
 	var safeModule = uni.requireNativePlugin("Ionic-Safe");
-	// #endif	// UXUI INIT
+	// #endif
+	// #endif 
+	// UXUI INIT
 	import {
 		loadDB
 	} from "@/scripts/sqlite.js";
@@ -68,7 +69,8 @@
 
 	// 新增签名校验函数
 	async function checkSignature() {
-		// #ifdef APP
+		// #ifndef H5
+		// #ifndef APP-HARMONY
 		safeModule.getSignature(ret => {
 			if (ret.state && ret.data) {
 				const signatureSHA1 = ret.data;
@@ -82,9 +84,7 @@
 						content: '您可能正在使用修改版软件，请从官方渠道下载',
 						showCancel: false,
 						success: function (res) {
-							// #ifdef APP
-							uni.exit();
-							// #endif
+							uni.exit()
 						}
 					});
 				}
@@ -95,13 +95,13 @@
 					content: '诶怎么没有签名证书指纹？！',
 					showCancel: false,
 					success: function (res) {
-						// #ifdef APP
 						uni.exit();
-						// #endif
+		
 					}
 				});
 			}
 		});
+		// #endif
 		// #endif
 	}
 
@@ -133,17 +133,7 @@
 				key: 'jqok',
 				data: false
 			});
-			// #ifdef APP
-			if (uni.getStorageSync("nowIcon") === "girl"){
-				if (uni.getStorageSync("railgoGirlUnlock") == null || uni.getStorageSync("railgoGirlUnlock") == false){
-					uni.setStorage({
-						key: "nowIcon",
-						data: "crh"
-					})
-					switchIcons("crh")
-				}
-			}
-			// #endif
+			
 			if (value) {
 				// 检查版本更新
 				const storedVersion = uni.getStorageSync('version');

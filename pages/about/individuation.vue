@@ -92,8 +92,10 @@
 </template>
 
 <script>
-	// #ifdef APP
+	// #ifndef H5
+	// #ifndef APP-HARMONY
 	import { getSwitchList, switchIcons, restoreIcons } from "@/uni_modules/ima-icons";
+	// #endif
 	// #endif
 import {uniGet} from "@/scripts/req.js"; 
 
@@ -152,12 +154,14 @@ import {uniGet} from "@/scripts/req.js";
 					"data": iconName
 				});
 				this.nowIcon = iconName;
-				// #ifdef APP
+				// #ifndef H5
+				// #ifndef APP-HARMONY
 				switchIcons(iconName);
 				uni.showToast({
 					title: "切换成功！",
 					icon: 'none'
 				});
+				// #endif
 				// #endif
 			},
 			
