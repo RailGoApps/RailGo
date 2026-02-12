@@ -296,7 +296,14 @@
 			radioSortChange: function(e) {
 				this.sortState = e.detail.value;
 				if (this.sortState === "speed") {
-					this.showData = this.data.sort((a, b) => a.passTime > b.passTime ? 1 : -1);
+					this.showData = this.data.sort((a, b) => {
+						const getMinutes = (t) => {
+							if (!t) return 0;
+							const m = t.match(/(\d+)(h|时)(?:(\d+)(m|分))?/);
+							return m ? (parseInt(m[1]) * 60 + (parseInt(m[3]) || 0)) : 0;
+						};
+						return getMinutes(a.passTime) - getMinutes(b.passTime);
+					});
 				} else if (this.sortState === "departure") {
 					this.showData = this.data.sort((a, b) => a.timetable[a.fromPos].depart > b.timetable[b.fromPos].depart ? 1 : -1);
 				} else if (this.sortState === "arrival") {

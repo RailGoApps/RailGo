@@ -339,6 +339,10 @@
 						});
 						return;
 					}
+					if (this.keyword == "2026" || this.keyword == "RailGo" || this.keyword == "新年快乐"){
+						uni.navigateTo({url: "/pages/404/newYear"})
+						return
+					}
 					// 保存到历史记录
 					this.saveToHistory(this.keyword);
 					uni.navigateTo({

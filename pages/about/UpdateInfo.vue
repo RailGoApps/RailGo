@@ -51,19 +51,29 @@
 				nowIcon: uni.getStorageSync("nowIcon") || 'crh',
 				updateLogs: [
 					{
+						version: "v1.7.5 (10705)",
+						date: "2026-01-29",
+						items: [
+							"Feature: 新年彩蛋",
+							"Feature: 赞助用户鸣谢",
+							"Fixed: 部分页面背景色问题",
+							"Fixed: 站到站查询页按速度排序问题"
+						]
+					},
+					{
 						version: "v1.7.4 (10704)",
 						date: "2026-01-18",
 						items: [
-							"Feature：列车正晚点卡片",
-							"Feature：列车查询历史记录",
-							"Feature：车型图页显示车组号"
+							"Feature: 列车正晚点卡片",
+							"Feature: 列车查询历史记录",
+							"Feature: 车型图页显示车组号"
 						]
 					},
 					{
 						version: "v1.7.3 (10703)",
 						date: "2026-01-14",
 						items: [
-							"Feature：公告栏说明文本动态修改",
+							"Feature: 公告栏说明文本动态修改",
 							"Fixed: OOBE进行完毕后还可回退",
 							"Changed: 移除古诗一言"
 						]
@@ -72,30 +82,30 @@
 						version: "v1.7.2 (10702)",
 						date: "2026-01-11",
 						items: [
-							"Feature：动车组查询字母自动大写",
-							"Changed：修改版本号命名方式",
-							"Changed：修改列车图片获取方式"
+							"Feature: 动车组查询字母自动大写",
+							"Changed: 修改版本号命名方式",
+							"Changed: 修改列车图片获取方式"
 						]
 					},
 					{
 						version: "v1.0.7.1",
 						date: "2025-12-23",
 						items: [
-							"Feature：站到站查询新增复兴号、智能动车组徽章显示，以及显示车型"
+							"Feature: 站到站查询新增复兴号、智能动车组徽章显示，以及显示车型"
 						]
 					},
 					{
 						version: "v1.0.7",
 						date: "2025-12-21",
 						items: [
-							"Feature：新增座位图显示功能"
+							"Feature: 新增座位图显示功能"
 						]
 					},
 					{
 						version: "v1.0.6",
 						date: "2025-12-03",
 						items: [
-							"Feature：车站查询新增车站周边交通信息"
+							"Feature: 车站查询新增车站周边交通信息"
 						]
 					}
 				]

@@ -1,217 +1,242 @@
 <template>
-	<view class="ux-bg-grey5" style="height:100vh;">
-		<view class="ux-bg-primary" style="height:  var(--status-bar-height);">&nbsp;</view>
+	<view class="ux-bg-grey5 root-container">
+		<view class="ux-bg-primary" style="height: var(--status-bar-height);"></view>
 
 		<view class="ux-padding">
-			<view hover-class="ux-bg-grey8" @click="back">
+			<view hover-class="ux-bg-grey8" @click="back" style="display: inline-block; padding: 10rpx;">
 				<text class="icon" style="font-size: 45rpx;">&#xe5c4;</text>
 			</view>
-			<br>
-			<text class="ux-h2">鸣谢</text>
-		</view>
-		<view class="ux-pl ux-pr">
-			<uni-section title="开发" type="line" style="background-color: transparent;"
-				title-font-size="35rpx"></uni-section>
-			<view class="ux-flex ux-space-around ux-justify-content-center">
-				<view class="ux-text-center ux-pl ux-pr">
-					<image mode="scaleToFill" src="https://q1.qlogo.cn/g?b=qq&s=100&nk=1316280182"
-						style="width:100rpx;height:100rpx;border-radius:50%;"></image>
-					<br>
-					<text class="ux-text-small">辰墨</text>
-				</view>
-				<view class="ux-text-center ux-pl ux-pr">
-					<image mode="scaleToFill" src="https://q1.qlogo.cn/g?b=qq&s=100&nk=572747232"
-						style="width:100rpx;height:100rpx;border-radius:50%;"></image>
-					<br>
-					<text class="ux-text-small">TKP30</text>
-				</view>
-				<view class="ux-text-center ux-pl ux-pr">
-					<image mode="scaleToFill" src="https://q1.qlogo.cn/g?b=qq&s=100&nk=1219439938"
-						style="width:100rpx;height:100rpx;border-radius:50%;"></image>
-					<br>
-					<text class="ux-text-small">姜胤</text>
-				</view>
-				<view class="ux-text-center ux-pl ux-pr">
-					<image mode="scaleToFill" src="https://q1.qlogo.cn/g?b=qq&s=100&nk=3776473661"
-						style="width:100rpx;height:100rpx;border-radius:50%;"></image>
-					<br>
-					<text class="ux-text-small">mstouk57g</text>
-				</view>
+			<view style="margin-top: 20rpx;">
+				<text class="ux-h2">鸣谢</text>
 			</view>
 		</view>
-		<view class="ux-pl ux-pr">
-			<uni-section title="特别鸣谢" type="line" style="background-color: transparent;"
-				title-font-size="35rpx"></uni-section>
-			<view class="ux-flex ux-space-around ux-justify-content-center">
-				<view class="ux-text-center ux-pl ux-pr">
-					<image mode="scaleToFill" src="https://q1.qlogo.cn/g?b=qq&s=100&nk=3068342155"
-						style="width:100rpx;height:100rpx;border-radius:50%;"></image>
-					<br>
-					<text class="ux-text-small">XieXiLin</text>
-				</view>
-				<view class="ux-text-center ux-pl ux-pr">
-					<image mode="scaleToFill" src="https://q1.qlogo.cn/g?b=qq&s=100&nk=2396807944"
-						style="width:100rpx;height:100rpx;border-radius:50%;"></image>
-					<br>
-					<text class="ux-text-small">bcdt</text>
+
+		<view class="ux-pl ux-pr ux-pb">
+			<uni-section title="开发" type="line" title-font-size="35rpx" class="no-bg-section"></uni-section>
+			<view class="ux-flex ux-row ux-justify-content-center">
+				<view class="developer-item" v-for="user in developers" :key="user.name">
+					<image mode="scaleToFill" :src="user.avatar" class="avatar-lg"></image>
+					<view class="name-container">
+						<text class="ux-text-small">{{ user.name }}</text>
+					</view>
 				</view>
 			</view>
 		</view>
 
-		<view class="ux-pl ux-pr">
-			<uni-section title="数据源" type="line" style="background-color: transparent;"
-				title-font-size="35rpx"></uni-section>
+		<view class="ux-pl ux-pr ux-pb">
+			<uni-section title="特别鸣谢" type="line" title-font-size="35rpx" class="no-bg-section"></uni-section>
+			<view class="ux-flex ux-row ux-justify-content-center">
+				<view class="developer-item" v-for="user in specialThanks" :key="user.name">
+					<image mode="scaleToFill" :src="user.avatar" class="avatar-lg"></image>
+					<view class="name-container">
+						<text class="ux-text-small">{{ user.name }}</text>
+					</view>
+				</view>
+			</view>
+		</view>
+
+		<view class="ux-pl ux-pr ux-pb">
+			<uni-section title="数据源" type="line" title-font-size="35rpx" class="no-bg-section"></uni-section>
 			<uni-table border stripe>
 				<uni-tr>
-					<uni-th align="center">数据源</uni-th>
+					<uni-th align="center" width="100rpx">数据源</uni-th>
 					<uni-th align="center">官网</uni-th>
 					<uni-th align="left">相关功能</uni-th>
 				</uni-tr>
-				<uni-tr v-for="(item,index) in dataSources" :key="index">
-					<uni-td>{{item.source}}</uni-td>
-					<uni-td>
-						<navigator :url="'https://' + item.website" hover-class="none" open-type="navigate">
-							<text class="ux-text-primary" style="color:#114598;">{{item.website}}</text>
-						</navigator>
+				<uni-tr v-for="(item, index) in dataSources" :key="index">
+					<uni-td align="center">{{ item.source }}</uni-td>
+					<uni-td align="center">
+						<text class="link-text" @click="openLink(item.website)">{{ item.website }}</text>
 					</uni-td>
-					<uni-td>{{item.function}}</uni-td>
+					<uni-td>{{ item.function }}</uni-td>
 				</uni-tr>
 			</uni-table>
 		</view>
-		<view class="ux-pl ux-pr">
-			<uni-section title="其他" type="line" style="background-color: transparent;"
-				title-font-size="35rpx"></uni-section>
-			<view class="ux-flex ux-space-around ux-justify-content-center">
-				<view class="ux-text-center ux-pl ux-pr">
-					慈云数据 (zovps.com) <br> 提供云计算支持
-				</view>
+
+		<view class="ux-pl ux-pr ux-pb">
+			<uni-section title="其他" type="line" title-font-size="35rpx" class="no-bg-section"></uni-section>
+			<view class="ux-text-center ux-padding-sm">
+				<text class="ux-text-grey7" style="font-size: 24rpx;">慈云数据 (zovps.com) 提供云计算支持</text>
 			</view>
 		</view>
 
-		<view class="ux-pl ux-pr">
-			<uni-section title="动车组图片" type="line" style="background-color: transparent;"
-				title-font-size="35rpx"></uni-section>
-			<image mode="scaleToFill" v-for="(nk, index) in picgive" :key="nk"
-				:src="`https://q1.qlogo.cn/g?b=qq&s=100&nk=${nk}`" style="width:90rpx;height:90rpx;border-radius:50%;"
-				class="ux-ml-small ux-r-small"></image><br><text class="ux-bold">可在tp.railgo.zenglingkun.cn提交车图</text>
+		<view class="ux-pl ux-pr ux-pb" v-if="zz.length > 0">
+			<uni-section title="赞助" type="line" title-font-size="35rpx" class="no-bg-section"></uni-section>
+			<view class="avatar-group">
+				<image mode="scaleToFill" v-for="(nk, index) in zz" :key="index"
+					:src="`https://q1.qlogo.cn/g?b=qq&s=100&nk=${nk}`" class="avatar-sm"></image>
+			</view>
+		</view>
+
+		<view class="ux-pl ux-pr ux-pb">
+			<uni-section title="动车组图片" type="line" title-font-size="35rpx" class="no-bg-section"></uni-section>
+			<view class="avatar-group">
+				<image mode="scaleToFill" v-for="(nk, index) in picgive" :key="index"
+					:src="`https://q1.qlogo.cn/g?b=qq&s=100&nk=${nk}`" class="avatar-sm"></image>
+			</view>
+			<view class="ux-mt-small">
+				<text class="ux-bold ux-text-primary tip-text">可在 tp.railgo.zenglingkun.cn 提交车图</text>
+			</view>
+		</view>
+
+		<view class="ux-pl ux-pr ux-pb">
+			<uni-section title="反馈" type="line" title-font-size="35rpx" class="no-bg-section"></uni-section>
+			<view class="avatar-group">
+				<image mode="scaleToFill" v-for="(nk, index) in items" :key="index"
+					:src="`https://q1.qlogo.cn/g?b=qq&s=100&nk=${nk}`" class="avatar-xs"></image>
+			</view>
+			<view class="ux-mt-small">
+				<text class="ux-bold ux-text-primary tip-text">可在 center.railgo.dev 进行反馈</text>
+			</view>
 		</view>
 		
-		<view class="ux-pl ux-pr">
-			<br><text class="ux-bold">可在center.railgo.dev进行反馈</text>
-			<uni-section title="反馈" type="line" style="background-color: transparent;"
-				title-font-size="35rpx"></uni-section>
-			<image mode="scaleToFill" v-for="(nk, index) in items" :key="nk"
-				:src="`https://q1.qlogo.cn/g?b=qq&s=100&nk=${nk}`" style="width:80rpx;height:80rpx;border-radius:50%;"
-				class="ux-ml-small ux-r-small"></image>
-		</view>
+		<view style="height: 60rpx;"></view>
 	</view>
 </template>
+
 <script>
-	import {
-		uniGet
-	} from "@/scripts/req.js";
+	import { uniGet } from "@/scripts/req.js";
 
 	export default {
-		// Railgo Code
 		data() {
 			return {
 				items: [],
+				developers: [
+					{ name: '辰墨', avatar: 'https://q1.qlogo.cn/g?b=qq&s=100&nk=1316280182' },
+					{ name: 'TKP30', avatar: 'https://q1.qlogo.cn/g?b=qq&s=100&nk=572747232' },
+					{ name: '姜胤', avatar: 'https://q1.qlogo.cn/g?b=qq&s=100&nk=1219439938' },
+					{ name: 'mstouk57g', avatar: 'https://q1.qlogo.cn/g?b=qq&s=100&nk=3776473661' }
+				],
+				specialThanks: [
+					{ name: 'XieXiLin', avatar: 'https://q1.qlogo.cn/g?b=qq&s=100&nk=3068342155' },
+					{ name: 'bcdt', avatar: 'https://q1.qlogo.cn/g?b=qq&s=100&nk=2396807944' }
+				],
 				picgive: ["1972867189", "2151235831", "1069943593", "525637945", "3596323062", "2377807972", "982588465",
 					"1779378782", "516127399", "2533221373", "2387845184", "365736548", "1983163227", "3111737636"
 				],
-				// 数据源列表
-				dataSources: [{
-						source: 'RailGo.Parser',
-						website: 'railgo.dev',
-						function: '车次、车站'
-					},
-					{
-						source: 'MoeFactory车厢',
-						website: 'rail.moefactory.com',
-						function: '正晚点、配属'
-					},
-					{
-						source: 'rail.re',
-						website: 'rail.re',
-						function: '动车组担当'
-					},
-					{
-						source: '车站小屏',
-						website: '12036.com',
-						function: '车站大屏'
-					}
+				zz: [],
+				dataSources: [
+					{ source: 'RailGo.Parser', website: 'railgo.dev', function: '车次、车站、正晚点' },
+					{ source: 'MoeFactory车厢', website: 'rail.moefactory.com', function: '配属' },
+					{ source: 'rail.re', website: 'rail.re', function: '动车组担当' },
+					{ source: '车站小屏', website: '12036.com', function: '车站大屏' }
 				]
 			};
 		},
 		mounted() {
-			this.fetchData(); // 获取反馈列表
-			this.fetchPicgiveUsers(); // 获取动车组图片贡献者列表
+			this.fetchData();
+			this.fetchPicgiveUsers();
+			this.fetchsUsers();
 		},
 		methods: {
-			back: function() {
-				uni.navigateBack()
+			back() {
+				uni.navigateBack();
+			},
+			openLink(url) {
+				
+				uni.setClipboardData({
+					data: 'https://' + url,
+					success: () => uni.showToast({ title: '链接已复制', icon: 'none' })
+				});
+				
 			},
 			async fetchData() {
 				try {
-					const Response = await uniGet("https://feedback.railgo.dev/api/get_users");
-					this.items = Response.data.users;
-				} catch (error) {
-					console.error('Error fetching data:', error);
-					this.items = [];
-				}
+					const res = await uniGet("https://feedback.railgo.dev/api/get_users");
+					if (res.data && res.data.users) this.items = res.data.users;
+				} catch (e) { console.error(e); }
 			},
-
-			// 新增方法：获取并合并动车组图片贡献者列表
 			async fetchPicgiveUsers() {
 				try {
-					const apiUrl = 'https://tp.railgo.zenglingkun.cn/api/user';
-					// 使用 uniGet 请求新接口
-					const response = await uniGet(apiUrl);
-
-					let remoteUsers = [];
-					// 检查响应格式是否符合预期：{ code: 200, data: [id1, id2, ...] }
-					if (response.data && Array.isArray(response.data.data)) {
-						remoteUsers = response.data.data.map(String); // 确保所有ID都是字符串
+					const res = await uniGet('https://tp.railgo.zenglingkun.cn/api/user');
+					if (res.data && Array.isArray(res.data.data)) {
+						const remote = res.data.data.map(String);
+						this.picgive = Array.from(new Set([...this.picgive, ...remote]));
 					}
-
-					// 1. 合并本地和远程列表
-					const combinedList = [...this.picgive, ...remoteUsers];
-
-					// 2. 去重并更新 picgive
-					this.picgive = Array.from(new Set(combinedList));
-
-					console.log("动车组图片用户列表更新成功");
-
-				} catch (error) {
-					console.warn("获取动车组图片用户列表失败，使用本地默认列表", error);
-					// 失败时，this.picgive 保持 data() 中定义的本地列表不变
-				}
+				} catch (e) { console.warn(e); }
+			},
+			async fetchsUsers() {
+				try {
+					const res = await uniGet('https://zz.railgo.dev/api/sponsors');
+					if (res.data && Array.isArray(res.data)) {
+						this.zz = res.data.map(String);
+					}
+				} catch (e) { console.warn(e); }
 			}
 		}
 	};
 </script>
 
 <style>
-	.content {
-		padding: 20px;
-		text-align: center;
+	page {
+		background-color: #F8F8F8; 
 	}
 
-	.thanks-text {
-		font-size: 32px;
-		font-weight: bold;
-		color: #333;
-		margin-top: 30px;
+	.root-container {
+		min-height: 100vh;
+		padding-bottom: 40rpx;
 	}
 
-	.developer-list {
-		margin-top: 20px;
+	.no-bg-section {
+		background-color: transparent !important;
 	}
 
-	.developer-name {
-		display: block;
-		font-size: 18px;
-		color: #555;
-		margin: 5px 0;
+	.developer-item {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		width: 160rpx; 
+		margin-bottom: 20rpx;
 	}
+
+	.name-container {
+		margin-top: 10rpx;
+		height: 40rpx;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.avatar-lg {
+		width: 100rpx;
+		height: 100rpx;
+		border-radius: 50%;
+		background-color: #eee;
+		border: 2rpx solid #fff;
+	}
+
+	.avatar-sm {
+		width: 90rpx;
+		height: 90rpx;
+		border-radius: 50%;
+		margin: 8rpx;
+	}
+
+	.avatar-xs {
+		width: 70rpx;
+		height: 70rpx;
+		border-radius: 50%;
+		margin: 6rpx;
+	}
+
+	.avatar-group {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: flex-start;
+		padding-left: 10rpx;
+	}
+
+	.link-text {
+		color: #114598;
+		text-decoration: underline;
+		font-size: 24rpx;
+	}
+	
+	.tip-text {
+		font-size: 24rpx;
+		opacity: 0.8;
+	}
+	
+	.ux-mt-small { margin-top: 10rpx; }
+	.ux-pb { padding-bottom: 30rpx; }
 </style>
