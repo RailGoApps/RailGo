@@ -1,6 +1,6 @@
 <template>
 	<view class="ux-bg-grey5 root-container">
-		<view class="ux-bg-primary" style="height: var(--status-bar-height);"></view>
+		<view class="ux-bg-primary" style="height: var(--status-bar-height);">11</view>
 
 		<view class="ux-padding">
 			<view hover-class="ux-bg-grey8" @click="back" style="display: inline-block; padding: 10rpx;">
@@ -116,9 +116,8 @@
 				],
 				zz: [],
 				dataSources: [
-					{ source: 'RailGo.Parser', website: 'railgo.dev', function: '车次、车站、正晚点' },
+					{ source: 'RailGo.Parser', website: 'railgo.dev', function: '车次、车站、正晚点、动车组担当' },
 					{ source: 'MoeFactory车厢', website: 'rail.moefactory.com', function: '配属' },
-					{ source: 'rail.re', website: 'rail.re', function: '动车组担当' },
 					{ source: '车站小屏', website: '12036.com', function: '车站大屏' }
 				]
 			};

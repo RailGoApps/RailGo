@@ -45,7 +45,8 @@ export async function doQuery(sql, struct) {
 				resolve(res);
 			},
 			fail: (e) => {
-				throw new Error("Failed to execute the SQL");
+				console.error("SQL查询失败:", e);
+				reject(e);
 			}
 		})
 	});
@@ -71,6 +72,34 @@ export async function doQuery(sql, struct) {
 		res[i] = item;
 	});
 	return res;
+	// #endif
+}
+
+export async function doExecute(sql) {
+	// #ifdef APP-PLUS
+	if (!plus.sqlite.isOpenDatabase({
+			name: 'railgo',
+			path: '_doc/railgo.sqlite'
+		})) {
+		throw new Error("SQLite DB hasn't opened yet");
+	}
+	return new Promise((resolve, reject) => {
+		plus.sqlite.executeSql({
+			name: 'railgo',
+			sql: sql,
+			success: () => {
+				resolve(true);
+			},
+			fail: (e) => {
+				console.error("SQL执行失败:", e);
+				reject(e);
+			}
+		})
+	});
+	// #endif
+	// #ifdef H5
+	console.error("H5端不支持直接执行SQL语句");
+	return false;
 	// #endif
 }
 

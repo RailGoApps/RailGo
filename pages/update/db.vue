@@ -1,7 +1,6 @@
 <template>
 	<view class="ux-bg-grey5" style="min-height:100vh;">
-		<view class="ux-bg-primary" style="height: var(--status-bar-height);">&nbsp;</view>
-
+	<view class="ux-bg-primary" style="height: var(--status-bar-height);">&nbsp;</view>
 		<view class="ux-padding">
 			<view hover-class="ux-bg-grey8" @click="back">
 				<text class="icon" style="font-size: 45rpx;">&#xe5c4;</text>
@@ -53,7 +52,7 @@
 				<br>
 				<uv-divider text="·" :hairline="false"></uv-divider>
 			</block>
-
+			<view v-if="mode == 'local'">
 			<uni-section style="background-color:#eeeeee;margin-left:-1.2vh;" type="line" title="数据库" title-font-size="34rpx"></uni-section>
 			
 			<view v-if="loading" class="card">
@@ -88,6 +87,7 @@
 			
 			<button v-if="hasDbUpdate" class="ux-button-primary ux-mt-large" @click="gotoDownload">立即更新数据库</button>
 			<button v-else class="ux-button-disabled ux-mt-large" disabled>数据库已是最新</button>
+			</view>
 		</view>
 	</view>
 </template>
@@ -113,6 +113,7 @@ import { uniGet } from "@/scripts/req.js";
 				latestAppVersion: 0,
 				latestAppVersionText: "",
 				appUpdateStatusText: "",
+				mode: uni.getStorageSync("mode")
 			}
 		},
 		computed: {

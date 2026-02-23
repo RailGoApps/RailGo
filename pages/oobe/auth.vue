@@ -1,6 +1,6 @@
 <template>
 	<view class="ux-bg-grey6" style="min-height:100vh;">
-		<view class="ux-bg-primary" style="height:  var(--status-bar-height);">&nbsp;</view>
+		<view class="ux-bg-primary" style="height: var(--status-bar-height);">&nbsp;</view>
 			<uni-popup ref="message" type="message">
 				<uni-popup-message :duration="3000" :type="msgType" :message="messageText"></uni-popup-message>
 			</uni-popup>

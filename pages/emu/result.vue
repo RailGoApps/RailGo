@@ -1,6 +1,6 @@
 <template>
 	<view class="ux-bg-grey5" style="min-height:100vh;">
-		<view class="ux-bg-primary" style="height:  var(--status-bar-height);">&nbsp;</view>
+		<view class="ux-bg-primary" style="height: var(--status-bar-height);">&nbsp;</view>
 
 		<view class="ux-padding">
 			<view hover-class="ux-bg-grey8" @click="back">
@@ -30,9 +30,12 @@
 							</navigator>
 						</uni-td>
 						<uni-td>
-							<navigator :url="getCarNavigatorURL(item, 0)">
-								{{item.emu_no}}
-							</navigator>
+							<template v-for="(emu, idx) in item.emu_no.split('+').map(s => s.trim())" :key="idx">
+								<navigator :url="'/pages/emu/result?keyword='+emu+'&future='+future">
+									{{emu}}
+								</navigator>
+								<text v-if="idx < item.emu_no.split('+').length - 1" style="margin: 0 4rpx;"> + </text>
+							</template>
 </uni-td>
 					</uni-tr>
 			</uni-table>
@@ -81,16 +84,31 @@ import {uniGet} from "@/scripts/req.js";
 			fillInData: async function() {
 			    this.loading = true; // 开始加载
 			    try {
-			        uni.showLoading({ title: '加载中...' }); 
+			        uni.showLoading({ title: '加载中...' });
 			        
-			        const keyword = this.keyword || "";
-			        const t = keyword.includes("CR") ? "emu" : "train";
+			        let keyword = this.keyword || "";
 			        
-			        const apiUrl = `https://emu.data.railgo.zenglingkun.cn/${t}/${encodeURIComponent(keyword)}`;
+			        // 如果 keyword 包含 /，使用 / 的前部分进行查询
+			        if (keyword.includes('/')) {
+			            keyword = keyword.split('/')[0].trim();
+			        }
+			        
+			        const apiUrl = `https://emu.railgo.dev/api/query?keyword=${encodeURIComponent(keyword)}`;
 			        
 			        const response = await uniGet(apiUrl);
-			        this.data = response.data;
-			        console.log("数据加载成功", this.data);
+			        
+			        // 检查响应是否成功
+			        if (response.data && response.data.success) {
+			            // 映射新 API 的数据格式到现有格式，保持原样显示
+			            this.data = response.data.data.map(item => ({
+			                date: item.runDate,
+			                emu_no: item.trainCode, // 保持原样，不分割
+			                train_no: item.trainNum
+			            }));
+			            console.log("数据加载成功", this.data);
+			        } else {
+			            this.data = [];
+			        }
 					
 					if (this.data.length === 0) {
 						uni.redirectTo({
@@ -113,7 +131,7 @@ import {uniGet} from "@/scripts/req.js";
 			        }
 
 			    } finally {
-			        uni.hideLoading(); 
+			        uni.hideLoading();
 			        this.loading = false; // 结束加载
 			    }
 			},

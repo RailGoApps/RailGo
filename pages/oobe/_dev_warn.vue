@@ -1,6 +1,6 @@
 <template>
 	<view class="ux-bg-grey6" style="min-height:100vh;">
-		<view class="ux-bg-primary" style="height:  var(--status-bar-height);">&nbsp;</view>
+		<view class="ux-bg-primary" style="height: var(--status-bar-height);">&nbsp;</view>
 		<view class="ux-padding-large">
 			<view class="ux-mt-large">
 				<text class="ux-h1">测试版本警告</text><br><br>

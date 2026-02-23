@@ -1,7 +1,6 @@
 <template>
 	<view class="ux-bg-grey5" style="min-height:100vh;">
-		<view class="ux-bg-primary" style="height:  var(--status-bar-height);">&nbsp;</view>
-
+	<view class="ux-bg-primary" style="height: var(--status-bar-height);">&nbsp;</view>
 		<view class="ux-pl ux-pr ux-pt ux-pb-none"> 
 			<view hover-class="ux-bg-grey8" @click="back">
 				<text class="icon" style="font-size: 45rpx;">&#xe5c4;</text>
@@ -53,17 +52,18 @@
 			<view v-if="selectIndex === 0" class="ux-padding-small ux-mb ux-h6 ux-text-center info-box">
 				<text>本功能支持车组模糊查询及未来车次查询功能<br>支持重联车组合并展示<br></text>
 				<text class="ux-bold">信息仅供参考，请以铁路运营企业实际运用为准</text><br>
-				<text class="ux-bold">仅离线模式不可用该功能</text>
 			</view>
 			<view v-if="selectIndex === 1" class="ux-padding-small ux-mb ux-h6 ux-text-center info-box">
 				<text>本功能支持查询动车组配属信息</text><br>
-				<text class="ux-bold">信息仅供参考</text><br>
-				<text class="ux-bold">仅离线模式不可用该功能</text>
+				<text class="ux-bold">信息仅供参考</text>
 			</view>
 
 			<br>
 			<view class="ux-flex ux-row ux-justify-content-center">
-				<text class="ux-text-small ux-opacity-4">—— 数据来源: {{ selectIndex === 0 ? 'RAIL.RE（临时）' : 'MoeFactory' }} ——</text>
+				<text class="ux-text-small ux-opacity-4">—— 数据来源: {{ selectIndex === 0 ? 'EMU.RAILGO.DEV' : 'MoeFactory' }} ——</text>
+			</view>
+			<view class="ux-flex ux-row ux-justify-content-center" style="margin-top: 12rpx;">
+				<text class="ux-text-small ux-opacity-4 ux-bold">可在上方数据源提交铁路畅行码使数据更完善</text>
 			</view>
 		</view>
 	</view>

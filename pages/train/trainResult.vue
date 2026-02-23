@@ -1,7 +1,6 @@
 <template>
 	<view class="ux-bg-grey5" style="min-height:100vh;">
-		<view class="ux-bg-primary" style="height: var(--status-bar-height);">&nbsp;</view>
-
+	<view class="ux-bg-primary" style="height: var(--status-bar-height);">&nbsp;</view>
 		<view class="ux-padding">
 			<view hover-class="ux-bg-grey8" @click="back">
 				<text class="icon" style="font-size: 45rpx;">&#xe5c4;</text>
@@ -253,16 +252,28 @@
 							                </view>
 							            </button>
 							        </navigator>
-							        
 							    </view>
 							</view>
 						</view>
 					</view>
 				</view>
+
+				<view class="ux-padding">
+					<button class="ux-color-white ux-bg-primary" size="mini" style="width:100%;"
+						@click="addToMyRoute" 
+						hover-class="ux-tap">
+						<view class="ux-flex ux-align-items-center ux-justify-content-center">
+							<text class="icon" style="font-size: 24rpx;">&#xe1b7;</text>
+							<text style="margin-left: 8rpx;">加入我的行程</text>
+						</view>
+					</button>
+				</view>
 				<view v-if="(carData.carOwner || '')+(carData.runner || '')+(carData.car || '')==''"
 					class="ux-padding ux-text-center">
 					暂无担当
 				</view>
+				
+
 				<uni-section title="交路" type="line" style="background-color: transparent;"
 					title-font-size="28rpx"></uni-section>
 				<navigator v-for="(item,index) in (carData.diagram || [])" :key="index"
@@ -481,8 +492,7 @@
 					this.loadPlatform(targetItem, targetIndex, false);
 				} else {
 					uni.showToast({
-						title: '无法匹配车站信息',
-						icon: 'error'
+						title: '无法匹配车站信息'
 					});
 				}
 			},
@@ -540,16 +550,14 @@
 						
 						if (!silent) {
 							uni.showToast({
-								title: '获取成功',
-								icon: 'success'
+								title: '获取成功'
 							});
 						}
 					} else {
 						// Failure 
 						if (!silent) {
 							uni.showToast({
-								title: response.data.errorMsg || '查询失败',
-								icon: 'error'
+								title: response.data.errorMsg || '查询失败'
 							});
 						}
 						this.$set(this.carData.timetable, index, {
@@ -562,8 +570,7 @@
 					console.error("查询停台数据出错:", error);
 					if (!silent) {
 						uni.showToast({
-							title: '网络请求失败',
-							icon: 'error'
+							title: '网络请求失败'
 						});
 					}
 					const currentItem = this.carData.timetable[index];
@@ -612,64 +619,63 @@
 					
 					uni.showToast({
 						title: `加载完成！成功${successCount} / ${totalCount}站`,
-						icon: 'success',
-						duration: 2000
+						duration: 2000,
+						position: 'bottom',
 					});
 					
 				} catch (e) {
 					uni.showToast({
-						title: '批量加载出错',
-						icon: 'error'
+						title: '批量加载出错'
 					});
 				} finally {
 					uni.hideLoading();
 				}
 			},
 
-			/**
-			 * 计算实际到达/发车时间 (HH:mm)
-			 */
-			calculateActualTime: function(estimatedTime, delayStatus, delayTime) {
-				if (!estimatedTime || estimatedTime === '-' || delayStatus === null || delayStatus === undefined) {
-					return '-';
-				}
-				if (typeof delayTime !== 'number' || isNaN(delayTime) || delayTime === null) {
-					return '-';
-				}
-				if (delayStatus === 'ON_TIME' || delayTime === 0) {
-					return estimatedTime;
-				}
-
-				const parts = estimatedTime.split(':');
-				let hours = parseInt(parts[0]);
-				let minutes = parseInt(parts[1]);
-
-				// 根据状态调整时间：早点需要减去时间，晚点需要加上时间
-				let adjustedDelayTime = delayTime;
-				if (delayStatus === 'EARLY') {
-					// 早点：实际时间是预计时间减去延迟时间（延迟时间为负值或需要转为负值）
-					// 根据API规范，早点delayTime应为负值，但若为正值则转为负值
-					adjustedDelayTime = delayTime > 0 ? -delayTime : delayTime;
-				} else if (delayStatus === 'DELAY') {
-					// 晚点：实际时间是预计时间加上延迟时间（延迟时间应为正值）
-					adjustedDelayTime = delayTime < 0 ? -delayTime : delayTime;
-				}
-
-				let totalMinutes = hours * 60 + minutes + adjustedDelayTime;
-
-				const minutesInDay = 24 * 60;
-				let finalMinutes = totalMinutes % minutesInDay;
-				if (finalMinutes < 0) {
-					finalMinutes += minutesInDay; 
-				}
-
-				let finalHours = Math.floor(finalMinutes / 60);
-				let finalMin = finalMinutes % 60;
-
-				const formattedHours = String(finalHours).padStart(2, '0');
-				const formattedMinutes = String(finalMin).padStart(2, '0');
-
-				return `${formattedHours}:${formattedMinutes}`;
+			/**
+			 * 计算实际到达/发车时间 (HH:mm)
+			 */
+			calculateActualTime: function(estimatedTime, delayStatus, delayTime) {
+				if (!estimatedTime || estimatedTime === '-' || delayStatus === null || delayStatus === undefined) {
+					return '-';
+				}
+				if (typeof delayTime !== 'number' || isNaN(delayTime) || delayTime === null) {
+					return '-';
+				}
+				if (delayStatus === 'ON_TIME' || delayTime === 0) {
+					return estimatedTime;
+				}
+
+				const parts = estimatedTime.split(':');
+				let hours = parseInt(parts[0]);
+				let minutes = parseInt(parts[1]);
+
+				// 根据状态调整时间：早点需要减去时间，晚点需要加上时间
+				let adjustedDelayTime = delayTime;
+				if (delayStatus === 'EARLY') {
+					// 早点：实际时间是预计时间减去延迟时间（延迟时间为负值或需要转为负值）
+					// 根据API规范，早点delayTime应为负值，但若为正值则转为负值
+					adjustedDelayTime = delayTime > 0 ? -delayTime : delayTime;
+				} else if (delayStatus === 'DELAY') {
+					// 晚点：实际时间是预计时间加上延迟时间（延迟时间应为正值）
+					adjustedDelayTime = delayTime < 0 ? -delayTime : delayTime;
+				}
+
+				let totalMinutes = hours * 60 + minutes + adjustedDelayTime;
+
+				const minutesInDay = 24 * 60;
+				let finalMinutes = totalMinutes % minutesInDay;
+				if (finalMinutes < 0) {
+					finalMinutes += minutesInDay; 
+				}
+
+				let finalHours = Math.floor(finalMinutes / 60);
+				let finalMin = finalMinutes % 60;
+
+				const formattedHours = String(finalHours).padStart(2, '0');
+				const formattedMinutes = String(finalMin).padStart(2, '0');
+
+				return `${formattedHours}:${formattedMinutes}`;
 			},
 
 			/**
@@ -800,8 +806,7 @@
 							this.carData = { /* ... reset data ... */ };
 							this.cardColor = '#114598';
 							uni.showToast({
-								title: '车次不存在',
-								icon: 'error'
+								title: '车次不存在'
 							})
 							const c = uni.getStorageSync("search");
 							uni.setStorage({
@@ -946,8 +951,7 @@
 							this.carData = { /* ... reset data ... */ };
 							this.cardColor = '#114598';
 							uni.showToast({
-								title: '车次不存在',
-								icon: 'error'
+								title: '车次不存在'
 							})
 							const c = uni.getStorageSync("search");
 							uni.setStorage({
@@ -1051,6 +1055,27 @@
 					// [1] 主数据加载结束：无论成功、失败或提前返回（离线模式），都确保隐藏最初的“加载中”动画
 					uni.hideLoading(); 
 				}
+			},
+			addToMyRoute: function() {
+				// 将车次信息保存到行程中
+				const routeData = {
+					trainNum: this.train,
+					numberKind: this.carData.numberKind,
+					from: this.carData.timetable && this.carData.timetable.length > 0 ? this.carData.timetable[0].station : '',
+					to: this.carData.timetable && this.carData.timetable.length > 0 ? this.carData.timetable[this.carData.timetable.length - 1].station : '',
+					date: this.date,
+					seat: '',
+					fromStation: this.carData.timetable && this.carData.timetable.length > 0 ? this.carData.timetable[0].station : '',
+					toStation: this.carData.timetable && this.carData.timetable.length > 0 ? this.carData.timetable[this.carData.timetable.length - 1].station : '',
+					bureauName: this.carData.bureauName,
+					car: this.carData.car,
+					runner: this.carData.runner,
+					timetable: this.carData.timetable // 保存完整的时刻表
+				};
+				
+				uni.navigateTo({
+					url: `/pages/route/addRoute?trainNum=${this.train}&date=${this.date}`
+				});
 			},
 			tabChange: function(e) {
 				this.selectIndex = e.index;

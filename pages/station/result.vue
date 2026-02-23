@@ -1,6 +1,6 @@
-<template>
+﻿<template>
 	<view class="ux-bg-grey5" style="min-height:100vh;">
-		<view class="ux-bg-primary" style="height: var(--status-bar-height);">&nbsp;</view>
+		<view class="ux-bg-primary" style="position: fixed; top: 0; left: 0; right: 0; z-index: 999; height: var(--status-bar-height);"">&nbsp;</view>
 
 		<view class="ux-padding">
 			<view hover-class="ux-bg-grey8" @click="back">
@@ -430,8 +430,7 @@
 						const result = resp.data;
 						if (result.error) {
 							uni.showToast({
-								title: '车站不存在',
-								icon: 'error'
+								title: '车站不存在'
 							});
 							const c = uni.getStorageSync("search");
 							uni.setStorage({
@@ -449,8 +448,7 @@
 						success = true;
 					} catch (error) {
 						uni.showToast({
-							title: '加载失败',
-							icon: 'error'
+							title: '加载失败'
 						});
 						console.error("车站数据加载失败", error);
 						// #ifdef APP-PLUS

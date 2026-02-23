@@ -1,6 +1,6 @@
 <template>
 	<view class="ux-bg-grey5" style="min-height:100vh;">
-		<view class="ux-bg-primary" style="height:  var(--status-bar-height);">&nbsp;</view>
+		<view class="ux-bg-primary" style="height: var(--status-bar-height);">&nbsp;</view>
 
 		<view class="ux-pl ux-pr ux-pt">
 			<view hover-class="ux-bg-grey8" @click="back">
@@ -551,17 +551,17 @@
 .icon-x {
     font-size: 40rpx;
 }
-/* 历史记录项目样式 */
-.history-list {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-}
-.history-item {
-  transition: all 0.2s ease;
-}
-.history-item:active {
-  transform: scale(0.95);
-  opacity: 0.7;
+/* 历史记录项目样式 */
+.history-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+.history-item {
+  transition: all 0.2s ease;
+}
+.history-item:active {
+  transform: scale(0.95);
+  opacity: 0.7;
 }
 </style>

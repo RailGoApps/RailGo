@@ -41,7 +41,7 @@ export const CAR_PERFORMANCE = {
 	"CRH3A-A": ["4", "2M2T", "不设餐车", "200", "/static/trainHead/missing.png"],
 	"CRH5A": ["8", "5M3T", "6车 无座", "250", "/static/trainHead/CRH5A.png"],
 	"CRH5E": ["8", "10M6T", "9车 无座", "250", "/static/trainHead/CRH5E.png"],
-	"CRH5G (旧型)": ["8", "5M3T", "5车 无座", "250", "/static/trainHead/CRH5A.png"],
+	"CRH5G (旧型)": ["8", "5M6T", "5车 无座", "250", "/static/trainHead/CRH5A.png"],
 	"CRH5G (技术提升)": ["8", "5M3T", "5车 无座", "250", "/static/trainHead/CRH5G.png"],
 	"CRH6A": ["8", "4M4T", "不设餐车", "200", "/static/trainHead/CRH6.png"],
 	"CRH6A-A": ["4", "2M2T", "不设餐车", "200", "/static/trainHead/CRH6.png"],
@@ -103,3 +103,37 @@ export const KEYS_STRUCT_TRAINS = ["code", "number", "numberFull", "numberKind",
 export const KEYS_STRUCT_STATIONS = ["telecode", "pinyin", "pinyinTriple", "tmism", "name", "bureau", "belong", "lines",
 	"type", "trainList", "level", "city", "province"
 ]
+
+export function getTrainTypeColor(trainNum) {
+	if (!trainNum) return '#a9dfbf';
+	const firstChar = trainNum.charAt(0).toUpperCase();
+	return TRAIN_KIND_COLOR_MAP[firstChar] || '#a9dfbf';
+}
+
+export function getTrainTypeDescription(trainNum) {
+	if (!trainNum) return '';
+	const firstChar = trainNum.charAt(0).toUpperCase();
+	
+	switch (firstChar) {
+		case 'G':
+			return '高速';
+		case 'D':
+			return '动车';
+		case 'C':
+			return '城际';
+		case 'Z':
+			return '直特';
+		case 'T':
+			return '特快';
+		case 'K':
+			return '快速';
+		case 'S':
+			return '市域';
+		case 'L':
+			return '临客';
+		case 'Y':
+			return '旅游';
+		default:
+			return '普慢';
+	}
+}

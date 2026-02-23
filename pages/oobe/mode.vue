@@ -1,6 +1,6 @@
 <template>
 	<view class="ux-bg-grey6" style="min-height:100vh;">
-		<view class="ux-bg-primary" style="height:  var(--status-bar-height);">&nbsp;</view>
+		<view class="ux-bg-primary" style="height: var(--status-bar-height);">&nbsp;</view>
 
 		<uni-popup ref="next_add" type="dialog">
 			<uni-popup-dialog cancelText="取消" confirmText="继续" title="提示" content="需要现在下载离线数据库。"

@@ -18,7 +18,9 @@
 			<view class="ux-bg-white ux-border-radius-large ux-padding">
 				<view class="ux-flex ux-align-items-center">
 					<image class="ux-box-shadow ux-border-radius-large" :src="logoSrc"
-						style="width: 140rpx; height: 140rpx;"></image><br />
+						style="width: 140rpx; height: 140rpx;"
+						@click="onLogoClick"
+						@longpress="onLogoLongPress"></image><br />
 					<view class="ux-pl">
 						<text class="ux-bold ux-h4">RailGo</text>
 						<br>
@@ -139,6 +141,7 @@
 		data() {
 			return {
 				count: 0,
+				iconClickCount: 0,
 				version: uni.getStorageSync("versionText"),
 				offline: uni.getStorageSync("offlineDataVersionText"),
 				error: uni.getStorageSync("DBerror"),
@@ -167,6 +170,30 @@
 			},
 			add: function() {
 				this.count += 1
+			},
+			onLogoClick: function() {
+				this.iconClickCount += 1;
+				console.log('Icon 点击次数:', this.iconClickCount);
+			},
+			onLogoLongPress: function() {
+				console.log('Icon 长按，当前点击次数:', this.iconClickCount);
+				if (this.iconClickCount >= 3) {
+					// 点击次数达到3次，显示警告提示
+					uni.showToast({
+						title: '本页面信息供开发者优化，请不要将本页信息发给你不信任的人',
+						duration: 3000,
+						position: 'bottom'
+					});
+					
+					// 延迟跳转到 Debug 页面
+					setTimeout(() => {
+						uni.navigateTo({
+							url: '/pages/debug/debug'
+						});
+					}, 500);
+				}
+				// 重置点击计数
+				this.iconClickCount = 0;
 			},
 			resetOobe: function() {
 				this.$refs.reset_oobe_dialog.open();

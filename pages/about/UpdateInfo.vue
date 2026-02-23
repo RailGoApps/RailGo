@@ -51,6 +51,18 @@
 				nowIcon: uni.getStorageSync("nowIcon") || 'crh',
 				updateLogs: [
 					{
+						version: "v1.7.8 (10708)",
+						date: "2026-02-23",
+						items: [
+							"Feature: 行程记录功能 (Beta)",
+							"Changed: 安卓端测速",
+							"Feature: 测速页面显示更多信息",
+							"Changed: 担当查询修改为自有数据源",
+							"Feature: 新增Debug及调试页",
+							"Fixed: 在线模式能更新数据库的Bug"
+						]
+					},
+					{
 						version: "v1.7.5 (10705)",
 						date: "2026-01-29",
 						items: [
