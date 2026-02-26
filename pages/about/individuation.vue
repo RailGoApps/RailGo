@@ -7,6 +7,11 @@
 			</view>
 			<br>
 			<text class="ux-h2">个性化</text>
+			<!-- #ifdef APP-IOS -->
+			<view style="margin-top: 5rpx;">
+				<text class="ux-color-grey3" style="font-size: 22rpx;">Apple端暂仅支持修改应用内的图标。</text>
+			</view>
+			<!-- #endif -->
 		</view>
 		<view class="ux-pl ux-pr">
 			<uni-section type="line" style="background-color: transparent;" title-font-size="35rpx" title="图标"></uni-section>

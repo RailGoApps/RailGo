@@ -51,6 +51,14 @@
 				nowIcon: uni.getStorageSync("nowIcon") || 'crh',
 				updateLogs: [
 					{
+						version: "v1.7.9 (10709)",
+						date: "2026-02-26",
+						items: [
+							"Feature: 行程记录功能允许删除行程",
+							"Fixed: 部分字段错误"
+						]
+					},
+					{
 						version: "v1.7.8 (10708)",
 						date: "2026-02-23",
 						items: [
@@ -65,7 +73,7 @@
 					{
 						version: "v1.7.5 (10705)",
 						date: "2026-01-29",
-						items: [
+																																																																																																																																																																																																																																																																																																																																				items: [
 							"Feature: 新年彩蛋",
 							"Feature: 赞助用户鸣谢",
 							"Fixed: 部分页面背景色问题",
