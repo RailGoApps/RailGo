@@ -46,7 +46,10 @@
 			
 			<br>
 			<view class="ux-flex ux-row ux-justify-content-center">
-				<text class="ux-text-small ux-opacity-4">—— 数据来源: RAIL.RE（临时） ——</text>
+				<text class="ux-text-small ux-opacity-4">—— 数据来源: {{ selectIndex === 0 ? 'EMU.RAILGO.DEV' : 'MoeFactory' }} ——</text>
+			</view>
+			<view class="ux-flex ux-row ux-justify-content-center" style="margin-top: 12rpx;">
+				<text class="ux-text-small ux-opacity-4 ux-bold">可在上方数据源提交铁路畅行码使数据更完善</text>
 			</view>
 		</view>
 	</view>

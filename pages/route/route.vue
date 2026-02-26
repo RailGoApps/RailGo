@@ -18,7 +18,8 @@
 				<view v-for="(route, index) in routes" :key="index" 
 					class="ux-bg-white ux-border-radius ux-mb-small ux-flex"
 					hover-class="ux-bg-grey8" 
-					@click="viewRouteDetail(route)">
+					@click="viewRouteDetail(route)"
+					@longpress="confirmDeleteRoute(route, index)">
 					<view style="border-bottom-left-radius: 10rpx; border-top-left-radius:10rpx;"
 						:style="'background-color:'+getTrainTypeColor(route.trainNum)">
 						&nbsp;&nbsp;
@@ -172,6 +173,40 @@ export default {
 			// 跳转到行程详情页面
 			uni.navigateTo({
 				url: `/pages/route/routeDetail?routeData=${encodeURIComponent(JSON.stringify(route))}`
+			});
+		},
+		// 确认删除行程
+		confirmDeleteRoute(route, index) {
+			uni.showModal({
+				title: '确认删除',
+				content: `确定要删除 ${route.fromStation || route.from} 到 ${route.toStation || route.to} 的行程记录吗？`,
+				confirmText: '删除',
+				confirmColor: '#ff0000',
+				cancelText: '取消',
+				success: (res) => {
+					if (res.confirm) {
+						this.deleteRoute(index);
+					}
+				}
+			});
+		},
+		// 删除行程
+		deleteRoute(index) {
+			this.routes.splice(index, 1);
+			// 更新存储
+			const routesData = JSON.stringify(this.routes);
+			// #ifdef H5
+			uni.setStorageSync('myRoutes', routesData);
+			// #endif
+			
+			// #ifdef APP-PLUS
+			plus.storage.setItem('myRoutes', routesData);
+			// #endif
+			
+			uni.showToast({
+				title: '删除成功',
+				icon: 'success',
+				duration: 1500
 			});
 		}
 	}
