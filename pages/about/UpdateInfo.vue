@@ -52,10 +52,11 @@
 				updateLogs: [
 					{
 						version: "v1.7.9 (10709)",
-						date: "2026-02-26",
+						date: "2026-03-07",
 						items: [
 							"Feature: 行程记录功能允许删除行程",
-							"Fixed: 部分字段错误"
+							"Fixed: 部分字段错误",
+							"Changed: 修订隐私协议"
 						]
 					},
 					{

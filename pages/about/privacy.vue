@@ -15,8 +15,8 @@
 			<text>
 				<p>欢迎使用 <strong>RailGo</strong>（以下简称"本软件"）！为保障您的个人信息安全，在您使用本软件前，请仔细阅读并同意以下隐私政策：</p>
 				<br>
-				<p><strong>更新日期：2025/11/24</strong></p>
-				<p><strong>生效日期：2025/11/24</strong></p>
+				<p><strong>更新日期：2026/03/07</strong></p>
+				<p><strong>生效日期：2026/03/07</strong></p>
 				<br>
 				<p>一、本软件由<strong>AZ Studio</strong>（以下简称"我们"）提供。您在使用我们的服务时，我们可能会收集和使用您的相关信息。</p>
 				<br>
@@ -61,7 +61,7 @@
 				<br>
 				<p>继续使用本软件即视为您已阅读并同意上述条款。</p>
 				<br>
-				<p>如对本《隐私政策》或相关事宜有任何问题，请通过 <strong>zenglingkun@zenglingkun.cn</strong> 与我们联系。</p>
+				<p>如对本《隐私政策》或相关事宜有任何问题，请通过 <strong>ChenMo@smart-teach.cn</strong> 与我们联系。</p>
 				<br>
 				<p><strong>AZ Studio</strong></p>
 				<br>

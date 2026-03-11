@@ -18,7 +18,7 @@
     },
     "displayName": "Avatar 头像",
     "dependencies": {
-        "@vue/reactivity": "^3.5.22",
+        "@vue/reactivity": "^3.5.29",
         "axios": "^1.10.0",
         "uniapp-axios-adapter": "^0.3.2",
         "vue": "^3.5.17"

@@ -8,14 +8,14 @@
         <scroll-view class="ux-bg-white ux-border ux-border-radius" scroll-y="true" style="max-height:40vh;">
           <view class="ux-padding">
             <text>
-              <p><strong>更新日期：2025/11/24</strong></p>
-              <p><strong>生效日期：2025/11/24</strong></p>
+              <p><strong>更新日期：2026/03/07</strong></p>
+              <p><strong>生效日期：2026/03/07</strong></p>
               <br>
               <p><strong>导言</strong></p>
               <p>RailGo 是一款由 AZ Studio （以下简称"我们"）提供的产品。您在使用我们的服务时，我们可能会收集和使用您的相关信息。我们希望通过本《隐私政策》向您说明，在使用我们的服务时，我们如何收集、使用、储存和分享这些信息，以及我们为您提供的访问、更新、控制和保护这些信息的方式。</p>
               <p>本《隐私政策》与您所使用的 RailGo 服务息息相关，希望您仔细阅读，在需要时，按照本《隐私政策》的指引，作出您认为适当的选择。</p>
               <p><strong>您使用或继续使用我们的服务，即意味着同意我们按照本《隐私政策》收集、使用、储存和分享您的相关信息。</strong></p>
-              <p>如对本《隐私政策》或相关事宜有任何问题，请通过 <strong>zenglingkun@zenglingkun.cn</strong> 与我们联系。</p>
+              <p>如对本《隐私政策》或相关事宜有任何问题，请通过 <strong>ChenMo@smart-teach.cn</strong> 与我们联系。</p>
               <br>
               <p><strong>1. 我们收集的信息</strong></p>
               <p>我们或我们的第三方合作伙伴提供服务时，可能会收集、储存和使用下列与您有关的信息。如果您不提供相关信息，可能无法注册成为我们的用户或无法享受我们提供的某些服务，或者无法达到相关服务拟达到的效果。</p>
