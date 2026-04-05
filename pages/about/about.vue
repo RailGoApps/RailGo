@@ -109,7 +109,7 @@
 								class="icon">&#xe5c8;</text></text>
 					</view>
 				</navigator>
-				<!-- #ifdef APP -->
+				<!-- #ifdef APP-PLUS -->
 				<navigator url="/pages/update/db"
 					class="ux-th ux-bg-white ux-border-radius-large ux-padding ux-mt-small">
 					<view class="ux-flex ux-space-between">

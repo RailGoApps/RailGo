@@ -51,6 +51,21 @@
 				nowIcon: uni.getStorageSync("nowIcon") || 'crh',
 				updateLogs: [
 					{
+						version: "v1.8.0 (10800)",
+						date: "2026-03-22",
+						items: [
+							"Feature: 显示交路类型"
+						]
+					},
+					{
+						version: "v1.7.10 (10710)",
+						date: "2026-03-15",
+						items: [
+							"Fixed: 鸿蒙端测速",
+							"Fixed: 正晚点未维护显示"
+						]
+					},
+					{
 						version: "v1.7.9 (10709)",
 						date: "2026-03-07",
 						items: [
@@ -138,7 +153,7 @@
 			}
 		},
 		onShow() {
-			// #ifdef APP
+			// #ifdef APP-PLUS
 			plus.navigator.setStatusBarBackground('#114598');
 			// #endif
 		},

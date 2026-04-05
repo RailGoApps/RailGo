@@ -238,7 +238,7 @@ export default {
 		}
 	},
 	onLoad(options) {
-		// #ifdef APP
+		// #ifdef APP-PLUS
 		plus.navigator.setStatusBarBackground('#114598');
 		// #endif
 		

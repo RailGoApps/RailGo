@@ -50,6 +50,7 @@
 
 <script>
 	export default {
+		// #ifdef APP-PLUS
 		data() {
 			return {
 				"ld": [{
@@ -65,11 +66,24 @@
 						value: "ol"
 					}
 				],
-				// Initialize checked from storage or use default 'network'
-				"checked": "network", 
+				"checked": "network",
 				"msgType": "success",
 			}
 		},
+		// #endif
+		// #ifndef APP-PLUS
+		data() {
+			return {
+				"ld": [{
+						text: "优先在线",
+						value: "network"
+					}
+				],
+				"checked": "network",
+				"msgType": "success",
+			}
+		},
+		// #endif
 		methods: {
 			finish: function() {
 				// The actual mode to store is 'network' or 'local'

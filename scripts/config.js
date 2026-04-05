@@ -97,7 +97,7 @@ export const CAR_PERFORMANCE = {
 }
 
 export const KEYS_STRUCT_TRAINS = ["code", "number", "numberFull", "numberKind", "bureau", "bureauName", "type",
-	"runner", "car", "carOwner", "diagram", "timetable", "spend", "rundays", "route", "isTemp", "isFuxing"
+	"runner", "car", "carOwner", "diagram", "timetable", "spend", "rundays", "route", "isTemp", "isFuxing", "diagramType"
 ]
 
 export const KEYS_STRUCT_STATIONS = ["telecode", "pinyin", "pinyinTriple", "tmism", "name", "bureau", "belong", "lines",

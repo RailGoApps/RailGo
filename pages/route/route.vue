@@ -62,13 +62,13 @@
 				</view>
 			</view>
 			<view v-else class="ux-text-center ux-mt-large">
-				<text class="ux-color-grey2">暂无行程记录</text>
+				<text class="ux-color-grey2">暂无行程记录，可在车次查询页面添加哦</text>
 			</view>
 		</view>
 		
 		<!-- 底部提示 -->
 		<view style="padding: 30rpx; text-align: center; margin-top: 20rpx;">
-			<text class="ux-color-grey2" style="font-size: 22rpx;">如果想要更好的记录体验，欢迎使用我们的伙伴产品 RailLog</text>
+			<text class="ux-color-grey2" style="font-size: 22rpx;">长按可删除数据<br>如果想要更好的记录体验，欢迎使用我们的伙伴产品 RailLog</text>
 		</view>
 	</view>
 </template>
@@ -153,7 +153,7 @@ export default {
 		},
 		async loadRoutes() {
 			// 从存储加载行程数据
-			// #ifdef H5
+			// #ifndef APP-PLUS
 			const routesData = uni.getStorageSync('myRoutes') || '[]';
 			this.routes = JSON.parse(routesData);
 			// #endif
@@ -195,7 +195,7 @@ export default {
 			this.routes.splice(index, 1);
 			// 更新存储
 			const routesData = JSON.stringify(this.routes);
-			// #ifdef H5
+			// #ifndef APP-PLUS 
 			uni.setStorageSync('myRoutes', routesData);
 			// #endif
 			

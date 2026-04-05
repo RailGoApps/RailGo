@@ -17,7 +17,7 @@
 							style="font-size:50rpx;padding-left:5rpx;">{{(carData.numberFull || []).join("/").replace(carData.numberKind, "").replace(carData.numberKind, "")}}</text>
 					</view>
 					<text class="ux-badge ux-text-small ux-color-white" style="padding:5rpx 15rpx;"
-						:style="'background-color:'+cardColor">{{carData.type || ''}}</text>
+						:style="'background-color:'+cardColor">{{carData.diagramType || ''}} {{carData.type || ''}}</text>
 				</view>
 				<view class="ux-flex ux-space-between ux-mt-small ux-pl ux-pr ux-pt-small ux-color-white"
 					:style="'background-color:'+cardColor">
@@ -124,10 +124,6 @@
 							<text class="ux-text-small">{{calculateActualTime(item.arrivalTime, item.delayStatusCode, item.delayTime)}}/{{calculateActualTime(item.departureTime, item.delayStatusCode, item.delayTime)}}</text>
 						</view>
 						<view class="ux-flex ux-space-between ux-mt">
-							<text class="ux-text-small ux-opacity-7" v-if="item.stopMinutes !== null && item.stopMinutes !== undefined">停站时间</text>
-							<text class="ux-text-small" v-if="item.stopMinutes !== null && item.stopMinutes !== undefined">{{item.stopMinutes}}'</text>
-						</view>
-						<view class="ux-flex ux-space-between ux-mt">
 							<text class="ux-text-small ux-opacity-7">停台/检票口</text>
 							<text class="ux-text-small">
 								<text v-if="item.platform">{{item.platform}}</text>
@@ -143,10 +139,38 @@
 						</view>
 					</view>
 				</view>
-
-				<view v-if="delay.length === 0" class="ux-bg-white ux-border-radius ux-padding ux-text-center">
-					<text v-if="isOnlyOfflineMode" class="ux-color-gray">仅离线模式下无法使用该功能</text>
-					<text v-else>暂无正晚点信息或加载失败</text>
+				<view v-if="delay.length === 0" v-for="(item,index) in (carData.timetable || [])" :key="index" class="ux-bg-white ux-border-radius ux-mt-small">
+					<view class="ux-flex">
+						<view style="border-bottom-left-radius: 10rpx; border-top-left-radius:10rpx; width: 12rpx;"
+							:style="'background-color: #606266;'">
+						</view>
+						<view class="ux-flex ux-space-between ux-pt ux-pl ux-pr ux-align-items-center" style="width: 100%;">
+							<text class="ux-bold" style="font-size: 32rpx;">{{item.station || ''}}</text>
+							<text :style="'color: #606266; font-weight: bold;'" class="ux-bold" style="font-size: 28rpx;">
+								未维护
+							</text>
+						</view>
+					</view>
+					<view class="ux-pl ux-pr ux-pb">
+						<view class="ux-flex ux-space-between ux-mt-small">
+							<text class="ux-text-small ux-opacity-7">预计时间</text>
+							<text class="ux-text-small">{{item.arrive || '-'}}/{{item.depart || '-'}}</text>
+						</view>
+						<view class="ux-flex ux-space-between ux-mt">
+							<text class="ux-text-small ux-opacity-7">停台/检票口</text>
+							<text class="ux-text-small">
+								<text v-if="item.platform">{{item.platform}}</text>
+								<button v-else-if="item.platform === null && showLoadAllButton" 
+									@click="loadPlatformByStationName(item.station)" 
+									size="mini" type="primary" 
+									style="margin: 0; padding: 0 5px; font-size: 10px; line-height: 20px; display: inline;">
+									查询
+								</button>
+								<text v-else>-</text>
+								<text v-if="item.wicket">/{{item.wicket}}</text>
+							</text>
+						</view>
+					</view>
 				</view>
 			</view>
 
@@ -371,6 +395,7 @@
 					car: '',
 					rundays: [],
 					diagram: [],
+					diagramType: ''
 				},
 				"colorMap": TRAIN_KIND_COLOR_MAP,
 				"carMap": CAR_PERFORMANCE,
@@ -819,7 +844,6 @@
 							return; // 结束执行
 						}
                         
-                        // 【网络模式的关键修正】：强制净化 diagram 数组的子元素
                         const processedDiagram = Array.isArray(result.diagram) ? result.diagram.map(item => ({
                             ...item,
                             // 确保 from 和 to 属性是数组，如果不是，则初始化为空数组
@@ -850,7 +874,8 @@
 							carOwner: result.carOwner || '',
 							car: result.car || '',
 							rundays: Array.isArray(result.rundays) ? result.rundays : [],
-							diagram: processedDiagram // 使用强制净化的交路数据
+							diagram: processedDiagram,
+							diagramType: result.diagramType
 						};
 						this.cardColor = this.colorMap[this.carData.numberKind] || '#114598';
 						loadSuccess = true; 

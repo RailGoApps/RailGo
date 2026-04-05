@@ -50,7 +50,7 @@
 
 <script>
 	export default {
-		// #ifdef APP
+		// #ifdef APP-PLUS
 		data() {
 			return {
 				"ld": [{
@@ -71,7 +71,7 @@
 			}
 		},
 		// #endif
-		// #ifdef H5
+		// #ifndef APP-PLUS
 		data() {
 			return {
 				"ld": [{

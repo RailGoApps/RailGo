@@ -96,6 +96,18 @@
 						<text class="icon">&#xe5c8;</text>
 					</view>
 				</navigator>
+				<!-- <navigator class="ux-th ux-bg-white ux-border-radius-large ux-padding ux-ml-small"
+					style="flex:auto;width:1rpx;" hover-class="ux-tap" url="/pages/simulate/trainScreen">
+					<text class="icon section-icon ux-color-purple1">&#xe0e2;</text>
+					<br>
+					<text class="ux-text">屏幕模拟</text>
+					<br>
+					<text class="ux-text-small ux-opacity-8">模拟智能动车组上的滚动屏幕。</text>
+					<br><br>
+					<view class="ux-text-right ux-mr-small">
+						<text class="icon">&#xe5c8;</text>
+					</view>
+				</navigator> -->
 			</view>
 		</view>
 		<br>
