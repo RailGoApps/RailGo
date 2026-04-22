@@ -35,7 +35,7 @@
       <view class="key letter-key" style="grid-row: 4; grid-column: 3;" @click="onLetterClick('S')"><text>S</text></view>
       <view class="key number-key" style="grid-row: 4; grid-column: 4;" @click="onNumberClick(0)"><text>0</text></view>
       <view class="key function-key delete-key" style="grid-row: 4; grid-column: 5;" @click="onDelete">
-          <text class="icon-x">×</text> 
+          <text class="icon-x">⌫</text> 
       </view>
     </view>
   </view>
