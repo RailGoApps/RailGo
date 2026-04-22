@@ -184,7 +184,7 @@
 					@touchstart="deleteTouchStart"
 					@touchend="deleteTouchEnd"
 				>
-					<text class="icon-x">×</text> 
+					<text class="icon-x">⌫</text> 
 				</view>
 			</view>
 		</view>
