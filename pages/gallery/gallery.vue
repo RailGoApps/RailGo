@@ -163,7 +163,7 @@
 			}
 		},
 		onShow() {
-			// #ifdef APP
+			// #ifdef APP-PLUS
 			plus.navigator.setStatusBarBackground('#114598');
 			// #endif
 			if (this.modelCode && !this.searched && !this.loading) {

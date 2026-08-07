@@ -353,13 +353,15 @@
 			</view>
 
 			<view v-if="selectIndex==2">
-				<view style="position:relative; margin-top: 10rpx;">
-					<z-map
-						ref="zMapRef"
-						:mapHeight="mapHeightPx"
-						@ready="onMapReady"
-						@click-point="onMapClickPoint"
-					></z-map>
+				<view style="position:relative; margin-top: 10rpx;" :style="{height: mapHeightPx}">
+					<siji-tianditu
+						ref="sijiMapRef"
+						:map-key="tdtMapKey"
+						:lonlat="[118.05, 24.621]"
+						:zoom="6"
+						:on-loaded="onMapReady"
+						style="width:100%;height:100%;"
+					></siji-tianditu>
 					<!-- 图例 -->
 					<view style="position:absolute;bottom:20rpx;right:20rpx;background:rgba(255,255,255,0.92);border-radius:8rpx;padding:12rpx 20rpx;z-index:10;display:flex;flex-direction:column;gap:6rpx;">
 						<view style="display:flex;align-items:center;gap:10rpx;">
@@ -460,14 +462,14 @@
 		uniGet,
 		uniPost
 	} from "@/scripts/req";
-	import ZMap from '@/uni_modules/z-map/components/z-map/z-map.vue';
+	import SijiTianditu from '@/uni_modules/siji-tianditu/components/siji-tianditu/siji-tianditu.vue';
 	import { gcj02ToWgs84 } from "@/scripts/coord_transform";
 	import { getTrainPosition } from "@/scripts/trainPosition";
 
 	export default {
 		components: {
 			calendar,
-			ZMap
+			SijiTianditu
 		},
 		data() {
 			return {
@@ -514,6 +516,8 @@
 				"selectedStationIndex": -1, 
 				// 日期判断：是否是今天的日期
 				"isTodayDate": true,
+				// 天地图地图 key
+				"tdtMapKey": "416cfaff76398b8567f8b7e48a933651",
 				// 地图路径数据
 				"mapStations": [],
 				"mapLines": [],
@@ -1465,28 +1469,21 @@
 			 * 在地图上绘制线路和站点
 			 */
 			drawRouteOnMap() {
-				if (!this.mapReady || !this.mapDataReady || !this.$refs.zMapRef) return;
-
-				// 清除旧图层（通过移除旧元素重新绘制）
-				this.$refs.zMapRef.mapDrawLinePath('remove');
-				this.$refs.zMapRef.mapDrawCircle('remove');
+				if (!this.mapReady || !this.mapDataReady || !this.$refs.sijiMapRef) return;
 
 				// 1. 绘制各区间线路
 				const segments = Object.values(this.mapLines).sort((a, b) => a.index - b.index);
 				const allCoords = [];
+				const routeSegments = [];
 				segments.forEach(seg => {
 					if (seg.line && seg.line.length > 0) {
 						seg.line.forEach(pt => allCoords.push(pt));
+						routeSegments.push({
+							points: seg.line,
+							style: { color: '#114598', width: 4 }
+						});
 					}
 				});
-
-				if (allCoords.length > 0) {
-					this.$refs.zMapRef.mapDrawLinePath({
-						path: allCoords,
-						style: { stroke: '#114598', width: 4 },
-						distanceUnit: 'km'
-					});
-				}
 
 				// 2. 收集所有站点名称（去重）
 				const stationMap = {};
@@ -1516,7 +1513,7 @@
 					}
 				});
 
-				// 4. 合并站点和路径端点，一次绘制（避免 renderjs 清空问题）
+				// 4. 合并站点和路径端点
 				const allPoints = [];
 				Object.values(stationMap).forEach(p => {
 					allPoints.push({ ...p, fill: '#114598', radius: 10, stroke: '#fff' });
@@ -1525,20 +1522,22 @@
 					allPoints.push({ ...p, fill: '#d70f19', radius: 8, stroke: '#fff' });
 				});
 
-				if (allPoints.length > 0) {
-					this.$refs.zMapRef.mapDrawCircle({
-						style: { showLabel: true, zIndex: 10 },
-						list: allPoints
-					});
-				}
-
 				// 保存点位数据用于实时位置更新
 				this.mapPointData = allPoints;
+
+				// 5. 绘制：先清空，再画路线，再画站点
+				this.$refs.sijiMapRef.clearAll();
+				if (routeSegments.length > 0) {
+					this.$refs.sijiMapRef.drawRoute(routeSegments);
+				}
+				if (allPoints.length > 0) {
+					this.$refs.sijiMapRef.drawMarkers(allPoints);
+				}
 
 				// 启动实时位置追踪
 				this.$nextTick(() => this.startTrainTracking());
 
-				// 5. 缩放至路线范围
+				// 6. 缩放至路线范围
 				if (allCoords.length > 0) {
 					// 取路线中心点，设合适的缩放级别展示全貌
 					const lngs = allCoords.map(c => c[0]);
@@ -1555,14 +1554,9 @@
 					else if (maxSpan > 2) zoom = 7;
 					else if (maxSpan > 1) zoom = 8;
 					else zoom = 9;
-					this.$refs.zMapRef.mapChangeCenter({ lng: centerLng, lat: centerLat, zoom });
+					this.$refs.sijiMapRef.setCenter(centerLng, centerLat, zoom);
 				}
 
-			},
-			onMapClickPoint(point) {
-				if (point && point.name) {
-					uni.showToast({ title: point.name, icon: 'none', duration: 2000 });
-				}
 			},
 			/**
 			 * 启动实时位置追踪（每10秒更新一次，非今天日期或当日不开行不追踪）
@@ -1592,7 +1586,7 @@
 			 * 更新列车实时位置标记
 			 */
 			updateTrainPosition() {
-				if (!this.mapDataReady || !this.mapReady || !this.$refs.zMapRef) return;
+				if (!this.mapDataReady || !this.mapReady || !this.$refs.sijiMapRef) return;
 				// 非今天日期或当日不开行不计算实时位置
 				if (!this.isTodayDate) return;
 				if (this.carData.rundays && !this.carData.rundays.includes(this.date)) return;
@@ -1641,30 +1635,14 @@
 					allPoints.push({ ...trainPoint, _isTrain: true });
 				}
 
-				this.$refs.zMapRef.mapDrawCircle({
-					style: { showLabel: true, zIndex: 10 },
-					list: allPoints
-				});
+				this.$refs.sijiMapRef.drawMarkers(allPoints);
 			},
 			/**
-			 * 地图组件就绪，初始化地图
+			 * 地图组件就绪，绘制路线
 			 */
 			onMapReady() {
 				this.mapReady = true;
-				if (this.$refs.zMapRef) {
-					this.$refs.zMapRef.mapInit({
-						sourceParams: {
-							vec: 'http://t0.tianditu.gov.cn/vec_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=vec&tileMatrixSet=w&TileMatrix={z}&TileRow={y}&TileCol={x}&style=default&format=tiles&tk=416cfaff76398b8567f8b7e48a933651',
-							cva: 'http://t0.tianditu.gov.cn/cva_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cva&tileMatrixSet=w&TileMatrix={z}&TileRow={y}&TileCol={x}&style=default&format=tiles&tk=416cfaff76398b8567f8b7e48a933651'
-						},
-						mapOptions: {
-							center: [118.050, 24.621],
-							zoom: 6
-						},
-						controlOptions: {
-							zoom: false
-						}
-					});
+				if (this.$refs.sijiMapRef) {
 					// 给地图留时间初始化后再绘制
 					setTimeout(() => this.drawRouteOnMap(), 500);
 				}

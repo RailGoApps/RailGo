@@ -1,6 +1,6 @@
 <template>
 	<view>
-		<!-- #ifdef APP-PLUS || H5 -->
+		<!-- #ifdef APP || H5 -->
 		<view id="zMap" class="map-container" :style="{ height: mapHeightStr }" :map-center-location="mapCenterLocation"
 			:change:map-center-location="ol.handleMapCenterLocation" :init-config="initConfig"
 			:change:init-config="ol.initMap" :center-icon-config="centerIconConfig"
