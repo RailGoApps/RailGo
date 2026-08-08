@@ -1,10 +1,10 @@
 <template>
 	<view class="ux-bg-grey6" style="min-height: 100vh;">
-		<view class="ux-bg-primary" style="height: var(--status-bar-height);">&nbsp;</view>
+		<view class="ux-bg-primary status-bar-fixed" style="height: var(--status-bar-height);">&nbsp;</view>
 		<view class="ux-padding-large">
 			<view class="ux-mt-large">
 				<text class="ux-h1">配置服务源</text><br><br>
-				<text class="ux-h6">请为每个服务选择一个 API 来源。</text>
+				<text class="ux-h6">请为每个服务选择一个 API 来源。<br>点击右下角按钮可一键选择。</text>
 			</view>
 		</view>
 
@@ -225,4 +225,11 @@
 	.icon {
 		font-size: 40rpx;
 	}
+	
+	.status-bar-fixed {
+			position: sticky;
+			top: 0;
+			height: var(--status-bar-height);
+			z-index: 999;
+		}
 </style>

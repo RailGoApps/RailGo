@@ -1,15 +1,9 @@
 <template>
-	<view class="ux-bg-grey5" style="min-height:100vh;">
+	<view class="ux-bg-grey5 ux-padding" style="min-height:100vh;">
 		
-		<view class="ux-bg-primary" style="height: var(--status-bar-height);">&nbsp;</view>
+		<back-header></back-header>
+		<text class="ux-h2">Error</text>
 
-		<view class="ux-padding">
-			<view hover-class="ux-bg-grey8" @click="back" class="back-icon-area">
-				<text class="icon" style="font-size: 45rpx;">&#xe5c4;</text>
-			</view>
-			<br>
-			<text class="ux-h2">Error</text>
-		</view>
 		
 		<view class="ux-padding content-area">
 			<view class="ux-text-center"><br>

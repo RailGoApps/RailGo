@@ -1,7 +1,7 @@
 {
-    "name" : "RailGo 铁路行",
+    "name" : "RailGo",
     "appid" : "__UNI__1A91000",
-    "description" : "一个现代化的专业铁路查询工具",
+    "description" : "现代化的专业铁路查询工具",
     "versionName" : "2.0.2",
     "versionCode" : 36,
     "transformPx" : false,
@@ -167,11 +167,12 @@
     "app-harmony" : {
         "distribute" : {
             "icons" : {
-                "foreground" : "static/logo.png"
+                "foreground" : "static/fore.png",
+                "background" : "static/bg.png"
             },
             "bundleName" : "com.azstudio.railgo",
             "splashScreens" : {
-                "startWindowIcon" : "static/logo.png"
+                "startWindowIcon" : "static/fang.png"
             },
             "signingConfigs" : {
                 "release" : {
@@ -183,8 +184,7 @@
                     "storeFile" : "D:/railgo-uniapp/harmonyos/railgo.p12",
                     "storePassword" : "0000001DAF83AE0568A825839F90647F22F01B3F6DAC09FF950DCBB3D23E8AB4E69B0FEEDCEDBFA2B430AC952D"
                 }
-            },
-            "deviceTypes" : [ "phone", "tablet" ]
+            }
         },
         "uniStatistics" : {
             "enable" : true

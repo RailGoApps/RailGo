@@ -1,11 +1,8 @@
 <template>
 	<view class="ux-bg-grey5 root-container">
-		<view class="ux-bg-primary" style="height: var(--status-bar-height);"></view>
+		<back-header></back-header>
 
-		<view class="ux-padding">
-			<view hover-class="ux-bg-grey8" @click="back" style="display: inline-block; padding: 10rpx;">
-				<text class="icon" style="font-size: 45rpx;">&#xe5c4;</text>
-			</view>
+		<view class="ux-padding" style="padding-top: 0px;">
 			<view style="margin-top: 20rpx;">
 				<text class="ux-h2">鸣谢</text>
 			</view>

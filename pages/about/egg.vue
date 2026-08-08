@@ -1,13 +1,9 @@
 <template>
 	<view class="ux-bg-grey5" style="min-height:100vh;">
 		<!-- headers begin -->
-		<view class="ux-bg-primary" style="height: var(--status-bar-height);">&nbsp;</view>
+		<back-header></back-header>
 
-		<view class="ux-padding">
-			<view hover-class="ux-bg-grey8" @click="back">
-				<text class="icon" style="font-size: 45rpx;">&#xe5c4;</text>
-			</view>
-			<br>
+		<view class="ux-padding" style="padding-top: 0px;">
 			<text class="ux-h2">Die Verliebte von TKP30</text>
 		</view>
 		<!-- headers end -->

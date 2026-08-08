@@ -382,6 +382,13 @@
 	.va {
 		vertical-align: middle;
 	}
+	
+	.status-bar {
+		position: sticky;
+		top: 0;
+		height: var(--status-bar-height);
+		z-index: 999;
+	}
 
 	/* UXUI */
 
@@ -423,4 +430,5 @@
 	$ux-button-mini-text-size: 22rpx;
 	$ux-button-mini-size: 66rpx;
 	@import "@/uni_modules/unix-ui/uxui.scss";
+	
 </style>

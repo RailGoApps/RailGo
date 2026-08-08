@@ -1,11 +1,7 @@
 <template>
 	<view class="ux-bg-grey5" style="min-height:100vh;">
-	<view class="ux-bg-primary" style="height: var(--status-bar-height);">&nbsp;</view>
-		<view class="ux-padding">
-			<view hover-class="ux-bg-grey8" @click="back">
-				<text class="icon" style="font-size: 45rpx;">&#xe5c4;</text>
-			</view>
-			<br>
+	<back-header></back-header>
+		<view class="ux-padding" style="padding-top: 0px;">
 			<text class="ux-h2">车次查询</text>
 			<br><br>
 			<text class="ux-text-small ux-opacity-5">共查询到 {{this.showData.length}} 个车次</text>
@@ -326,3 +322,15 @@
 		}
 	}
 </script>
+
+<style>
+	.sticky-back {
+		position: sticky;
+		top: var(--status-bar-height);
+		z-index: 999;
+		height: 60rpx;
+		line-height: 80rpx;
+		padding-left: 30rpx;
+		padding-bottom: 18rpx;
+	}
+</style>

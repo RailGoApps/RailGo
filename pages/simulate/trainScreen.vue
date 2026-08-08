@@ -1,14 +1,10 @@
 <template>
 	<view class="ux-bg-grey5" style="min-height: 100vh;">
 		<!-- 状态栏 -->
-		<view class="ux-bg-primary" style="height: var(--status-bar-height);">&nbsp;</view>
+		<back-header></back-header>
 
 		<!-- 头部 -->
-		<view class="ux-padding">
-			<view hover-class="ux-bg-grey8" @click="back">
-				<text class="icon" style="font-size: 45rpx;">&#xe5c4;</text>
-			</view>
-			<br>
+		<view class="ux-padding" style="padding-top: 0px;">
 			<text class="ux-h2">列车信息屏</text>
 		</view>
 

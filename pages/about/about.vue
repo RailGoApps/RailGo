@@ -1,17 +1,13 @@
 <template>
 	<view class="ux-bg-grey5" style="min-height: 100vh; position: relative;">
-		<view class="ux-bg-primary" style="height: var(--status-bar-height);">&nbsp;</view>
+		<back-header></back-header>
 
 		<uni-popup ref="reset_oobe_dialog" type="dialog">
 			<uni-popup-dialog cancelText="取消" confirmText="确定" title="提示" :content="`您确定要销毁设置吗？这将重启程序并跳转到OOBE页面.`"
 				@confirm="confirmResetOobe"></uni-popup-dialog>
 		</uni-popup>
 
-		<view class="ux-padding">
-			<view hover-class="ux-bg-grey8" @click="back">
-				<text class="icon" style="font-size: 45rpx;">&#xe5c4;</text>
-			</view>
-			<br>
+		<view class="ux-padding" style="padding-top: 0px;">
 			<text class="ux-h2">关于</text>
 		</view>
 		<view class="ux-padding">

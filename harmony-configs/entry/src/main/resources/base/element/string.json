@@ -6,11 +6,11 @@
     },
     {
       "name": "EntryAbility_desc",
-      "value": "description"
+      "value": "现代化的专业铁路信息查询工具"
     },
     {
       "name": "EntryAbility_label",
-      "value": "$string:app_name"
+      "value": "RailGo"
     },
 	 {
 	  "name": "location_reason",

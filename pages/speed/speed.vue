@@ -1,11 +1,7 @@
 <template>
 	<view class="ux-bg-grey5" style="height:100vh;">
-	<view class="ux-bg-primary" style="height: var(--status-bar-height);">&nbsp;</view>
-		<view class="ux-padding">
-			<view hover-class="ux-bg-grey8" @click="back">
-				<text class="icon" style="font-size: 45rpx;">&#xe5c4;</text>
-			</view>
-			<br>
+	<back-header></back-header>
+		<view class="ux-padding" style="padding-top: 0px;">
 			<text class="ux-h2">实时测速</text>
 		</view>
 

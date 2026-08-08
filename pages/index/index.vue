@@ -1,5 +1,5 @@
 <template>
-	<view class="ux-bg-primary" style="height:  var(--status-bar-height);">&nbsp;</view>
+	<view class="ux-bg-primary status-bar">&nbsp;</view>
 
 	<!-- 版本更新欢迎弹窗 -->
 	<view v-if="showUpdatePopup" class="update-popup-overlay" @click="closeUpdatePopup">

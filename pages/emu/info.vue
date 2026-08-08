@@ -1,12 +1,6 @@
 <template>
 	<view class="ux-bg-grey5" style="min-height:100vh; padding-bottom: 40rpx;">
-		<view class="ux-bg-primary" style="height: var(--status-bar-height);">&nbsp;</view>
-
-		<view class="ux-padding">
-			<view hover-class="ux-bg-grey8" @click="back" style="display: inline-block;">
-				<text class="icon" style="font-size: 45rpx;">&#xe5c4;</text>
-			</view>
-		</view>
+		<back-header></back-header>
 
 		<view class="ux-pl ux-pr ux-pb" v-if="!loading && emuData.id">
 			<view class="ux-bg-white ux-border-radius">

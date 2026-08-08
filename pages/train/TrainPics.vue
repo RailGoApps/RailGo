@@ -1,13 +1,6 @@
 <template>
 	<view class="ux-bg-grey5" style="min-height:100vh;">
-		<view class="ux-bg-primary" style="height: var(--status-bar-height);">&nbsp;</view>
-
-		<view class="ux-pl ux-pr ux-pt">
-			<view hover-class="ux-bg-grey8" @click="back" style="display: inline-block;">
-				<text class="icon" style="font-size: 45rpx;">&#xe5c4;</text>
-			</view>
-			<br>
-		</view>
+		<back-header></back-header>
 
 		<view class="ux-pl ux-pr ux-pb"><br>
 			

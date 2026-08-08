@@ -1,12 +1,8 @@
 <template>
 	<view class="ux-bg-grey5" style="min-height:100vh; padding-bottom: 40rpx;">
-		<view class="ux-bg-primary" style="height: var(--status-bar-height);">&nbsp;</view>
+		<back-header></back-header>
 
-		<view class="ux-padding">
-			<view hover-class="ux-bg-grey8" @click="back" style="display: inline-block;">
-				<text class="icon" style="font-size: 45rpx;">&#xe5c4;</text>
-			</view>
-			<br>
+		<view class="ux-padding" style="padding-top: 0px;">
 			<text class="ux-h2" style="display: block; margin-top: 10rpx;">{{keyword}}</text>
 			<view class="ux-mt-small">
 				<text class="custom-badge">
