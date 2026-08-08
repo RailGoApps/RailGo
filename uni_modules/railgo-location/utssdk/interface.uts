@@ -1,0 +1,43 @@
+/**
+ * 鸿蒙原生定位结果
+ */
+export type HarmonyLocationInfo = {
+	/**
+	 * 纬度
+	 */
+	latitude : number,
+	/**
+	 * 经度
+	 */
+	longitude : number,
+	/**
+	 * 海拔（米）
+	 */
+	altitude : number,
+	/**
+	 * 速度（米/秒）
+	 */
+	speed : number,
+	/**
+	 * 定位方式：GPS / 网络 / 室内 等
+	 */
+	sourceType : string
+};
+
+/**
+ * 单次定位参数
+ */
+export type HarmonyGetLocationOptions = {
+	/**
+	 * 是否高精度（true 高精度 GPS，false 普通精度）
+	 */
+	highAccuracy : boolean,
+	/**
+	 * 定位成功回调
+	 */
+	success ?: (result : HarmonyLocationInfo) => void,
+	/**
+	 * 定位失败回调
+	 */
+	fail ?: (errMsg : string) => void
+};

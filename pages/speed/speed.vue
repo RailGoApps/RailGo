@@ -57,6 +57,9 @@
 </template>
 
 <script>
+	// #ifdef APP-HARMONY
+	import { getHarmonyLocationOnce } from "@/uni_modules/railgo-location";
+	// #endif
 	export default {
 		data() {
 			return {
@@ -109,61 +112,42 @@
 				}
 			},
 			getLocationSpeed() {
+				// #ifdef APP-HARMONY
+				// 鸿蒙端：调用鸿蒙原生定位 API
+				getHarmonyLocationOnce({
+					highAccuracy: this.isHighAccuracy,
+					success: (res) => {
+						this.applyLocationResult({
+							speed: res.speed,
+							longitude: res.longitude,
+							latitude: res.latitude,
+							altitude: res.altitude,
+							sourceType: res.sourceType
+						});
+					},
+					fail: (errMsg) => {
+						console.error('鸿蒙定位失败:', errMsg);
+						uni.showToast({
+							title: '定位失败',
+							icon: 'error'
+						});
+					}
+				});
+				// #endif
+				// #ifndef APP-HARMONY
 				uni.getLocation({
 					type: 'wgs84',
 					isHighAccuracy: this.isHighAccuracy,
 					altitudeAccuracy: true,
 					success: (res) => {
-						// 1. 将原始速度 m/s 转换为 km/h
-						const rawSpeed = (res.speed * 3.6);
-						
-						// 2. 速度变化检测
-						if (rawSpeed >= 0) {
-							if (this.speedHistory.length > 0) {
-								const lastSpeed = this.speedHistory[this.speedHistory.length - 1];
-								const diff = Math.abs(rawSpeed - lastSpeed);
-								if (diff > 50) {
-									console.warn('速度变化过大，可能是异常数据:', rawSpeed, lastSpeed);
-								} else {
-									this.speedHistory.push(rawSpeed);
-								}
-							} else {
-								this.speedHistory.push(rawSpeed);
-							}
-						}
-			
-						// 3. 维护历史记录的大小
-						if (this.speedHistory.length > this.HISTORY_SIZE) {
-							this.speedHistory.shift();
-						}
-			
-						// 4. 计算平滑后的速度
-						let smoothedSpeed = 0;
-						if (this.speedHistory.length > 0) {
-							const total = this.speedHistory.reduce((sum, current) => sum + current, 0);
-							smoothedSpeed = total / this.speedHistory.length;
-						}
-						this.speed = smoothedSpeed.toFixed(2);
-			
-						// 5. 更新经纬度和半球信息
-						this.longitude = res.longitude.toFixed(6);
-						this.latitude = res.latitude.toFixed(6);
-						this.hemisphere_lat = res.latitude >= 0 ? '北半球' : '南半球';
-						this.hemisphere_lon = res.longitude >= 0 ? '东半球' : '西半球';
-			
-						// 6. 更新海拔、卫星数、定位方式
-						this.altitude = res.altitude ? res.altitude.toFixed(1) : '0';
-						
-						// #ifdef APP-PLUS
-						// Android 平台获取额外信息（卫星数、定位方式）
-						this.getAndroidLocationInfo();
-						// #endif
-						
-						// #ifndef APP-PLUS
-						// 非 APP 平台使用系统提供的数据
-						this.satellites = res.satellites || 0;
-						this.locationProvider = '系统定位';
-						// #endif
+						this.applyLocationResult({
+							speed: res.speed || 0,
+							longitude: res.longitude,
+							latitude: res.latitude,
+							altitude: res.altitude,
+							satellites: res.satellites || 0,
+							sourceType: '系统定位'
+						});
 					},
 					fail: (err) => {
 						console.error('获取地理位置失败:', err);
@@ -173,6 +157,60 @@
 						});
 					}
 				});
+				// #endif
+			},
+			// 统一处理定位结果（速度平滑、经纬度、海拔、卫星数、定位方式）
+			applyLocationResult(data) {
+				// 1. 将原始速度 m/s 转换为 km/h
+				const rawSpeed = (data.speed * 3.6);
+
+				// 2. 速度变化检测
+				if (rawSpeed >= 0) {
+					if (this.speedHistory.length > 0) {
+						const lastSpeed = this.speedHistory[this.speedHistory.length - 1];
+						const diff = Math.abs(rawSpeed - lastSpeed);
+						if (diff > 50) {
+							console.warn('速度变化过大，可能是异常数据:', rawSpeed, lastSpeed);
+						} else {
+							this.speedHistory.push(rawSpeed);
+						}
+					} else {
+						this.speedHistory.push(rawSpeed);
+					}
+				}
+
+				// 3. 维护历史记录的大小
+				if (this.speedHistory.length > this.HISTORY_SIZE) {
+					this.speedHistory.shift();
+				}
+
+				// 4. 计算平滑后的速度
+				let smoothedSpeed = 0;
+				if (this.speedHistory.length > 0) {
+					const total = this.speedHistory.reduce((sum, current) => sum + current, 0);
+					smoothedSpeed = total / this.speedHistory.length;
+				}
+				this.speed = smoothedSpeed.toFixed(2);
+
+				// 5. 更新经纬度和半球信息
+				this.longitude = data.longitude.toFixed(6);
+				this.latitude = data.latitude.toFixed(6);
+				this.hemisphere_lat = data.latitude >= 0 ? '北半球' : '南半球';
+				this.hemisphere_lon = data.longitude >= 0 ? '东半球' : '西半球';
+
+				// 6. 更新海拔、卫星数、定位方式
+				this.altitude = data.altitude ? data.altitude.toFixed(1) : '0';
+
+				// #ifdef APP-PLUS
+				// Android 平台获取额外信息（卫星数、定位方式）
+				this.getAndroidLocationInfo();
+				// #endif
+
+				// #ifndef APP-PLUS
+				// 非 Android/iOS 平台使用系统提供的数据（含鸿蒙）
+				this.satellites = data.satellites || 0;
+				this.locationProvider = data.sourceType || '系统定位';
+				// #endif
 			},
 			getAndroidLocationInfo() {
 				// #ifdef APP-PLUS
