@@ -133,6 +133,10 @@
 			drawMarkers(markers) {
 				this.addEvent("drawMarkers", { markers });
 			},
+			// 绘制纯文字标签（无圆点），labels: [{ lng, lat, text, color }]
+			drawLabels(labels) {
+				this.addEvent("drawLabels", { labels });
+			},
 			// 清除所有覆盖物（折线 + 标记）
 			clearAll() {
 				this.addEvent("clearAll", {});
@@ -190,6 +194,7 @@
 				_event: {},
 				_lineOverlays: [],
 				_markerOverlays: [],
+				_labelOverlays: [],
 			};
 		},
 		methods: {
@@ -282,6 +287,7 @@
 						const pts = (seg.points || []).map(p => new T.LngLat(Number(p[0]), Number(p[1])));
 						if (pts.length < 2) return;
 						const style = seg.style || {};
+						// 绘制可见线段
 						const polyline = new T.Polyline(pts, {
 							color: style.color || '#114598',
 							weight: style.width || 4,
@@ -289,6 +295,19 @@
 						});
 						this._mapInstance.addOverLay(polyline);
 						this._lineOverlays.push(polyline);
+						// 有名称时，叠加一条更宽的透明线用于接收点击
+						if (seg.name) {
+							const hitArea = new T.Polyline(pts, {
+								color: style.color || '#114598',
+								weight: 20,
+								opacity: 0.01
+							});
+							hitArea.addEventListener('click', () => {
+								this.$ownerInstance.callMethod('onLineClick', { name: seg.name });
+							});
+							this._mapInstance.addOverLay(hitArea);
+							this._lineOverlays.push(hitArea);
+						}
 					});
 				} catch (err) {
 					console.error('绘制路线失败:', err);
@@ -349,14 +368,38 @@
 					iconAnchor: new T.Point(cx, cy)
 				});
 			},
+			// 绘制纯文字标签（不影响其他覆盖物）
+			_drawLabels(data) {
+				if (!this._mapInstance) return;
+				try {
+					(this._labelOverlays || []).forEach(ov => this._mapInstance.removeOverLay(ov));
+					this._labelOverlays = [];
+					const labels = data.labels || [];
+					labels.forEach(lb => {
+						const lnglat = new T.LngLat(Number(lb.lng), Number(lb.lat));
+						const color = lb.color || '#333';
+						const label = new T.Label({
+							text: `<b style="font-size:13px;color:${color};background:rgba(255,255,255,0.95);padding:2px 8px;border-radius:4px;white-space:nowrap;border:1px solid ${color};">${lb.text}</b>`,
+							position: lnglat,
+							offset: new T.Point(-40, -14)
+						});
+						this._mapInstance.addOverLay(label);
+						this._labelOverlays.push(label);
+					});
+				} catch (err) {
+					console.error('绘制标签失败:', err);
+				}
+			},
 			// 清除所有覆盖物
 			_clearAll() {
 				if (!this._mapInstance) return;
 				try {
 					(this._lineOverlays || []).forEach(ov => this._mapInstance.removeOverLay(ov));
 					(this._markerOverlays || []).forEach(ov => this._mapInstance.removeOverLay(ov));
+					(this._labelOverlays || []).forEach(ov => this._mapInstance.removeOverLay(ov));
 					this._lineOverlays = [];
 					this._markerOverlays = [];
+					this._labelOverlays = [];
 				} catch (err) {
 					console.error('清除覆盖物失败:', err);
 				}

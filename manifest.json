@@ -1,9 +1,9 @@
 {
-    "name" : "RailGo",
+    "name" : "RailGo 铁路行",
     "appid" : "__UNI__1A91000",
     "description" : "现代化的专业铁路查询工具",
-    "versionName" : "2.0.3",
-    "versionCode" : 20003,
+    "versionName" : "2.0.4",
+    "versionCode" : 20004,
     "transformPx" : false,
     /* 5+App特有相关 */
     "app-plus" : {
@@ -52,9 +52,9 @@
                 "dSYMs" : false,
                 "urltypes" : "railgo",
                 "privacyDescription" : {
-                    "NSLocationWhenInUseUsageDescription" : "用于测速",
-                    "NSLocationAlwaysUsageDescription" : "用于测速",
-                    "NSLocationAlwaysAndWhenInUseUsageDescription" : "用于测速"
+                    "NSLocationWhenInUseUsageDescription" : "用于测速功能",
+                    "NSLocationAlwaysUsageDescription" : "用于测速功能",
+                    "NSLocationAlwaysAndWhenInUseUsageDescription" : "用于测速功能"
                 }
             },
             /* SDK配置 */

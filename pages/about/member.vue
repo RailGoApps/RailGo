@@ -33,6 +33,13 @@
 		</view>
 
 		<view class="ux-pl ux-pr ux-pb">
+			<uni-section title="合作伙伴" type="line" title-font-size="35rpx" class="no-bg-section"></uni-section>
+			<view class="ux-flex ux-row ux-justify-content-center ux-padding-sm">
+				<image src="/static/hzzc.png" mode="widthFix" style="width: 320rpx;"></image>
+			</view>
+		</view>
+
+		<view class="ux-pl ux-pr ux-pb">
 			<uni-section title="数据源" type="line" title-font-size="35rpx" class="no-bg-section"></uni-section>
 			<uni-table border stripe>
 				<uni-tr>
@@ -61,6 +68,14 @@
 			<uni-section title="赞助" type="line" title-font-size="35rpx" class="no-bg-section"></uni-section>
 			<view class="avatar-group">
 				<image mode="scaleToFill" v-for="(nk, index) in zz" :key="index"
+					:src="`https://q1.qlogo.cn/g?b=qq&s=100&nk=${nk}`" class="avatar-sm"></image>
+			</view>
+		</view>
+
+		<view class="ux-pl ux-pr ux-pb">
+			<uni-section title="服务器赞助者" type="line" title-font-size="35rpx" class="no-bg-section"></uni-section>
+			<view class="avatar-group">
+				<image mode="scaleToFill" v-for="(nk, index) in serverSponsors" :key="index"
 					:src="`https://q1.qlogo.cn/g?b=qq&s=100&nk=${nk}`" class="avatar-sm"></image>
 			</view>
 		</view>
@@ -108,11 +123,14 @@
 				specialThanks: [
 					{ name: 'XieXiLin', avatar: 'https://q1.qlogo.cn/g?b=qq&s=100&nk=3068342155' },
 					{ name: 'bcdt', avatar: 'https://q1.qlogo.cn/g?b=qq&s=100&nk=2396807944' },
-					{ name: 'lihugang', avatar: 'https://q1.qlogo.cn/g?b=qq&s=100&nk=3186095880' }
+					{ name: 'lihugang', avatar: 'https://q1.qlogo.cn/g?b=qq&s=100&nk=3186095880' },
+					{ name: 'Sutarn', avatar: 'https://q1.qlogo.cn/g?b=qq&s=100&nk=1482163108' },
+					{ name: '小白告天', avatar: 'https://q1.qlogo.cn/g?b=qq&s=100&nk=11482827' }
 				],
 				picgive: ["1972867189", "2151235831", "1069943593", "525637945", "3596323062", "2377807972", "982588465",
 					"1779378782", "516127399", "2533221373", "2387845184", "365736548", "1983163227", "3111737636"
 				],
+				serverSponsors: ["1708208890", "525637945", "11482827", "740528989", "375166221", "1067519395", "2068364343", "3418736198"],
 				zz: [],
 				dataSources: [
 					{ source: 'RailGo.Parser', website: 'railgo.dev', function: '车次、车站、正晚点、动车组担当、大屏' },
@@ -122,9 +140,9 @@
 			};
 		},
 		mounted() {
-			this.fetchData();
+			// this.fetchData();
 			this.fetchPicgiveUsers();
-			this.fetchsUsers();
+			// this.fetchsUsers();
 		},
 		methods: {
 			back() {

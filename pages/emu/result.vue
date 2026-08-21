@@ -144,7 +144,7 @@ export default {
 		analyzeQueryType() {
 			const kw = this.keyword;
 			const trainNumReg = /^[A-Z]\d{1,4}$/i;
-			const emuIdReg = /^[A-Z0-9]+-\d+/i;
+			const emuIdReg = /^[A-Z0-9]+(?:-[A-Z0-9]+)*-\d+/i;
 			
 			if (trainNumReg.test(kw) || emuIdReg.test(kw)) {
 				this.isQueryTypeRun = true;

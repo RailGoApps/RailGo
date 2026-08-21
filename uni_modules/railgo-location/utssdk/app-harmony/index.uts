@@ -37,31 +37,58 @@ function ensurePermission() : Promise<boolean> {
 }
 
 /**
- * 鸿蒙端单次定位
+ * 鸿蒙端单次定位（同时订阅卫星状态）
  */
 export function getHarmonyLocationOnce(options : HarmonyGetLocationOptions) : void {
-	// 1. 申请权限
 	ensurePermission().then((granted : boolean) => {
 		if (!granted) {
 			options.fail?.('位置权限未授予，无法获取定位');
 			return;
 		}
-		// 2. 单次定位请求（精度优先，10s 超时）
+
+		// 1. 订阅 GNSS 卫星状态变化
+		let satellitesNumber = 0;
+		let satelliteCallback = (satelliteInfo : geoLocationManager.SatelliteStatusInfo) => {
+			if (satelliteInfo != null && satelliteInfo.satellitesNumber > 0) {
+				satellitesNumber = satelliteInfo.satellitesNumber;
+			}
+		};
+		try {
+			geoLocationManager.on('satelliteStatusChange', satelliteCallback);
+		} catch (err) {
+			hilog.error(0, TAG, 'subscribe satelliteStatusChange error: %{public}s', (err as BusinessError).message);
+		}
+
+		// 2. 单次定位请求（精度优先，1500ms 超时）
 		let request : geoLocationManager.SingleLocationRequest = {
 			locatingPriority: geoLocationManager.LocatingPriority.PRIORITY_ACCURACY,
-			locatingTimeoutMs: 1000
+			locatingTimeoutMs: 1500
 		};
-		// 3. 发起单次定位（未授权时此处会以错误码 201/202 拒绝，走 fail 回调）
+
+		// 3. 发起单次定位
 		geoLocationManager.getCurrentLocation(request).then((loc : geoLocationManager.Location) => {
+			try {
+				geoLocationManager.off('satelliteStatusChange', satelliteCallback);
+			} catch (err) {
+				// 忽略取消订阅异常
+			}
+
 			let info : HarmonyLocationInfo = {
 				latitude: loc.latitude,
 				longitude: loc.longitude,
 				altitude: loc.altitude,
 				speed: loc.speed,
-				sourceType: '系统定位'
+				sourceType: satellitesNumber > 0 ? 'GPS' : '系统定位',
+				satellites: satellitesNumber,
+				locationProvider: satellitesNumber > 0 ? 'GPS' : '系统定位'
 			};
 			options.success?.(info);
 		}).catch((error : BusinessError) => {
+			try {
+				geoLocationManager.off('satelliteStatusChange', satelliteCallback);
+			} catch (err) {
+				// 忽略取消订阅异常
+			}
 			hilog.error(0, TAG, 'getCurrentLocation error: %{public}s', error.message);
 			options.fail?.('定位失败：' + error.message);
 		});

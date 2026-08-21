@@ -113,7 +113,7 @@
 			},
 			getLocationSpeed() {
 				// #ifdef APP-HARMONY
-				// 鸿蒙端：调用鸿蒙原生定位 API
+				// 鸿蒙端：调用鸿蒙原生定位 API（含卫星状态订阅）
 				getHarmonyLocationOnce({
 					highAccuracy: this.isHighAccuracy,
 					success: (res) => {
@@ -122,7 +122,9 @@
 							longitude: res.longitude,
 							latitude: res.latitude,
 							altitude: res.altitude,
-							sourceType: res.sourceType
+							sourceType: res.sourceType,
+							satellites: res.satellites,
+							locationProvider: res.locationProvider
 						});
 					},
 					fail: (errMsg) => {
@@ -134,7 +136,29 @@
 					}
 				});
 				// #endif
-				// #ifndef APP-HARMONY
+				// #ifdef APP-PLUS
+				// Android / iOS：使用 5+ geolocation 接口
+				plus.geolocation.getCurrentPosition((p) => {
+					this.applyLocationResult({
+						speed: p.coords.speed || 0,
+						longitude: p.coords.longitude,
+						latitude: p.coords.latitude,
+						altitude: p.coords.altitude,
+						sourceType: '系统定位'
+					});
+				}, (e) => {
+					console.error('获取地理位置失败:', e.message);
+					uni.showToast({
+						title: '定位失败',
+						position: "bottom"
+					});
+				}, {
+					provider: 'system',
+					enableHighAccuracy: this.isHighAccuracy,
+					timeout: this.isHighAccuracy ? 10000 : 5000
+				});
+				// #endif
+				// #ifndef APP-PLUS || APP-HARMONY
 				uni.getLocation({
 					type: 'wgs84',
 					isHighAccuracy: this.isHighAccuracy,
@@ -153,7 +177,7 @@
 						console.error('获取地理位置失败:', err);
 						uni.showToast({
 							title: '定位失败',
-							icon: 'error'
+							position:"bottom"
 						});
 					}
 				});
@@ -209,7 +233,7 @@
 				// #ifndef APP-PLUS
 				// 非 Android/iOS 平台使用系统提供的数据（含鸿蒙）
 				this.satellites = data.satellites || 0;
-				this.locationProvider = data.sourceType || '系统定位';
+				this.locationProvider = data.locationProvider || data.sourceType || '系统定位';
 				// #endif
 			},
 			getAndroidLocationInfo() {

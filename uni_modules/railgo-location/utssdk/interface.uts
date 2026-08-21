@@ -21,7 +21,15 @@ export type HarmonyLocationInfo = {
 	/**
 	 * 定位方式：GPS / 网络 / 室内 等
 	 */
-	sourceType : string
+	sourceType : string,
+	/**
+	 * 卫星数量（鸿蒙订阅 satelliteStatusChange 获取）
+	 */
+	satellites : number,
+	/**
+	 * 定位提供者：GPS / 系统定位 等
+	 */
+	locationProvider : string
 };
 
 /**

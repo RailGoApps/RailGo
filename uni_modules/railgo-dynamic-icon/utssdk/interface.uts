@@ -1,0 +1,116 @@
+/**
+ * 动态图标信息（仅保留鸿蒙原生 API 返回的字段，避免类型转换报错）
+ */
+export type DynamicIconInfo = {
+	/**
+	 * 动态图标 ID
+	 */
+	iconId : string
+};
+
+/**
+ * 查询动态图标成功结果
+ */
+export type QueryDynamicIconsSuccess = {
+	/**
+	 * 错误信息
+	 */
+	errMsg : string,
+	/**
+	 * 动态图标信息列表
+	 */
+	iconInfos : DynamicIconInfo[]
+};
+
+/**
+ * 通用失败结果
+ */
+export type DynamicIconFail = {
+	/**
+	 * 错误信息
+	 */
+	errMsg : string
+};
+
+/**
+ * 通用完成结果
+ */
+export type DynamicIconComplete = {
+	/**
+	 * 错误信息
+	 */
+	errMsg : string
+};
+
+/**
+ * 查询动态图标信息选项
+ */
+export type QueryDynamicIconsOptions = {
+	/**
+	 * 接口调用成功的回调函数
+	 */
+	success ?: (result : QueryDynamicIconsSuccess) => void,
+	/**
+	 * 接口调用失败的回调函数
+	 */
+	fail ?: (result : DynamicIconFail) => void,
+	/**
+	 * 接口调用结束的回调函数（调用成功、失败都会执行）
+	 */
+	complete ?: (result : DynamicIconComplete) => void
+};
+
+/**
+ * 切换动态图标选项
+ */
+export type SelectDynamicIconOptions = {
+	/**
+	 * 要切换的动态图标 ID
+	 */
+	iconId : string,
+	/**
+	 * 接口调用成功的回调函数
+	 */
+	success ?: (result : DynamicIconComplete) => void,
+	/**
+	 * 接口调用失败的回调函数
+	 */
+	fail ?: (result : DynamicIconFail) => void,
+	/**
+	 * 接口调用结束的回调函数（调用成功、失败都会执行）
+	 */
+	complete ?: (result : DynamicIconComplete) => void
+};
+
+/**
+ * 禁用动态图标选项
+ */
+export type DisableDynamicIconOptions = {
+	/**
+	 * 接口调用成功的回调函数
+	 */
+	success ?: (result : DynamicIconComplete) => void,
+	/**
+	 * 接口调用失败的回调函数
+	 */
+	fail ?: (result : DynamicIconFail) => void,
+	/**
+	 * 接口调用结束的回调函数（调用成功、失败都会执行）
+	 */
+	complete ?: (result : DynamicIconComplete) => void
+};
+
+export interface Uni {
+	/**
+	 * 查询动态图标信息
+	 */
+	queryDynamicIcons(options : QueryDynamicIconsOptions) : void;
+	/**
+	 * 切换动态图标
+	 */
+	selectDynamicIcon(options : SelectDynamicIconOptions) : void;
+	/**
+	 * 禁用动态图标，恢复默认图标
+	 */
+	disableDynamicIcon(options : DisableDynamicIconOptions) : void;
+}

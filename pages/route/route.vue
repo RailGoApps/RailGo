@@ -79,7 +79,7 @@ export default {
 		}
 	},
 	onLoad() {
-		// #ifdef APP
+		// #ifdef APP-PLUS
 		plus.navigator.setStatusBarBackground('#114598');
 		// #endif
 	},

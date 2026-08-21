@@ -21,6 +21,7 @@
 					</button>
 				</view>
 
+				<!-- #ifndef APP-HARMONY -->
 				<view class="icon-item">
 					<image mode="scaleToFill" src="/static/icons/rg-red.png"></image>
 					<text class="icon-text">红神龙</text>
@@ -54,12 +55,14 @@
 						{{ nowIcon === 'purple' ? '已使用' : ((searchUnlock1 || purpleUnlock) ? '使用' : '未解锁') }}
 					</button>
 				</view>
+				<!-- #endif -->
+
 				<view class="icon-item">
-					<image mode="scaleToFill" :src="'/static/icons/rg-passion.png'"
-						:class="{'grayscale': !searchUnlock2 && !passionUnlock}" @click="showIconHelp('百香果', 'passionUnlock')"></image>
-					<text class="icon-text">百香果</text>
-					<button class="ux-btn" :disabled="!(searchUnlock2 || passionUnlock) || nowIcon === 'passion'" @click="selectIcon('passion')">
-						{{ nowIcon === 'passion' ? '已使用' : ((searchUnlock2 || passionUnlock) ? '使用' : '未解锁') }}
+					<image mode="scaleToFill" src="/static/icons/rg-first.png"
+						:class="{'grayscale': !firstAnniversaryUnlock}" @click="showIconHelp('周年庆', 'firstAnniversaryUnlock')"></image>
+					<text class="icon-text">周年庆</text>
+					<button class="ux-btn" :disabled="!firstAnniversaryUnlock || nowIcon === 'first'" @click="selectIcon('first')">
+						{{ nowIcon === 'first' ? '已使用' : (firstAnniversaryUnlock ? '使用' : '未解锁') }}
 					</button>
 				</view>
 
@@ -72,11 +75,11 @@
 				</view>
 
 				<view class="icon-item">
-					<image mode="scaleToFill" src="/static/icons/rg-first.png"
-						:class="{'grayscale': !firstAnniversaryUnlock}" @click="showIconHelp('周年庆', 'firstAnniversaryUnlock')"></image>
-					<text class="icon-text">周年庆</text>
-					<button class="ux-btn" :disabled="!firstAnniversaryUnlock || nowIcon === 'first'" @click="selectIcon('first')">
-						{{ nowIcon === 'first' ? '已使用' : (firstAnniversaryUnlock ? '使用' : '未解锁') }}
+					<image mode="scaleToFill" :src="'/static/icons/rg-passion.png'"
+						:class="{'grayscale': !searchUnlock2 && !passionUnlock}" @click="showIconHelp('百香果', 'passionUnlock')"></image>
+					<text class="icon-text">百香果</text>
+					<button class="ux-btn" :disabled="!(searchUnlock2 || passionUnlock) || nowIcon === 'passion'" @click="selectIcon('passion')">
+						{{ nowIcon === 'passion' ? '已使用' : ((searchUnlock2 || passionUnlock) ? '使用' : '未解锁') }}
 					</button>
 				</view>
 			</view>
@@ -102,10 +105,11 @@
 </template>
 
 <script>
-	// #ifndef H5
-	// #ifndef APP-HARMONY
-	import { getSwitchList, switchIcons, restoreIcons } from "@/uni_modules/ima-icons";
+	// #ifdef APP-PLUS
+	// import { getSwitchList, switchIcons, restoreIcons } from "@/uni_modules/ima-icons";
 	// #endif
+	// #ifdef APP-HARMONY
+	import "@/uni_modules/railgo-dynamic-icon";
 	// #endif
 import {uniGet} from "@/scripts/req.js"; 
 
@@ -116,27 +120,27 @@ import {uniGet} from "@/scripts/req.js";
 				egg: uni.getStorageSync("Funnyegg"),
 				search: uni.getStorageSync("search"),
 				nowIcon: uni.getStorageSync("nowIcon"),
-				
+							
 				// 默认解锁状态 (通过原有方式)
 				eggUnlock: false, 
 				searchUnlock1: false, 
 				searchUnlock2: false, 
 				searchUnlock3: false, 
 				girlUnlock: false, 
-
+		
 				greenUnlock: uni.getStorageSync("greenUnlock") || false, // 立及甬
 				purpleUnlock: uni.getStorageSync("purpleUnlock") || false, // 大茄子
 				passionUnlock: uni.getStorageSync("passionUnlock") || false, // 百香果
 				railgoGirlUnlock: uni.getStorageSync("railgoGirlUnlock") || false, // 露星
 				firstAnniversaryUnlock: uni.getStorageSync("firstAnniversaryUnlock") || false, // 周年庆
-				
+							
 				dfh: uni.getStorageSync("dfh"), 
 				tys: uni.getStorageSync("tys"), 
-
+		
 				// 兑换码自定义模态框状态
 				showCustomRedeemModal: false, 
 				redeemCodeInput: '', 
-
+		
 				// 兑换图标映射表
 				exchangeIconsMap: [
 					{ name: '立及甬', iconKey: 'green', storageKey: 'greenUnlock' },
@@ -168,15 +172,68 @@ import {uniGet} from "@/scripts/req.js";
 					"data": iconName
 				});
 				this.nowIcon = iconName;
+				// #ifdef APP-HARMONY
+				this.applyHarmonyDynamicIcon(iconName);
+				// #endif
+				// #ifdef APP-PLUS
+				// switchIcons(iconName);
+				// #endif
 				// #ifndef H5
-				// #ifndef APP-HARMONY
-				switchIcons(iconName);
 				uni.showToast({
 					title: "切换成功！",
 					icon: 'none'
 				});
 				// #endif
-				// #endif
+			},
+			applyHarmonyDynamicIcon(iconName) {
+				const deviceType = uni.getSystemInfoSync().deviceType;
+				const isPad = deviceType === 'tablet' || deviceType === 'pad';
+				const iconMap = {
+					'girl': isPad ? 'rg_girl_pad' : 'rg_girl',
+					'first': isPad ? 'rg_1st_pad' : 'rg_1st',
+					'passion': isPad ? 'rg_passion_pad' : 'rg_passion'
+				};
+				const applySuccess = () => {
+					uni.setStorage({
+						"key": "nowIcon",
+						"data": iconName
+					});
+					this.nowIcon = iconName;
+				};
+				if (iconName === 'crh') {
+					uni.disableDynamicIcon({
+						success: () => {
+							applySuccess();
+							uni.showToast({
+								title: "已恢复默认图标",
+								icon: 'none'
+							});
+						},
+						fail: (err) => {
+							uni.showToast({
+								title: "恢复失败：" + err.errMsg,
+								icon: 'none'
+							});
+						}
+					});
+				} else if (iconMap[iconName]) {
+					uni.selectDynamicIcon({
+						iconId: iconMap[iconName],
+						success: () => {
+							applySuccess();
+							uni.showToast({
+								title: "切换成功！",
+								icon: 'none'
+							});
+						},
+						fail: (err) => {
+							uni.showToast({
+								title: "切换失败：" + err.errMsg,
+								icon: 'none'
+							});
+						}
+					});
+				}
 			},
 			
 			// 修改：图标解锁提示

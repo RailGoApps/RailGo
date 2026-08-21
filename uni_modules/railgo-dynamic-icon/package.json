@@ -1,0 +1,63 @@
+{
+  "id": "railgo-dynamic-icon",
+  "displayName": "railgo-dynamic-icon",
+  "version": "1.0.0",
+  "description": "调用鸿蒙 AppGalleryKit 原生 API 实现动态图标的查询、切换与恢复默认图标",
+  "keywords": [
+    "动态图标",
+    "鸿蒙",
+    "AppGalleryKit"
+  ],
+  "uni_modules": {
+    "uni-ext-api": {
+      "uni": {
+        "queryDynamicIcons": {
+          "name": "queryDynamicIcons",
+          "app": {
+            "js": false,
+            "kotlin": false,
+            "swift": false,
+            "arkts": true
+          }
+        },
+        "selectDynamicIcon": {
+          "name": "selectDynamicIcon",
+          "app": {
+            "js": false,
+            "kotlin": false,
+            "swift": false,
+            "arkts": true
+          }
+        },
+        "disableDynamicIcon": {
+          "name": "disableDynamicIcon",
+          "app": {
+            "js": false,
+            "kotlin": false,
+            "swift": false,
+            "arkts": true
+          }
+        }
+      }
+    },
+    "dependencies": [],
+    "encrypt": [],
+    "platforms": {
+      "client": {
+        "Vue": {
+          "vue2": "y",
+          "vue3": "y"
+        },
+        "App": {
+          "app-android": "n",
+          "app-ios": "n",
+          "app-harmony": "y"
+        },
+        "H5-mobile": "n",
+        "H5-pc": "n",
+        "小程序": "n",
+        "快应用": "n"
+      }
+    }
+  }
+}

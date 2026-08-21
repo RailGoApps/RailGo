@@ -86,7 +86,7 @@ function normalizeTimetable(timetable) {
  * @param {number} todayMinutes - 当天 00:00 起的分钟数
  * @returns {number} 对齐后的分钟数
  */
-function alignCurrentMinutesToTrainDate(timetable, todayMinutes) {
+export function alignCurrentMinutesToTrainDate(timetable, todayMinutes) {
 	const firstDepart = parseTimeToMinutes(timetable[0]?.depart);
 	if (firstDepart === null) return todayMinutes;
 
@@ -117,7 +117,7 @@ function alignCurrentMinutesToTrainDate(timetable, todayMinutes) {
  * @param {number} avgSpeed - 区间平均速度 (km/h)
  * @returns {number} 空间进度 0~1
  */
-function timeProgressToDistanceProgress(timeProgress, avgSpeed) {
+export function timeProgressToDistanceProgress(timeProgress, avgSpeed) {
 	if (timeProgress <= 0) return 0;
 	if (timeProgress >= 1) return 1;
 

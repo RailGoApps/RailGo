@@ -1,0 +1,149 @@
+import {
+	QueryDynamicIconsOptions,
+	SelectDynamicIconOptions,
+	DisableDynamicIconOptions,
+	DynamicIconInfo,
+	QueryDynamicIconsSuccess,
+	DynamicIconFail,
+	DynamicIconComplete
+} from '../interface.uts'
+
+import { appInfoManager } from '@kit.AppGalleryKit';
+import { hilog } from '@kit.PerformanceAnalysisKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+export {
+	QueryDynamicIconsOptions,
+	SelectDynamicIconOptions,
+	DisableDynamicIconOptions,
+	DynamicIconInfo,
+	QueryDynamicIconsSuccess,
+	DynamicIconFail,
+	DynamicIconComplete
+}
+
+const TAG = 'RailGoDynamicIcon';
+
+/**
+ * 查询动态图标信息
+ */
+export function queryDynamicIcons(options : QueryDynamicIconsOptions) : void {
+	try {
+		appInfoManager.queryDynamicIcons().then((iconInfos : appInfoManager.DynamicIconInfo[]) => {
+			hilog.info(0, TAG, `queryDynamicIcons success. iconInfos: ${JSON.stringify(iconInfos)}`);
+			let mappedIconInfos : DynamicIconInfo[] = iconInfos.map((item : appInfoManager.DynamicIconInfo) => {
+				return { iconId: item.iconId } as DynamicIconInfo;
+			});
+			let result : QueryDynamicIconsSuccess = {
+				errMsg: "ok",
+				iconInfos: mappedIconInfos
+			};
+			let completeResult : DynamicIconComplete = {
+				errMsg: "ok"
+			};
+			options?.success?.(result);
+			options?.complete?.(completeResult);
+		}).catch((error : BusinessError) => {
+			hilog.error(0, TAG, `queryDynamicIcons failed, code: ${error.code}, message: ${error.message}`);
+			let errMsg = error.message ?? `queryDynamicIcons failed, code: ${error.code}`;
+			let failResult : DynamicIconFail = {
+				errMsg: errMsg
+			};
+			let completeResult : DynamicIconComplete = {
+				errMsg: errMsg
+			};
+			options?.fail?.(failResult);
+			options?.complete?.(completeResult);
+		});
+	} catch (error) {
+		let businessError = error as BusinessError;
+		hilog.error(0, TAG, `queryDynamicIcons exception, code: ${businessError.code}, message: ${businessError.message}`);
+		let errMsg = businessError.message ?? `queryDynamicIcons exception, code: ${businessError.code}`;
+		let failResult : DynamicIconFail = {
+			errMsg: errMsg
+		};
+		let completeResult : DynamicIconComplete = {
+			errMsg: errMsg
+		};
+		options?.fail?.(failResult);
+		options?.complete?.(completeResult);
+	}
+}
+
+/**
+ * 切换动态图标
+ */
+export function selectDynamicIcon(options : SelectDynamicIconOptions) : void {
+	try {
+		appInfoManager.selectDynamicIcon(options.iconId).then(() => {
+			hilog.info(0, TAG, `selectDynamicIcon success. iconId: ${options.iconId}`);
+			let result : DynamicIconComplete = {
+				errMsg: "ok"
+			};
+			options?.success?.(result);
+			options?.complete?.(result);
+		}).catch((error : BusinessError) => {
+			hilog.error(0, TAG, `selectDynamicIcon failed, code: ${error.code}, message: ${error.message}`);
+			let errMsg = error.message ?? `selectDynamicIcon failed, code: ${error.code}`;
+			let failResult : DynamicIconFail = {
+				errMsg: errMsg
+			};
+			let completeResult : DynamicIconComplete = {
+				errMsg: errMsg
+			};
+			options?.fail?.(failResult);
+			options?.complete?.(completeResult);
+		});
+	} catch (error) {
+		let businessError = error as BusinessError;
+		hilog.error(0, TAG, `selectDynamicIcon exception, code: ${businessError.code}, message: ${businessError.message}`);
+		let errMsg = businessError.message ?? `selectDynamicIcon exception, code: ${businessError.code}`;
+		let failResult : DynamicIconFail = {
+			errMsg: errMsg
+		};
+		let completeResult : DynamicIconComplete = {
+			errMsg: errMsg
+		};
+		options?.fail?.(failResult);
+		options?.complete?.(completeResult);
+	}
+}
+
+/**
+ * 禁用动态图标，恢复默认图标
+ */
+export function disableDynamicIcon(options : DisableDynamicIconOptions) : void {
+	try {
+		appInfoManager.disableDynamicIcon().then(() => {
+			hilog.info(0, TAG, `disableDynamicIcon success.`);
+			let result : DynamicIconComplete = {
+				errMsg: "ok"
+			};
+			options?.success?.(result);
+			options?.complete?.(result);
+		}).catch((error : BusinessError) => {
+			hilog.error(0, TAG, `disableDynamicIcon failed, code: ${error.code}, message: ${error.message}`);
+			let errMsg = error.message ?? `disableDynamicIcon failed, code: ${error.code}`;
+			let failResult : DynamicIconFail = {
+				errMsg: errMsg
+			};
+			let completeResult : DynamicIconComplete = {
+				errMsg: errMsg
+			};
+			options?.fail?.(failResult);
+			options?.complete?.(completeResult);
+		});
+	} catch (error) {
+		let businessError = error as BusinessError;
+		hilog.error(0, TAG, `disableDynamicIcon exception, code: ${businessError.code}, message: ${businessError.message}`);
+		let errMsg = businessError.message ?? `disableDynamicIcon exception, code: ${businessError.code}`;
+		let failResult : DynamicIconFail = {
+			errMsg: errMsg
+		};
+		let completeResult : DynamicIconComplete = {
+			errMsg: errMsg
+		};
+		options?.fail?.(failResult);
+		options?.complete?.(completeResult);
+	}
+}

@@ -53,7 +53,6 @@
 						<text class="ux-text-small ux-color-grey1"><text class="icon">&#xe5c8;</text></text>
 					</view>
 				</navigator>
-				<!-- #ifndef APP-HARMONY  -->
 				<!-- #ifndef H5  -->
 				<navigator url="/pages/about/individuation"
 					class="ux-th ux-bg-white ux-border-radius-large ux-padding ux-mt-small">
@@ -63,7 +62,7 @@
 								class="icon">&#xe5c8;</text></text>
 					</view>
 				</navigator>
-				<!-- #endif --><!-- #endif -->
+				<!-- #endif -->
 				<!-- #ifndef H5  -->
 				<navigator url="/pages/about/mode"
 					class="ux-th ux-bg-white ux-border-radius-large ux-padding ux-mt-small">
@@ -156,7 +155,8 @@
 		},
 		computed: {
 			logoSrc() {
-				return `/static/icons/rg-${this.nowIcon}.png`;
+				const currentIcon = uni.getStorageSync("nowIcon") || 'crh';
+				return `/static/icons/rg-${currentIcon}.png`;
 			}
 		},
 		onShow() {
