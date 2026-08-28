@@ -87,8 +87,8 @@
 						</uni-tr>
 				</uni-table>
 
-				<!-- 只有今天的日期才显示正晚点和停台信息 -->
-				<view v-if="isTodayDate">
+				<!-- 日期在±3天范围内才显示正晚点和停台信息 -->
+				<view v-if="isWithinDelayDays">
 					<uni-section title="正晚点" type="line" style="background-color: transparent;"
 						title-font-size="28rpx"></uni-section>
 
@@ -459,7 +459,7 @@
 	} from "@/scripts/req";
 	import SijiTianditu from '@/uni_modules/siji-tianditu/components/siji-tianditu/siji-tianditu.vue';
 	import { gcj02ToWgs84 } from "@/scripts/coord_transform";
-	import { getTrainPosition } from "@/scripts/trainPosition";
+	import { getTrainPosition, getMinutesSinceDate } from "@/scripts/trainPosition";
 
 	export default {
 		components: {
@@ -511,6 +511,8 @@
 				"selectedStationIndex": -1, 
 				// 日期判断：是否是今天的日期
 				"isTodayDate": true,
+				// 日期判断：是否在今天的±3天范围内（用于正晚点/停台显示）
+				"isWithinDelayDays": true,
 				// 天地图地图 key
 				"tdtMapKey": "416cfaff76398b8567f8b7e48a933651",
 				// 地图路径数据
@@ -587,12 +589,23 @@
 			this.title = this.train;
 			this.date = options.date || '';
 
-			// 判断日期是否是今天
+			// 判断日期是否是今天，以及是否在今天的±3天范围内
 			const today = new Date();
 			const todayStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
 			// 支持两种格式：YYYYMMDD 或 YYYY-MM-DD
 			const dateStr = this.date.replace(/-/g, '');
 			this.isTodayDate = dateStr === todayStr || this.date === '';
+			if (this.date === '' || dateStr === todayStr) {
+				this.isWithinDelayDays = true;
+			} else {
+				const y = parseInt(dateStr.substr(0, 4));
+				const m = parseInt(dateStr.substr(4, 2));
+				const d = parseInt(dateStr.substr(6, 2));
+				const targetDate = new Date(y, m - 1, d);
+				const todayZero = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+				const diffDays = Math.round((targetDate - todayZero) / 86400000);
+				this.isWithinDelayDays = !isNaN(diffDays) && Math.abs(diffDays) <= 3;
+			}
 
 			const mode = uni.getStorageSync("mode");
 			this.isOnlyOfflineMode = uni.getStorageSync("ol") === true;
@@ -1308,9 +1321,9 @@
 					
 					// -------------------------------------------------------------------------
 					// **正晚点数据加载逻辑**
-					// 只有今天的日期才加载正晚点数据
+					// 日期在±3天范围内才加载正晚点数据
 					let delayLoadSuccess = false;
-					if (loadSuccess && this.carData.timetable.length > 0 && this.isTodayDate) {
+					if (loadSuccess && this.carData.timetable.length > 0 && this.isWithinDelayDays) {
 						if (this.train && this.date) {
 							uni.showLoading({
 								title: '加载正晚点数据'
@@ -1338,8 +1351,8 @@
 					
 					// -------------------------------------------------------------------------
 					// **停台自动/手动加载逻辑**
-					// 只有今天的日期才加载停台信息
-					if (loadSuccess && this.carData.timetable.length > 0 && this.isTodayDate) {
+					// 日期在±3天范围内才加载停台信息
+					if (loadSuccess && this.carData.timetable.length > 0 && this.isWithinDelayDays) {
 						if (this.carData.timetable.length < this.platformLoadThreshold) {
 							// 车站少于阈值，自动加载所有停台信息
 							this.loadAllPlatforms();
@@ -1591,7 +1604,10 @@
 					: this.carData.timetable;
 				if (!timetable || timetable.length < 2) return;
 
-				const pos = getTrainPosition(timetable, this.mapLines, this.mapStations);
+				// 第 0 日以查询日（发车日）为基准，避免跨日车次在发车前被误判为运行中
+				const currentMinutes = getMinutesSinceDate(this.date);
+				const pos = getTrainPosition(timetable, this.mapLines, this.mapStations,
+					currentMinutes !== null ? currentMinutes : undefined);
 				if (!pos || !pos.lng || !pos.lat) return;
 
 				this.currentTrainPos = pos;

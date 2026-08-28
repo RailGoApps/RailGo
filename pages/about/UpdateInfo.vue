@@ -47,6 +47,13 @@
 				nowIcon: uni.getStorageSync("nowIcon") || 'crh',
 				updateLogs: [
 					{
+						version: "v2.0.5 (20005)",
+						date: "2026-08-28",
+						items: [
+							"Fixed: 一些已知Bug"
+						]
+					},
+					{
 						version: "v2.0.4 (20004)",
 						date: "2026-08-13",
 						items: [

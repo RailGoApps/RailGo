@@ -210,7 +210,7 @@
 					data: 0
 				});
 				uni.setStorage({
-					key: 'Funnyegg',
+					key: 'cr200jUnlock',
 					data: false
 				});
 

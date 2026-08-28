@@ -40,10 +40,10 @@
 
 				<view class="icon-item">
 					<image mode="scaleToFill" :src="'/static/icons/rg-green.png'"
-						:class="{'grayscale': !eggUnlock && !greenUnlock}" @click="showIconHelp('立及甬', 'greenUnlock')"></image>
+						:class="{'grayscale': !cr200jUnlock && !greenUnlock}" @click="showIconHelp('立及甬', 'greenUnlock')"></image>
 					<text class="icon-text">立及甬</text>
-					<button class="ux-btn" :disabled="!(eggUnlock || greenUnlock) || nowIcon === 'green'" @click="selectIcon('green')">
-						{{ nowIcon === 'green' ? '已使用' : ((eggUnlock || greenUnlock) ? '使用' : '未解锁') }}
+					<button class="ux-btn" :disabled="!(cr200jUnlock || greenUnlock) || nowIcon === 'green'" @click="selectIcon('green')">
+						{{ nowIcon === 'green' ? '已使用' : ((cr200jUnlock || greenUnlock) ? '使用' : '未解锁') }}
 					</button>
 				</view>
 
@@ -117,18 +117,17 @@ import {uniGet} from "@/scripts/req.js";
 		data() {
 			return {
 				items: [],
-				egg: uni.getStorageSync("Funnyegg"),
 				search: uni.getStorageSync("search"),
 				nowIcon: uni.getStorageSync("nowIcon"),
 							
 				// 默认解锁状态 (通过原有方式)
-				eggUnlock: false, 
 				searchUnlock1: false, 
 				searchUnlock2: false, 
 				searchUnlock3: false, 
 				girlUnlock: false, 
 		
-				greenUnlock: uni.getStorageSync("greenUnlock") || false, // 立及甬
+				greenUnlock: uni.getStorageSync("greenUnlock") || false, // 立及甬（兑换码）
+				cr200jUnlock: uni.getStorageSync("cr200jUnlock") || false, // 立及甬（图鉴搜索CR200J）
 				purpleUnlock: uni.getStorageSync("purpleUnlock") || false, // 大茄子
 				passionUnlock: uni.getStorageSync("passionUnlock") || false, // 百香果
 				railgoGirlUnlock: uni.getStorageSync("railgoGirlUnlock") || false, // 露星
@@ -156,13 +155,17 @@ import {uniGet} from "@/scripts/req.js";
 			this.updateUnlockStatus();
 			this.apiUrl = (uni.getStorageSync('service_source_icon') || 'https://gateway.zenglingkun.cn') + '/api/v2/cc';
 		},
+		onShow() {
+			// 重新读取解锁状态（如图鉴搜索CR200J解锁可能在其他页面触发）
+			this.updateUnlockStatus();
+		},
 		methods: {
 			back: function() {
 				uni.navigateBack()
 			},
 			updateUnlockStatus() {
-				// 原有解锁逻辑
-				this.eggUnlock = this.egg === true;
+				// 原有解锁逻辑（重新读取图鉴搜索解锁状态）
+				this.cr200jUnlock = uni.getStorageSync("cr200jUnlock") || false;
 				this.searchUnlock1 = this.search >= 300; 
 				this.searchUnlock2 = this.search >= 1000;
 			},
@@ -240,7 +243,7 @@ import {uniGet} from "@/scripts/req.js";
 			showIconHelp(icon, storageKey) {
 				// 检查是否已解锁
 				const isUnlocked = this[storageKey] || 
-				  (icon === '立及甬' && this.eggUnlock) ||
+				  (icon === '立及甬' && this.cr200jUnlock) ||
 				  (icon === '大茄子' && this.searchUnlock1) ||
 				  (icon === '百香果' && this.searchUnlock2) ||
 				  (icon === '露星' && this.girlUnlock);
@@ -252,7 +255,7 @@ import {uniGet} from "@/scripts/req.js";
 				let content = '';
 				switch(icon) {
 					case '立及甬':
-						content = '立及甬需要发现彩蛋后可解锁，或通过兑换码兑换。';
+						content = '立及甬在图鉴页面输入特定车型解锁，或通过兑换码兑换。';
 						break;
 					case '大茄子':
 						content = '大茄子在查询300次后解锁，或通过兑换码兑换。';
@@ -353,7 +356,7 @@ import {uniGet} from "@/scripts/req.js";
 					// 检查是否已通过兑换码或原有方式解锁
 					const isUnlockedByRedeem = this[item.storageKey];
 					const isUnlockedByOldMethod = 
-						(item.iconKey === 'green' && this.eggUnlock) ||
+						(item.iconKey === 'green' && this.cr200jUnlock) ||
 						(item.iconKey === 'purple' && this.searchUnlock1) ||
 						(item.iconKey === 'passion' && this.searchUnlock2) ||
 						(item.iconKey === 'girl' && this.girlUnlock);
@@ -408,7 +411,7 @@ import {uniGet} from "@/scripts/req.js";
 						const hasAvailableIcons = this.exchangeIconsMap.some(item => {
 							const isUnlockedByRedeem = this[item.storageKey];
 							const isUnlockedByOldMethod = 
-								(item.iconKey === 'green' && this.eggUnlock) ||
+								(item.iconKey === 'green' && this.cr200jUnlock) ||
 								(item.iconKey === 'purple' && this.searchUnlock1) ||
 								(item.iconKey === 'passion' && this.searchUnlock2) ||
 								(item.iconKey === 'girl' && this.girlUnlock);

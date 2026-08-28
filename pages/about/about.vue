@@ -20,7 +20,7 @@
 					<view class="ux-pl">
 						<text class="ux-bold ux-h4">RailGo</text>
 						<br>
-						<text style="font-size: 12px; color: grey;" @click="add">Version {{version}}</text><br>
+						<text style="font-size: 12px; color: grey;">Version {{version}}</text><br>
 					</view>
 				</view>
 				<uv-divider></uv-divider>
@@ -122,14 +122,6 @@
 					</view>
 				</navigator>				
 				<!-- #endif -->
-				<navigator v-if="count >= 10" url="/pages/about/egg"
-					class="ux-th ux-bg-white ux-border-radius-large ux-padding ux-mt-small">
-					<view class="ux-flex ux-space-between">
-						<text class="ux-text-left ux-text-small">达速跨越北京北站！</text>
-						<text class="ux-text-right ux-text-small ux-color-grey1"><text
-								class="icon">&#xe5c8;</text></text>
-					</view>
-				</navigator>
 			</view>
 
 			<view style="margin-top: 50rpx; text-align: center;">
@@ -143,7 +135,6 @@
 	export default {
 		data() {
 			return {
-				count: 0,
 				iconClickCount: 0,
 				version: uni.getStorageSync("versionText"),
 				offline: uni.getStorageSync("offlineDataVersionText"),
@@ -171,9 +162,6 @@
 		methods: {
 			back: function() {
 				uni.navigateBack()
-			},
-			add: function() {
-				this.count += 1
 			},
 			onLogoClick: function() {
 				this.iconClickCount += 1;

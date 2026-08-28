@@ -51,8 +51,17 @@
 					});
 					return;
 				}
+				// 搜索CR200J解锁“立及甬”图标
+				if (this.keyword.trim().toUpperCase() === "CR200J" && !uni.getStorageSync('cr200jUnlock')) {
+					uni.setStorageSync('cr200jUnlock', true);
+					uni.showToast({
+						icon: "none",
+						title: "解锁立及甬图标！",
+						duration: 3000
+					});
+				}
 				uni.navigateTo({
-					url: "/pages/gallery/result?keyword=" + this.keyword 
+					url: "/pages/gallery/result?keyword=" + this.keyword
 				});
 			},
 			inputData: function(e) {

@@ -2,8 +2,8 @@
     "version" : "1.0",
     "configurations" : [
         {
-            "customPlaygroundType" : "local",
-            "playground" : "custom",
+            "customPlaygroundType" : "device",
+            "playground" : "standard",
             "type" : "uni-app:app-android"
         }
     ]

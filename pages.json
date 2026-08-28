@@ -64,12 +64,6 @@
 			}
 		},
 		{
-			"path": "pages/about/egg",
-			"style": {
-				"navigationBarTitleText": ""
-			}
-		},
-		{
 			"path": "pages/about/mode",
 			"style": {
 				"navigationBarTitleText": ""

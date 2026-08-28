@@ -28,6 +28,30 @@ export function getCurrentTimeMinutes() {
 }
 
 /**
+ * 获取当前时刻距指定日期 00:00 的累计分钟数（可超过 1440，天然支持跨日）
+ * 第 0 日以查询日（发车日）为基准计算列车位置时使用
+ *
+ * @param {string} dateStr - 查询日期，支持 YYYYMMDD 或 YYYY-MM-DD，空串视为今天
+ * @returns {number|null} 累计分钟数，解析失败返回 null
+ */
+export function getMinutesSinceDate(dateStr) {
+	const ds = (dateStr || '').replace(/-/g, '');
+	const now = new Date();
+	let base;
+	if (!ds) {
+		base = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+	} else {
+		if (ds.length < 8) return null;
+		const y = parseInt(ds.substr(0, 4), 10);
+		const m = parseInt(ds.substr(4, 2), 10);
+		const d = parseInt(ds.substr(6, 2), 10);
+		if (isNaN(y) || isNaN(m) || isNaN(d)) return null;
+		base = new Date(y, m - 1, d);
+	}
+	return Math.floor((now.getTime() - base.getTime()) / 60000);
+}
+
+/**
  * 根据时刻表生成带跨日偏移的数值化站点序列
  * 使用 dayOffset 累计跨日，而不是只比较相邻两站
  *
@@ -76,37 +100,6 @@ function normalizeTimetable(timetable) {
 	}
 
 	return stations;
-}
-
-/**
- * 根据列车发车日期，推测当前时间应映射到哪个运行日
- * 返回值会以首站发车时间为参考对齐到最近的一天
- *
- * @param {Array} timetable - 原始时刻表
- * @param {number} todayMinutes - 当天 00:00 起的分钟数
- * @returns {number} 对齐后的分钟数
- */
-export function alignCurrentMinutesToTrainDate(timetable, todayMinutes) {
-	const firstDepart = parseTimeToMinutes(timetable[0]?.depart);
-	if (firstDepart === null) return todayMinutes;
-
-	// 候选：昨天、今天、明天
-	const candidates = [
-		todayMinutes - 1440,
-		todayMinutes,
-		todayMinutes + 1440,
-	];
-
-	let best = todayMinutes;
-	let minDiff = Infinity;
-	for (const c of candidates) {
-		const diff = Math.abs(c - firstDepart);
-		if (diff < minDiff) {
-			minDiff = diff;
-			best = c;
-		}
-	}
-	return best;
 }
 
 /**
@@ -397,14 +390,14 @@ export function interpolatePositionOnRoute(mapLines, mapStations, stationA, stat
  * @param {Array} timetable - 时刻表
  * @param {Object} mapLines - 路线段数据
  * @param {Array} mapStations - 站点坐标
- * @param {number} [currentMinutes] - 当前分钟数，缺省使用系统时间
+ * @param {number} [currentMinutes] - 当前分钟数（应以查询日/发车日 00:00 为基准的累计分钟数，
+ *                                    可由 getMinutesSinceDate 获得），缺省使用系统当天时间
  * @returns {Object|null} { lng, lat, currentStation, nextStation, status, progress }
  */
 export function getTrainPosition(timetable, mapLines, mapStations, currentMinutes) {
-	let mins = currentMinutes !== undefined ? currentMinutes : getCurrentTimeMinutes();
-
-	// 自动对齐当前时间到列车运行日期（处理跨日车次）
-	mins = alignCurrentMinutesToTrainDate(timetable, mins);
+	// 第 0 日以调用方传入的基准为准（查询日），不做“就近对齐”的日期猜测，
+	// 避免跨日车次在发车前被误判为运行中
+	const mins = currentMinutes !== undefined ? currentMinutes : getCurrentTimeMinutes();
 
 	const prog = calculateTrainProgress(timetable, mins);
 	if (!prog) {
