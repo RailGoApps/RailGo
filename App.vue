@@ -1,8 +1,8 @@
 <script>
 	const nauth = false;
-	const version = "2.0.4 Build 20004"
-	const version_number = 28
-	import {uniGet} from "./scripts/req";
+	const version = "2.0.6 Build 20006"
+	const version_number = 30
+	import {uniGet, fetchServiceEndpoints, applyFirstServiceSources} from "./scripts/req";
 	// #ifndef H5
 	// #ifndef APP-HARMONY
 	var safeModule = uni.requireNativePlugin("Ionic-Safe");
@@ -103,6 +103,49 @@
 		});
 		// #endif
 		// #endif
+	}
+
+	// 启动时服务源校验（异步）：
+	// 1. 本地存在未配置的服务源 → 从云端获取并全部选第一个（替代原跳转 OOBE 配置）；
+	// 2. 本地已配置的源在云端列表中消失 → 提示过期并跳转设置页。
+	async function validateServiceSources() {
+		const rawList = await fetchServiceEndpoints();
+		if (!rawList) return;
+
+		let hasEmpty = false;
+		for (const item of rawList) {
+			const code = Object.keys(item)[0];
+			if (code && !uni.getStorageSync('service_source_' + code)) {
+				hasEmpty = true;
+				break;
+			}
+		}
+		if (hasEmpty) {
+			applyFirstServiceSources(rawList);
+			return;
+		}
+
+		for (const item of rawList) {
+			const code = Object.keys(item)[0];
+			if (!code) continue;
+			const saved = uni.getStorageSync('service_source_' + code);
+			if (!saved) continue;
+			const urls = (item[code] || []).map(ep => ep.url);
+			if (urls.indexOf(saved) < 0) {
+				uni.showModal({
+					title: '提示',
+					content: '您的数据源设置已过期，请重新设置。',
+					showCancel: false,
+					confirmText: '确定',
+					success: function() {
+						uni.navigateTo({
+							url: '/pages/about/source'
+						});
+					}
+				});
+				return;
+			}
+		}
 	}
 
 	// --- 【新增辅助函数：获取当前日期 YYYYMMDD】 ---
@@ -222,21 +265,8 @@
 			}
 
 			if (uni.getStorageSync('oobe')) {
-				// 检查服务源是否已全部配置
-				const serviceCodes = ['train', 'train_v2', 'station', 'emu_run', 'emu_assignment', 'icon', 'update_pack', 'update_db', 'bigScreen', 'trainDelay', 'exit', 'coach', 'mapLine', 'notice', 'tp'];
-				let hasEmptySource = false;
-				for (const code of serviceCodes) {
-					if (!uni.getStorageSync('service_source_' + code)) {
-						hasEmptySource = true;
-						break;
-					}
-				}
-				if (hasEmptySource) {
-					uni.reLaunch({
-						url: '/pages/oobe/source'
-					});
-					return;
-				}
+				// 异步校验服务源（空则云端全选第一、过期则提示重设），不再阻断启动
+				validateServiceSources();
 			} else {
 				uni.reLaunch({
 					url: '/pages/oobe/welcome'

@@ -13,7 +13,7 @@
 	</view>
 </template>
 <script>
-import {uniGet} from "@/scripts/req.js";
+import {uniGet, fetchServiceEndpoints, applyFirstServiceSources} from "@/scripts/req.js";
 	import {
 		loadDB
 	} from "@/scripts/sqlite.js";
@@ -94,12 +94,10 @@ import {uniGet} from "@/scripts/req.js";
 		        await loadDB();
 
 		
-		        // 设置完成标志并跳转到服务源配置
+		        // 设置完成标志；数据源步骤已移除：云端获取并全部选第一个后进入主页
 		        uni.setStorageSync("oobe", true);
 		        uni.setStorageSync("mode", "local");
-		        uni.reLaunch({ 
-		            url: '/pages/oobe/source' 
-		        });
+		        await this.initSourcesAndGo();
 		
 		    } catch (e) {
 		        console.error("下载或初始化过程中发生错误:", e);
@@ -115,12 +113,18 @@ import {uniGet} from "@/scripts/req.js";
 		    // #ifdef H5
 		    uni.setStorageSync("oobe", true);
 		    uni.setStorageSync("mode", "network");
-		    uni.reLaunch({ 
-		        url: '/pages/oobe/source' 
-		    });
+		    await this.initSourcesAndGo();
 		    // #endif
 		},
 		methods: {
+			// 数据源步骤已移除：云端获取服务端点并全部选第一个，然后进入主页
+			initSourcesAndGo: async function() {
+				const rawList = await fetchServiceEndpoints();
+				if (rawList) applyFirstServiceSources(rawList);
+				uni.reLaunch({
+					url: '/pages/index/index'
+				});
+			}
 		}
 	}
 </script>

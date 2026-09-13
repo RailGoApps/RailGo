@@ -49,6 +49,7 @@
 
 
 <script>
+	import { fetchServiceEndpoints, applyFirstServiceSources } from "@/scripts/req.js";
 	export default {
 		// #ifdef APP-PLUS
 		data() {
@@ -111,9 +112,7 @@
 					// #endif
 				} else {
 					uni.setStorageSync("oobe", true)
-					uni.reLaunch({
-						url: '/pages/oobe/source'
-					})
+					this.initSourcesAndGo();
 				}
 				
 				
@@ -124,6 +123,14 @@
 				uni.navigateTo({
 					url: '/pages/oobe/download'
 				})
+			},
+			// 数据源步骤已移除：云端获取服务端点并全部选第一个，然后进入主页
+			initSourcesAndGo: async function() {
+				const rawList = await fetchServiceEndpoints();
+				if (rawList) applyFirstServiceSources(rawList);
+				uni.reLaunch({
+					url: '/pages/index/index'
+				});
 			}
 		}
 	}

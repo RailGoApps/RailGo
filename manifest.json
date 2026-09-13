@@ -1,9 +1,9 @@
 {
-    "name" : "RailGo 铁路行",
+    "name" : "RailGo",
     "appid" : "__UNI__1A91000",
     "description" : "现代化的专业铁路查询工具",
-    "versionName" : "2.0.4",
-    "versionCode" : 20004,
+    "versionName" : "2.0.6",
+    "versionCode" : 20006,
     "transformPx" : false,
     /* 5+App特有相关 */
     "app-plus" : {

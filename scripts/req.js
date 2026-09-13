@@ -124,5 +124,39 @@ const uniPost = (url, data, config = {}) => {
   });
 };
 
+// 云端服务端点列表地址
+const SERVICE_ENDPOINTS_URL = 'https://gateway.zenglingkun.cn/api/v2/service_endpoints';
+
+/**
+ * 获取云端服务端点列表。
+ * @returns {Promise<Array|null>} 成功返回原始数组（每项形如 { code: [{ desc, url }, ...] }），失败返回 null。
+ */
+const fetchServiceEndpoints = async () => {
+  try {
+    const resp = await uniGet(SERVICE_ENDPOINTS_URL);
+    if (resp && resp.data && Array.isArray(resp.data)) {
+      return resp.data;
+    }
+  } catch (e) {
+    console.error('获取服务端点失败:', e);
+  }
+  return null;
+};
+
+/**
+ * 为全部服务选择第一个可用端点并写入本地存储（service_source_<code>）。
+ * @param {Array} rawList fetchServiceEndpoints 返回的原始数组。
+ */
+const applyFirstServiceSources = (rawList) => {
+  for (const item of rawList) {
+    const code = Object.keys(item)[0];
+    if (!code) continue;
+    const endpoints = item[code] || [];
+    if (endpoints.length > 0 && endpoints[0].url) {
+      uni.setStorageSync('service_source_' + code, endpoints[0].url);
+    }
+  }
+};
+
 // 使用命名导出，与您的导入方式 (import { uniGet, uniPost } from ...) 匹配
-export { uniGet, uniPost };
+export { uniGet, uniPost, fetchServiceEndpoints, applyFirstServiceSources };

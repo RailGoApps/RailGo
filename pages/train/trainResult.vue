@@ -3,18 +3,28 @@
 	<back-header></back-header>
 		<view class="ux-pl ux-pr ux-pb">
 
-			<view class="ux-bg-white ux-border-radius">
-				<view class="ux-flex ux-space-between ux-pt ux-pl ux-pr ux-align-items-center">
+			<view class="ux-bg-white ux-border-radius" style="overflow:hidden;">
+				<view class="ux-flex ux-space-between ux-pl ux-pr ux-align-items-center" style="padding-top:36rpx;padding-bottom:28rpx;">
 					<view>
 						<text class="ux-bold consolas" style="font-size:60rpx;"
 							:style="'color:'+cardColor">{{carData.numberKind || ''}}</text>
 						<text class="consolas"
 							style="font-size:50rpx;padding-left:5rpx;">{{(carData.numberFull || []).join("/").replace(carData.numberKind, "").replace(carData.numberKind, "")}}</text>
 					</view>
-					<text class="ux-badge ux-text-small ux-color-white" style="padding:5rpx 15rpx;"
-						:style="'background-color:'+cardColor">{{carData.diagramType || ''}} {{carData.type || ''}}</text>
+					<!-- 胶囊：左=交路类型（透底描边），右=列车类型（实心），双边 -2px 重叠；无交路类型时单颗实心徽章 -->
+					<view v-if="carData.diagramType">
+						<text class="ux-text-small" style="padding:5rpx 5rpx 5rpx 10rpx;"
+							:style="'border-top-left-radius:38rpx;border-bottom-left-radius:38rpx;border:solid '+cardColor+' 2px;color:'+cardColor">{{carData.diagramType || ''}}</text>
+						<text class="ux-text-small" style="padding:5rpx 10rpx 5rpx 5rpx;margin-left:-2px;"
+							:style="'border-top-right-radius:38rpx;border-bottom-right-radius:38rpx;color:#ffffff;background-color:'+cardColor+';border:solid '+cardColor+' 2px;'">{{carData.type || ''}}</text>
+					</view>
+					<view v-if="!carData.diagramType && carData.type">
+						<text class="ux-badge ux-text-small ux-color-white" style="padding:5rpx 15rpx;"
+							:style="'background-color:'+cardColor">{{carData.type || ''}}</text>
+					</view>
 				</view>
-				<view class="ux-flex ux-space-between ux-mt-small ux-pl ux-pr ux-pt-small ux-color-white"
+				<view class="ux-flex ux-space-between ux-pl ux-pr ux-color-white"
+					style="padding-top:18rpx;padding-bottom:18rpx;"
 					:style="'background-color:'+cardColor">
 					<text
 						class="ux-text-small">{{(carData.timetable && carData.timetable[0] ? carData.timetable[0].station : '')}}
@@ -22,14 +32,21 @@
 						{{(carData.timetable && carData.timetable.length > 0 ? carData.timetable[carData.timetable.length-1].station : '')}}</text>
 					<text class="ux-text-small">{{carData.bureauName || ''}}{{carData.runner || ''}}&nbsp;&nbsp;</text>
 				</view>
-				<view class="ux-pb-small" style="border-bottom-left-radius:10rpx; border-bottom-right-radius:10rpx;"
-					:style="'background-color:'+cardColor">
-				</view>
 			</view>
-			<br>
-			<view class="ux-padding-small ux-h6 ux-text-center"
-				style="background-color:#e9eef5;border:1px solid #114598;border-radius:10rpx;color:#114598;">
-				<text class="ux-bold">信息仅供参考 请以铁路运营企业实际运用为准</text>
+			<!-- 按钮行：与原版对齐——等高、留间隙，左描边提示 + 右实心加入行程 -->
+			<view class="ux-flex" style="margin-top:36rpx;align-items:stretch;">
+				<view class="ux-flex1 ux-flex ux-align-items-center ux-justify-content-center ux-h6"
+					style="height:76rpx;box-sizing:border-box;background-color:#e9eef5;border:2rpx solid #114598;border-radius:10rpx;color:#114598;">
+					<text class="ux-bold">信息仅供参考 请以实际为准</text>
+				</view>
+				<button class="ux-color-white ux-bg-primary" size="mini"
+					style="margin:0 0 0 20rpx;border-radius:10rpx;height:76rpx;padding:0 40rpx;box-sizing:border-box;"
+					@click="addToMyRoute" hover-class="ux-tap">
+					<view class="ux-flex ux-align-items-center ux-justify-content-center" style="height:100%;">
+						<text class="icon" style="font-size: 24rpx;">&#xe1b7;</text>
+						<text style="margin-left: 8rpx;">加入行程</text>
+					</view>
+				</button>
 			</view>
 			<view v-if="carData.rundays && !carData.rundays.includes(date)">
 				<view class="ux-padding-small ux-h6 ux-text-center ux-mt-small"
@@ -92,85 +109,35 @@
 					<uni-section title="正晚点" type="line" style="background-color: transparent;"
 						title-font-size="28rpx"></uni-section>
 
-					<view v-if="showLoadAllButton" class="ux-pb-small">
-						<button @click="loadAllPlatforms" type="primary" size="mini"
-							style="margin: 0; padding: 0 15px; font-size: 14px; line-height: 30px;">
-							一键全部加载停台信息 (共{{carData.timetable.length}}站)
-						</button>
-					</view>
 
-					<view v-for="(item,index) in combinedDelayData" :key="index" 
-						class="ux-bg-white ux-border-radius ux-mt-small" 
-						@click="item.platform ? showPlatformDetails(item, index) : null"
+					<view v-for="(item,index) in combinedDelayData" :key="index"
+						class="ux-bg-white ux-border-radius ux-mt-small"
+						@click="openDelaySheet(item, index)"
 						hover-class="ux-tap">
 						<view class="ux-flex">
 							<view style="border-bottom-left-radius: 10rpx; border-top-left-radius:10rpx; width: 12rpx;"
 								:style="getDelayStatusBackground(item.delayStatusCode)">
 							</view>
-							<view class="ux-flex ux-space-between ux-pt ux-pl ux-pr ux-align-items-center" style="width: 100%;">
+							<view class="ux-flex ux-space-between ux-padding ux-align-items-center" style="width: 100%;">
 								<text class="ux-bold" style="font-size: 32rpx;">{{item.stationName || ''}}</text>
 								<text :style="getDelayStatusColor(item.delayStatusCode, item.delayTime)" class="ux-bold" style="font-size: 28rpx;">
 									{{formatDelayStatus(item.delayStatusCode, item.delayTime)}}
 								</text>
 							</view>
 						</view>
-						<view class="ux-pl ux-pr ux-pb">
-							<view class="ux-flex ux-space-between ux-mt-small">
-								<text class="ux-text-small ux-opacity-7">预计时间</text>
-								<text class="ux-text-small">{{item.arrivalTime || '-'}}/{{item.departureTime || '-'}}</text>
-							</view>
-							<view class="ux-flex ux-space-between ux-mt">
-								<text class="ux-text-small ux-opacity-7">实际时间</text>
-								<text class="ux-text-small">{{calculateActualTime(item.arrivalTime, item.delayStatusCode, item.delayTime)}}/{{calculateActualTime(item.departureTime, item.delayStatusCode, item.delayTime)}}</text>
-							</view>
-							<view class="ux-flex ux-space-between ux-mt">
-								<text class="ux-text-small ux-opacity-7">停台</text>
-								<text class="ux-text-small">
-									<!-- 停台信息 -->
-									<text v-if="item.platform">{{item.platform}} 站台</text>
-									<button v-else-if="item.platform === null && showLoadAllButton" 
-										@click.stop="loadPlatformByStationName(item.stationName)" 
-										size="mini" type="primary" 
-										style="margin: 0; padding: 0 5px; font-size: 10px; line-height: 20px; display: inline;">
-										查询
-									</button>
-									<text v-else>-</text>
-								</text>
-							</view>
-						</view>
 					</view>
-					<view v-if="delay.length === 0" v-for="(item,index) in (carData.timetable || [])" :key="index" 
+					<view v-if="delay.length === 0" v-for="(item,index) in (carData.timetable || [])" :key="index"
 						class="ux-bg-white ux-border-radius ux-mt-small"
-						@click="item.platform ? showPlatformDetails(item, index) : null"
+						@click="openDelaySheet(item, index)"
 						hover-class="ux-tap">
 						<view class="ux-flex">
 							<view style="border-bottom-left-radius: 10rpx; border-top-left-radius:10rpx; width: 12rpx;"
 								:style="'background-color: #606266;'">
 							</view>
-							<view class="ux-flex ux-space-between ux-pt ux-pl ux-pr ux-align-items-center" style="width: 100%;">
+							<view class="ux-flex ux-space-between ux-padding ux-align-items-center" style="width: 100%;">
 								<text class="ux-bold" style="font-size: 32rpx;">{{item.station || ''}}</text>
 								<text :style="'color: #606266; font-weight: bold;'" class="ux-bold" style="font-size: 28rpx;">
 									未维护
-								</text>
-							</view>
-						</view>
-						<view class="ux-pl ux-pr ux-pb">
-							<view class="ux-flex ux-space-between ux-mt-small">
-								<text class="ux-text-small ux-opacity-7">预计时间</text>
-								<text class="ux-text-small">{{item.arrive || '-'}}/{{item.depart || '-'}}</text>
-							</view>
-							<view class="ux-flex ux-space-between ux-mt">
-								<text class="ux-text-small ux-opacity-7">停台</text>
-								<text class="ux-text-small">
-									<!-- 停台信息 -->
-									<text v-if="item.platform">{{item.platform}}</text>
-									<button v-else-if="item.platform === null && showLoadAllButton" 
-										@click.stop="loadPlatformByStationName(item.station)" 
-										size="mini" type="primary" 
-										style="margin: 0; padding: 0 5px; font-size: 10px; line-height: 20px; display: inline;">
-										查询
-									</button>
-									<text v-else>-</text>
 								</text>
 							</view>
 						</view>
@@ -286,16 +253,6 @@
 					</view>
 				</view>
 
-				<view class="ux-padding">
-					<button class="ux-color-white ux-bg-primary" size="mini" style="width:100%;"
-						@click="addToMyRoute" 
-						hover-class="ux-tap">
-						<view class="ux-flex ux-align-items-center ux-justify-content-center">
-							<text class="icon" style="font-size: 24rpx;">&#xe1b7;</text>
-							<text style="margin-left: 8rpx;">加入我的行程</text>
-						</view>
-					</button>
-				</view>
 				<view v-if="(carData.carOwner || '')+(carData.runner || '')+(carData.car || '')==''"
 					class="ux-padding ux-text-center">
 					暂无担当
@@ -382,53 +339,62 @@
 		</view>
 	</view>
 	
-	<!-- 自定义停台详情模态框 -->
-	<view v-if="showPlatformModal" class="modal-overlay" @click="hidePlatformDetails">
-		<view class="modal-content" @click.stop>
-			<view class="modal-header">
-				<text class="modal-title">详情</text>
-				<text class="modal-close icon" @click="hidePlatformDetails">&#xe5cd;</text>
+	<!-- 正晚点详情底部弹出卡片 -->
+	<view v-if="sheetRender" class="sheet-overlay" :class="{ 'sheet-overlay--leave': sheetLeaving }" @click="closeDelaySheet">
+		<view class="sheet-panel" @click.stop>
+			<view class="sheet-handle"></view>
+			<view class="sheet-head">
+				<text class="sheet-station">{{ sheetData.stationName || '' }}</text>
+				<text class="icon sheet-close" @click="closeDelaySheet">&#xe5cd;</text>
 			</view>
-			<view class="modal-body">
-				<view v-if="selectedStationIndex >= 0 && carData.timetable[selectedStationIndex]" class="ux-padding">
-					<!-- 车站名称 -->
-					<view class="ux-mb-small">
-						<text class="ux-bold" style="font-size: 36rpx;">{{carData.timetable[selectedStationIndex].station}}</text>
+			<!-- 三列：到达 / 停留 / 出发 -->
+			<view class="sheet-times">
+				<view class="sheet-time-col" :style="getDelayTintBackground(sheetData.delayStatusCode)">
+					<text class="sheet-time-label">到达</text>
+					<text class="sheet-time-main">{{ calculateActualTime(sheetData.arrivalTime, sheetData.delayStatusCode, sheetData.delayTime) }}</text>
+					<text class="sheet-time-sub"
+						:class="{ 'sheet-time-sub--diff': isTimeChanged(sheetData.arrivalTime, sheetData.delayStatusCode, sheetData.delayTime) }">{{ sheetData.arrivalTime || '-' }}</text>
+				</view>
+				<view class="sheet-time-col sheet-time-col--mid">
+					<text class="sheet-time-label">停留</text>
+					<text class="sheet-time-main">{{ getStopMinutesText(sheetData) }}</text>
+					<text class="sheet-time-sub">STAY</text>
+				</view>
+				<view class="sheet-time-col" :style="getDelayTintBackground(sheetData.delayStatusCode)">
+					<text class="sheet-time-label">出发</text>
+					<text class="sheet-time-main">{{ calculateActualTime(sheetData.departureTime, sheetData.delayStatusCode, sheetData.delayTime) }}</text>
+					<text class="sheet-time-sub"
+						:class="{ 'sheet-time-sub--diff': isTimeChanged(sheetData.departureTime, sheetData.delayStatusCode, sheetData.delayTime) }">{{ sheetData.departureTime || '-' }}</text>
+				</view>
+			</view>
+			<!-- 状态色条：单条通栏，颜色跟随正晚点状态（正点为主题蓝） -->
+			<view class="sheet-bars">
+				<view class="sheet-bar" :style="getDelayBarBackground(sheetData.delayStatusCode)">
+					<text class="sheet-bar-text">{{ formatDelayStatus(sheetData.delayStatusCode, sheetData.delayTime) }}</text>
+				</view>
+			</view>
+			<!-- 检票口 / 站台 -->
+			<view class="sheet-cards">
+				<view class="sheet-card sheet-card--gate">
+					<text class="sheet-card-label">检票口</text>
+					<view v-if="sheetStation.entrance && sheetStation.entrance.length > 0">
+						<text v-for="(entrance, idx) in sheetStation.entrance" :key="idx"
+							class="sheet-card-value sheet-card-value--gate">{{ entrance }}</text>
 					</view>
-					
-					<!-- 停台信息 -->
-					<view class="detail-item ux-bg-grey8 ux-border-radius ux-mt-small ux-padding-small">
-						<view class="ux-mb-small">
-							<text class="ux-text-small ux-opacity-5">停台</text>
-						</view>
-						<text class="ux-bold ux-text" style="font-size: 40rpx;">{{carData.timetable[selectedStationIndex].platform || '未查询'}}</text>
-					</view>
-					
-					<!-- 检票口信息 -->
-					<view class="detail-item ux-bg-grey8 ux-border-radius ux-mt-small ux-padding-small">
-						<view class="ux-mb-small">
-							<text class="ux-text-small ux-opacity-5">检票口</text>
-						</view>
-						<view v-if="carData.timetable[selectedStationIndex].entrance && carData.timetable[selectedStationIndex].entrance.length > 0">
-							<text v-for="(entrance, idx) in carData.timetable[selectedStationIndex].entrance" :key="idx" class="ux-text ux-mr-small">
-								{{entrance}}
-							</text>
-						</view>
-						<text v-else class="ux-text-small ux-opacity-5">暂无数据</text>
-					</view>
-					
-					<!-- 出站口信息 -->
-					<view class="detail-item ux-bg-grey8 ux-border-radius ux-mt-small ux-padding-small">
-						<view class="ux-mb-small">
-							<text class="ux-text-small ux-opacity-5">出站口</text>
-						</view>
-						<view v-if="carData.timetable[selectedStationIndex].exit && carData.timetable[selectedStationIndex].exit.length > 0">
-							<text v-for="(exit, idx) in carData.timetable[selectedStationIndex].exit" :key="idx" class="ux-text ux-mr-small">
-								{{exit}}
-							</text>
-						</view>
-						<text v-else class="ux-text-small ux-opacity-5">暂无数据</text>
-					</view>
+					<text v-else class="sheet-card-value sheet-card-value--empty">-</text>
+				</view>
+				<view class="sheet-card sheet-card--platform">
+					<text class="sheet-card-label">站台</text>
+					<text v-if="sheetPlatformLoading" class="sheet-card-value sheet-card-value--empty">获取中…</text>
+					<text v-else-if="sheetStation.platform && sheetStation.platform !== '查询失败' && sheetStation.platform !== '网络错误'"
+						class="sheet-card-value sheet-card-value--platform">{{ sheetStation.platform }}</text>
+					<button v-else
+						@click="maybeFetchSheetPlatform"
+						size="mini" type="primary"
+						style="margin: 0; padding: 0 5px; font-size: 10px; line-height: 20px; display: inline;">
+						查询
+					</button>
+					<text v-else class="sheet-card-value sheet-card-value--empty">-</text>
 				</view>
 			</view>
 		</view>
@@ -502,13 +468,11 @@
 				"defaultImageUrl": "",
 				"imageUploaderUsername": "暂缺图片", // NEW: For dynamic image source
 				"isImageLoading": true,
-				// 停台加载逻辑相关状态
-				"platformLoadThreshold": 15, 
-				"allPlatformLoaded": false, 
-				"showLoadAllButton": false, 
-				// 停台详情模态框相关状态
-				"showPlatformModal": false, 
-				"selectedStationIndex": -1, 
+				// 正晚点详情底部弹层相关状态
+				"sheetRender": false, 
+				"sheetLeaving": false, 
+				"sheetData": {}, 
+				"sheetPlatformLoading": false, 
 				// 日期判断：是否是今天的日期
 				"isTodayDate": true,
 				// 日期判断：是否在今天的±3天范围内（用于正晚点/停台显示）
@@ -580,6 +544,18 @@
 						_index: -1 
 					};
 				});
+			},
+			/**
+			 * 弹层实时站台/检票口：弹层内单站查询后反映最新时刻表结果
+			 */
+			sheetStation() {
+				const sd = this.sheetData;
+				if (!sd || !sd.stationName) return {};
+				const live = (this.combinedDelayData || []).find(x => x.stationName === sd.stationName);
+				if (live) return live;
+				const t = (this.carData.timetable || []).find(x => x.station === sd.stationName);
+				if (t) return { platform: t.platform, entrance: t.entrance || [] };
+				return {};
 			}
 		},
 		onLoad(options) {
@@ -647,24 +623,6 @@
 			},
 			back: function() {
 				uni.navigateBack()
-			},
-			/**
-			 * 根据车站名触发单个停台查询（用于正晚点表中的“查询”按钮）
-			 * @param {string} stationName 车站名称
-			 */
-			loadPlatformByStationName: function(stationName) {
-				// 在 carData.timetable 中找到对应的原始数据和索引
-				const targetIndex = this.carData.timetable.findIndex(item => item.station === stationName);
-				const targetItem = this.carData.timetable[targetIndex];
-				
-				if (targetItem && targetIndex !== -1) {
-					// 调用核心加载逻辑
-					this.loadPlatform(targetItem, targetIndex, false);
-				} else {
-					uni.showToast({
-						title: '无法匹配车站信息'
-					});
-				}
 			},
 			/**
 			 * 停台查询方法 (单个车站)
@@ -765,51 +723,6 @@
 						uni.hideLoading();
 					}
 					return result;
-				}
-			},
-
-			/**
-			 * 批量加载所有车站的停台信息
-			 */
-			async loadAllPlatforms() {
-				if (this.allPlatformLoaded) return;
-				
-				uni.showLoading({ title: '一键加载中...' });
-				
-				let successCount = 0;
-				let totalCount = this.carData.timetable.length;
-				
-				try {
-					for (let i = 0; i < this.carData.timetable.length; i++) {
-						const item = this.carData.timetable[i];
-						// 检查是否已经查询过，避免重复请求
-						if (item.platform === null || item.platform === '查询失败' || item.platform === '网络错误') {
-							// 使用 silent 模式进行加载
-							const result = await this.loadPlatform(item, i, true); 
-							if (result.success) {
-								successCount++;
-							}
-						} else if (item.platform) {
-							// 已经有数据了，也算成功
-							successCount++;
-						}
-					}
-					
-					this.allPlatformLoaded = true;
-					this.showLoadAllButton = false;
-					
-					uni.showToast({
-						title: `加载完成！成功${successCount} / ${totalCount}站`,
-						duration: 2000,
-						position: 'bottom',
-					});
-					
-				} catch (e) {
-					uni.showToast({
-						title: '批量加载出错'
-					});
-				} finally {
-					uni.hideLoading();
 				}
 			},
 
@@ -1350,17 +1263,7 @@
 					// -------------------------------------------------------------------------
 					
 					// -------------------------------------------------------------------------
-					// **停台自动/手动加载逻辑**
-					// 日期在±3天范围内才加载停台信息
-					if (loadSuccess && this.carData.timetable.length > 0 && this.isWithinDelayDays) {
-						if (this.carData.timetable.length < this.platformLoadThreshold) {
-							// 车站少于阈值，自动加载所有停台信息
-							this.loadAllPlatforms();
-						} else {
-							// 车站多于阈值，显示一键加载按钮
-							this.showLoadAllButton = true;
-						}
-					}
+					// **停台加载逻辑**：不自动预取，进入弹层卡片时按需获取（±3天窗口由正晚点区块 v-if 控制）
 					// -------------------------------------------------------------------------
 
 
@@ -1416,19 +1319,111 @@
 			},
 			
 			/**
-			 * 显示停台详情模态框
+			 * 打开正晚点详情底部弹层（兼容正晚点合并项 / 原始时刻表项两种数据形态）
 			 */
-			showPlatformDetails: function(item, index) {
-				this.selectedStationIndex = index;
-				this.showPlatformModal = true;
+			openDelaySheet: function(item, index) {
+				this.sheetData = {
+					stationName: item.stationName || item.station || '',
+					delayStatusCode: (item.delayStatusCode !== undefined && item.delayStatusCode !== null) ? item.delayStatusCode : 'MAINTAINCE_MISSING',
+					delayTime: (typeof item.delayTime === 'number') ? item.delayTime : 0,
+					arrivalTime: item.arrivalTime || item.arrive || null,
+					departureTime: item.departureTime || item.depart || null,
+					platform: (item.platform !== undefined) ? item.platform : null,
+					entrance: item.entrance || [],
+					stopMinutes: item.stopMinutes,
+					_index: (item._index !== undefined) ? item._index : index
+				};
+				this.sheetLeaving = false;
+				this.sheetRender = true;
+				// 进入卡片后再获取检票口/站台
+				this.maybeFetchSheetPlatform();
 			},
-			
+
 			/**
-			 * 隐藏停台详情模态框
+			 * 关闭正晚点详情底部弹层（先播退出动画再移除节点）
 			 */
-			hidePlatformDetails: function() {
-				this.showPlatformModal = false;
-				this.selectedStationIndex = -1;
+			closeDelaySheet: function() {
+				if (this.sheetLeaving) return;
+				this.sheetLeaving = true;
+				setTimeout(() => {
+					if (this.sheetLeaving) {
+						this.sheetRender = false;
+						this.sheetLeaving = false;
+						this.sheetData = {};
+					}
+				}, 300);
+			},
+
+			/**
+			 * 进入弹层后按需静默获取该站检票口/站台（未查询或查询失败时）
+			 */
+			maybeFetchSheetPlatform: async function() {
+				const name = this.sheetData.stationName;
+				if (!name || this.sheetPlatformLoading) return;
+				const idx = (this.carData.timetable || []).findIndex(x => x.station === name);
+				if (idx === -1) return;
+				const item = this.carData.timetable[idx];
+				if (item.platform && item.platform !== '查询失败' && item.platform !== '网络错误') return;
+				this.sheetPlatformLoading = true;
+				await this.loadPlatform(item, idx, true);
+				this.sheetPlatformLoading = false;
+			},
+
+			/**
+			 * 弹层时间列的状态底色（浅色渐变 tint）
+			 */
+			getDelayTintBackground: function(delayStatus) {
+				let tint = 'rgba(17, 69, 152, 0.08)';
+				if (delayStatus === 'EARLY' || delayStatus === 'EARLY_PREDICTION') {
+					tint = 'rgba(39, 174, 96, 0.12)';
+				} else if (delayStatus === 'DELAY' || delayStatus === 'DELAY_PREDICTION') {
+					tint = 'rgba(192, 57, 43, 0.12)';
+				} else if (delayStatus === 'MAINTAINCE_MISSING') {
+					tint = 'rgba(96, 98, 102, 0.08)';
+				}
+				return 'background: linear-gradient(180deg, #fdfdfd 40%, ' + tint + ' 100%);';
+			},
+
+			/**
+			 * 弹层状态色条渐变背景（正点为主题蓝渐变）
+			 */
+			getDelayBarBackground: function(delayStatus) {
+				if (delayStatus === 'EARLY' || delayStatus === 'EARLY_PREDICTION') {
+					return 'background: linear-gradient(90deg, #27ae60 0%, #67d98b 100%);';
+				}
+				if (delayStatus === 'DELAY' || delayStatus === 'DELAY_PREDICTION') {
+					return 'background: linear-gradient(90deg, #c0392b 0%, #e67e22 100%);';
+				}
+				if (delayStatus === 'MAINTAINCE_MISSING') {
+					return 'background: #606266;';
+				}
+				return 'background: linear-gradient(90deg, #114598 0%, #3f7ac4 100%);';
+			},
+
+			/**
+			 * 实际时间是否与预计时间不同（用于弹层中给预计时间加删除线）
+			 */
+			isTimeChanged: function(scheduled, delayStatus, delayTime) {
+				if (!scheduled || scheduled === '-') return false;
+				const actual = this.calculateActualTime(scheduled, delayStatus, delayTime);
+				return actual !== '-' && actual !== scheduled;
+			},
+
+			/**
+			 * 停留分钟文本（优先 API stopMinutes，否则由预计到达/出发计算）
+			 */
+			getStopMinutesText: function(item) {
+				if (typeof item.stopMinutes === 'number' && !isNaN(item.stopMinutes)) {
+					return item.stopMinutes + 'MIN';
+				}
+				const a = item.arrivalTime;
+				const d = item.departureTime;
+				if (!a || !d || a === '-' || d === '-') return '-';
+				const ap = a.split(':');
+				const dp = d.split(':');
+				let diff = (parseInt(dp[0]) * 60 + parseInt(dp[1])) - (parseInt(ap[0]) * 60 + parseInt(ap[1]));
+				if (diff < 0) diff += 24 * 60;
+				return diff + 'MIN';
 			},
 			/**
 			 * 获取列车运行线路点
@@ -1671,54 +1666,233 @@
 		height: var(--status-bar-height);
 	}
 	
-	/* 自定义模态框样式 */
-	.modal-overlay {
+	/* 正晚点详情底部弹出卡片 */
+	.sheet-overlay {
 		position: fixed;
 		top: 0;
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background-color: rgba(0, 0, 0, 0.5);
+		background-color: rgba(0, 0, 0, 0.45);
 		display: flex;
-		justify-content: center;
-		align-items: center;
+		align-items: flex-end;
 		z-index: 9999;
+		animation: sheetFadeIn 0.3s ease both;
 	}
-	
-	.modal-content {
-		width: 85%;
-		max-width: 600rpx;
-		background-color: #fff;
-		border-radius: 20rpx;
-		overflow: hidden;
+
+	.sheet-overlay--leave {
+		animation: sheetFadeOut 0.28s ease both;
 	}
-	
-	.modal-header {
+
+	.sheet-panel {
+		width: 100%;
+		box-sizing: border-box;
+		padding: 20rpx 30rpx 50rpx;
+		background-color: #f2f3f5;
+		border-top-left-radius: 32rpx;
+		border-top-right-radius: 32rpx;
+		animation: sheetUp 0.34s cubic-bezier(0.32, 0.72, 0, 1) both;
+	}
+
+	.sheet-overlay--leave .sheet-panel {
+		animation: sheetDown 0.28s ease-in both;
+	}
+
+	@keyframes sheetFadeIn {
+		from { opacity: 0; }
+		to { opacity: 1; }
+	}
+
+	@keyframes sheetFadeOut {
+		from { opacity: 1; }
+		to { opacity: 0; }
+	}
+
+	@keyframes sheetUp {
+		from { transform: translateY(100%); }
+		to { transform: translateY(0); }
+	}
+
+	@keyframes sheetDown {
+		from { transform: translateY(0); }
+		to { transform: translateY(100%); }
+	}
+
+	.sheet-handle {
+		width: 80rpx;
+		height: 8rpx;
+		border-radius: 4rpx;
+		background-color: #d0d3d9;
+		margin: 0 auto 24rpx;
+	}
+
+	.sheet-head {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding: 30rpx;
-		background-color: #114598;
+		padding: 0 10rpx 24rpx;
+	}
+
+	.sheet-station {
+		font-size: 44rpx;
+		font-weight: 700;
+		color: #1c1e21;
+	}
+
+	.sheet-close {
+		font-size: 40rpx;
+		color: #9aa0a6;
+	}
+
+	.sheet-times {
+		display: flex;
+		border-top-left-radius: 24rpx;
+		border-top-right-radius: 24rpx;
+		overflow: hidden;
+	}
+
+	.sheet-time-col {
+		flex: 1;
+		padding: 28rpx 20rpx;
+		text-align: center;
+	}
+
+	.sheet-time-col--mid {
+		background: linear-gradient(180deg, #fdfdfd 0%, #f7f8fa 100%);
+		border-left: 1rpx solid #f0f1f3;
+		border-right: 1rpx solid #f0f1f3;
+	}
+
+	.sheet-time-label {
+		display: block;
+		font-size: 24rpx;
+		color: #8a8f99;
+	}
+
+	.sheet-time-main {
+		display: block;
+		margin-top: 12rpx;
+		font-size: 56rpx;
+		font-weight: 700;
+		color: #1c1e21;
+		line-height: 1.1;
+	}
+
+	.sheet-time-sub {
+		display: block;
+		margin-top: 8rpx;
+		font-size: 26rpx;
+		color: #b6bac1;
+	}
+
+	.sheet-time-sub--diff {
+		text-decoration: line-through;
+	}
+
+	.sheet-bars {
+		display: flex;
+		overflow: hidden;
+		border-bottom-left-radius: 24rpx;
+		border-bottom-right-radius: 24rpx;
+	}
+
+	.sheet-bar {
+		flex: 1;
+		padding: 14rpx 0;
+		text-align: center;
+	}
+
+	.sheet-bar-text {
+		font-size: 24rpx;
 		color: #fff;
 	}
-	
-	.modal-title {
-		font-size: 32rpx;
-		font-weight: bold;
+
+	.sheet-cards {
+		display: flex;
+		margin-top: 24rpx;
 	}
-	
-	.modal-close {
-		font-size: 40rpx;
-		cursor: pointer;
+
+	.sheet-card {
+		position: relative;
+		overflow: hidden;
+		flex: 1;
+		padding: 28rpx 24rpx;
+		border-radius: 24rpx;
 	}
-	
-	.modal-body {
-		padding: 20rpx;
-		max-height: 60vh;
-		overflow-y: auto;
+
+	/* 检票口卡：暖色粉彩渐变；站台卡：冷色粉彩渐变（参考设计） */
+	.sheet-card--gate {
+		background: linear-gradient(160deg, #fffdf8 0%, #fbf0dd 100%);
 	}
-	
-	.detail-item {
-		margin-bottom: 20rpx;
+
+	.sheet-card--platform {
+		background: linear-gradient(160deg, #f8fbff 0%, #e3effc 100%);
+	}
+
+	/* 右下角半透明几何水印，模拟参考图插画装饰；弹层打开时从右下角滑入 */
+	.sheet-card::after {
+		content: '';
+		position: absolute;
+		right: -30rpx;
+		bottom: -46rpx;
+		width: 190rpx;
+		height: 150rpx;
+		border-radius: 28rpx;
+		transform: translate(0, 0) rotate(-18deg);
+		z-index: 0;
+		animation: sheetCardMark 0.5s cubic-bezier(0.32, 0.72, 0, 1) 0.18s both;
+	}
+
+	.sheet-card--gate::after {
+		background: linear-gradient(200deg, rgba(230, 162, 60, 0.16) 0%, rgba(230, 162, 60, 0.32) 100%);
+	}
+
+	.sheet-card--platform::after {
+		background: linear-gradient(200deg, rgba(63, 122, 196, 0.14) 0%, rgba(17, 69, 152, 0.26) 100%);
+	}
+
+	@keyframes sheetCardMark {
+		from {
+			transform: translate(140rpx, 140rpx) rotate(-18deg);
+			opacity: 0;
+		}
+		to {
+			transform: translate(0, 0) rotate(-18deg);
+			opacity: 1;
+		}
+	}
+
+	.sheet-card+.sheet-card {
+		margin-left: 24rpx;
+	}
+
+	.sheet-card-label {
+		position: relative;
+		z-index: 1;
+		display: block;
+		font-size: 24rpx;
+		color: #8a8f99;
+	}
+
+	.sheet-card-value {
+		position: relative;
+		z-index: 1;
+		display: block;
+		margin-top: 16rpx;
+		font-size: 44rpx;
+		font-weight: 700;
+		color: #1c1e21;
+	}
+
+	.sheet-card-value--gate {
+		color: #e6a23c;
+	}
+
+	.sheet-card-value--platform {
+		color: #114598;
+	}
+
+	.sheet-card-value--empty {
+		color: #b6bac1;
 	}
 </style>

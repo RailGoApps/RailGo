@@ -47,10 +47,21 @@
 				nowIcon: uni.getStorageSync("nowIcon") || 'crh',
 				updateLogs: [
 					{
+						version: "v2.0.6 (20006)",
+						date: "2026-09-12",
+						items: [
+							"Fixed: 一些已知Bug",
+							"Feature: 优化服务源选择流程",
+							"Feature: 更好的UI"
+							
+						]
+					},
+					{
 						version: "v2.0.5 (20005)",
 						date: "2026-08-28",
 						items: [
-							"Fixed: 一些已知Bug"
+							"Fixed: 一些已知Bug",
+							"Feature: 支持切换主页风格"
 						]
 					},
 					{

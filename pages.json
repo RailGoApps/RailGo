@@ -257,12 +257,6 @@
 			}
 		},
 		{
-			"path": "pages/oobe/source",
-			"style": {
-				"navigationBarTitleText": ""
-			}
-		},
-		{
 			"path": "pages/gallery/query",
 			"style": {
 				"navigationBarTitleText": ""
@@ -270,6 +264,12 @@
 		},
 		{
 			"path": "pages/gallery/result",
+			"style": {
+				"navigationBarTitleText": ""
+			}
+		},
+		{
+			"path": "pages/about/friend",
 			"style": {
 				"navigationBarTitleText": ""
 			}

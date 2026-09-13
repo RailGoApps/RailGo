@@ -84,6 +84,43 @@
 				</view>
 			</view>
 		</view>
+
+		<view class="ux-pl ux-pr">
+			<uni-section type="line" style="background-color: transparent;" title-font-size="35rpx" title="主页风格"></uni-section>
+			<view class="icon-flex-container">
+				<view class="icon-item" v-for="s in homeStyles" :key="s.key">
+					<view class="style-preview" :class="{ 'style-preview--active': nowIndexStyle === s.key }" @click="selectIndexStyle(s.key)">
+						<!-- 线路图缩略图 -->
+						<view v-if="s.key === 'rail'">
+							<view class="preview-rail-line"></view>
+							<view class="preview-rail-block preview-rail-block--l" style="top: 20rpx;"></view>
+							<view class="preview-rail-block preview-rail-block--r" style="top: 56rpx;"></view>
+							<view class="preview-rail-block preview-rail-block--l" style="top: 92rpx;"></view>
+						</view>
+						<!-- 大卡缩略图 -->
+						<view v-else-if="s.key === 'card'" class="preview-card">
+							<view class="preview-card-cell"></view>
+							<view class="preview-card-cell"></view>
+							<view class="preview-card-cell"></view>
+							<view class="preview-card-cell"></view>
+						</view>
+						<!-- 渐变卡片缩略图 -->
+						<view v-else class="preview-bento">
+							<view class="preview-bento-grad"></view>
+							<view class="preview-bento-hero"></view>
+							<view class="preview-bento-row">
+								<view class="preview-bento-cell"></view>
+								<view class="preview-bento-cell"></view>
+							</view>
+						</view>
+					</view>
+					<text class="icon-text">{{ s.name }}</text>
+					<button class="ux-btn" :disabled="nowIndexStyle === s.key" @click="selectIndexStyle(s.key)">
+						{{ nowIndexStyle === s.key ? '已使用' : '使用' }}
+					</button>
+				</view>
+			</view>
+		</view>
 		
 		<view class="custom-modal-overlay" v-if="showCustomRedeemModal">
 		    <view class="custom-modal-content">
@@ -106,7 +143,7 @@
 
 <script>
 	// #ifdef APP-PLUS
-	// import { getSwitchList, switchIcons, restoreIcons } from "@/uni_modules/ima-icons";
+	import { getSwitchList, switchIcons, restoreIcons } from "@/uni_modules/ima-icons";
 	// #endif
 	// #ifdef APP-HARMONY
 	import "@/uni_modules/railgo-dynamic-icon";
@@ -119,6 +156,13 @@ import {uniGet} from "@/scripts/req.js";
 				items: [],
 				search: uni.getStorageSync("search"),
 				nowIcon: uni.getStorageSync("nowIcon"),
+				// 主页风格选择：rail(线路图) / card(经典大卡) / bento(渐变卡片)
+				nowIndexStyle: uni.getStorageSync("indexStyle") || 'bento',
+				homeStyles: [
+					{ key: 'rail', name: '线路图' },
+					{ key: 'card', name: '经典大卡' },
+					{ key: 'bento', name: '渐变卡片' }
+				],
 							
 				// 默认解锁状态 (通过原有方式)
 				searchUnlock1: false, 
@@ -163,6 +207,13 @@ import {uniGet} from "@/scripts/req.js";
 			back: function() {
 				uni.navigateBack()
 			},
+			// 切换主页风格，首页在 onShow 时读取生效
+			selectIndexStyle(key) {
+				if (this.nowIndexStyle === key) return;
+				uni.setStorageSync('indexStyle', key);
+				this.nowIndexStyle = key;
+				uni.showToast({ title: '已切换主页风格', icon: 'none' });
+			},
 			updateUnlockStatus() {
 				// 原有解锁逻辑（重新读取图鉴搜索解锁状态）
 				this.cr200jUnlock = uni.getStorageSync("cr200jUnlock") || false;
@@ -179,7 +230,7 @@ import {uniGet} from "@/scripts/req.js";
 				this.applyHarmonyDynamicIcon(iconName);
 				// #endif
 				// #ifdef APP-PLUS
-				// switchIcons(iconName);
+				switchIcons(iconName);
 				// #endif
 				// #ifndef H5
 				uni.showToast({
@@ -529,6 +580,107 @@ import {uniGet} from "@/scripts/req.js";
 
 	.grayscale {
 		filter: grayscale(100%);
+	}
+
+	/* 主页风格缩略图 */
+	.style-preview {
+		width: 130rpx;
+		height: 130rpx;
+		background: #fff;
+		border: 2rpx solid #e5e9f0;
+		border-radius: 16rpx;
+		position: relative;
+		overflow: hidden;
+		margin-bottom: 5px;
+		transition: border-color 0.2s ease, box-shadow 0.2s ease;
+	}
+	.style-preview--active {
+		border-color: #114598;
+		box-shadow: 0 0 0 4rpx rgba(17, 69, 152, 0.15);
+	}
+
+	/* 线路图缩略图 */
+	.preview-rail-line {
+		position: absolute;
+		left: 50%;
+		top: 8rpx;
+		bottom: 8rpx;
+		width: 4rpx;
+		margin-left: -2rpx;
+		background: #b9cee8;
+		border-radius: 2rpx;
+	}
+	.preview-rail-block {
+		position: absolute;
+		width: 42rpx;
+		height: 20rpx;
+		background: #e8eef7;
+		border-radius: 6rpx;
+	}
+	.preview-rail-block--l { left: 12rpx; }
+	.preview-rail-block--r { right: 12rpx; }
+
+	/* 大卡缩略图 */
+	.preview-card {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		display: flex;
+		flex-wrap: wrap;
+		padding: 12rpx;
+	}
+	.preview-card-cell {
+		width: 46%;
+		height: 42%;
+		margin: 2%;
+		background: #e8eef7;
+		border-radius: 8rpx;
+	}
+
+	/* 渐变卡片缩略图 */
+	.preview-bento {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: #EEEEEE;
+		overflow: hidden;
+	}
+	.preview-bento-grad {
+		position: absolute;
+		left: 0;
+		top: 0;
+		right: 0;
+		bottom: 45%;
+		background:
+			radial-gradient(130% 190% at 0% 0%, #114598 0%, #1d55ab 25%, #3f7ac4 45%, #79a9de 65%, #bcd7f3 82%, #EEEEEE 100%);
+	}
+	.preview-bento-hero {
+		position: absolute;
+		left: 12rpx;
+		right: 12rpx;
+		top: 106rpx;
+		height: 26rpx;
+		background: #ffffff;
+		border: 1rpx solid #eef1f5;
+		border-radius: 6rpx;
+	}
+	.preview-bento-row {
+		position: absolute;
+		left: 12rpx;
+		right: 12rpx;
+		top: 76rpx;
+		display: flex;
+	}
+	.preview-bento-cell {
+		flex: 1;
+		height: 20rpx;
+		margin: 0 3rpx;
+		background: #f2f4f8;
+		border-radius: 6rpx;
 	}
 
 	.ux-btn[disabled] {

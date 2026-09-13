@@ -4,32 +4,31 @@
 		<view class="ux-padding">
 			<view class="ux-bg-white ux-border-radius">
 				<view class="ux-pl ux-pr ux-pb-small ux-pt ux-flex ux-align-items-center ux-justify-content-center">
-					<view class="ux-flex ux-align-items-center">
-						<view v-for="(tag,i) in data.type" :key="i">
-							<text class="ux-badge ux-color-white ux-mr-small"
-								:style="'background-color:'+badgeFlag[tag]">{{tag}}</text>
+					<view>
+						<view class="ux-flex ux-align-items-center ux-justify-content-end">
+							<view v-for="(tag,i) in data.type" :key="i">
+								<text class="ux-badge ux-color-white ux-mr-small"
+									:style="'background-color:'+badgeFlag[tag]">{{tag}}</text>
+							</view>
+						</view>
+						<view class="ux-mr-small ux-text-right">
+							<text v-if="data.city" class="ux-text-small ux-opacity-7">
+								{{ data.city || '' }}
+								<br>
+							</text>
 						</view>
 					</view>
 					<view>
 						<text class="ux-h3">{{data.name}}站</text><br>
-						<text v-if="data.province || (data.level && data.level !== '未知')" class="ux-text-small ux-opacity-7">
-							<template v-if="data.province">
-								{{ data.province === data.city ? data.province : (data.province + (data.city || '')) }}
-							</template>
-							
-							<template v-if="data.province && data.level && data.level !== '未知'"> | </template>
-							
-							<template v-if="data.level && data.level !== '未知'">{{data.level}}</template>
-							<br>
-						</text>
 						<text class="ux-text-small">{{data.pinyin}} Station</text>
 					</view>
 				</view>
 				<view class="ux-flex ux-space-between ux-color-white ux-pt-small ux-pb-small ux-pl ux-pr ux-text-small"
 					style="border-bottom-left-radius:10rpx;border-bottom-right-radius:10rpx;"
-					:style="'background-color:'+(Array.isArray(data.type) && data.type.includes('客') ? '#114598' : '#eeba67')">
+					:style="'background-color:'+(Array.isArray(data.type) && data.type.includes('客') ? '#114598' : (Array.isArray(data.type) && data.type.includes('货')? '#eeba67': '#85929e'))">
 					<text>{{data.pinyinTriple}}/-{{data.telecode}}</text>
-					<text>{{data.bureau}} {{data.belong}}辖</text>
+					<text>{{data.bureau}} {{data.belong}}辖 <template
+							v-if="data.level && data.level !== '未知'">&nbsp;{{data.level}}站</template></text>
 				</view>
 			</view>
 
@@ -374,7 +373,7 @@
 					"货": "#eeba67",
 					"高": "#c0392b",
 					"行": "#459811",
-					"运": "#5499c7"
+					"运": "#85929e"
 				},
 				// 默认只包含“车次”和“路线”，如果为客运站则在 fillInData 中添加“大屏”和“交通”
 				topTabList: [{
