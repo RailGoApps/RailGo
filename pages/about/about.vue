@@ -63,6 +63,7 @@
 									@click="changeConfigBox({detail:{value:'ONLINE'}},'mode')"></radio>
 							</view>
 						</view>
+						<!-- #ifndef APP-HARMONY -->
 						<view class="ux-th ux-border-radius-large ux-padding ux-ml-small" style="flex:auto;width:1rpx;"
 							:style="modeDisplayLocal" @click="changeConfigBox({detail:{value:'LOCAL'}},'mode')">
 							<text class="ux-text">离线模式</text>
@@ -75,6 +76,7 @@
 									@click="changeConfigBox({detail:{value:'LOCAL'}},'mode')"></radio>
 							</view>
 						</view>
+						<!-- #endif -->
 					</view>
 					<uv-divider></uv-divider>
 					<view hover-class="ux-tap" @click="goIndividuation">
@@ -230,7 +232,7 @@
 			}
 		},
 		onShow() {
-			// #ifdef APP
+			// #ifdef APP-PLUS
 			plus.navigator.setStatusBarBackground('#114598');
 			// #endif
 
@@ -239,7 +241,14 @@
 			this.nowIcon = uni.getStorageSync("nowIcon") || 'crh';
 			// 唯一数据源：独立 mode 键（'network'/'local'），不再依赖 config 对象
 			const storedMode = uni.getStorageSync("mode");
+			// #ifdef APP-HARMONY
+			// 鸿蒙端仅支持在线模式
+			this.config.mode = 'ONLINE';
+			uni.setStorageSync('mode', 'network');
+			// #endif
+			// #ifndef APP-HARMONY
 			this.config.mode = storedMode === 'network' ? 'ONLINE' : 'LOCAL';
+			// #endif
 
 			this.fetchSources();
 		},

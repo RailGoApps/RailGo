@@ -15,7 +15,9 @@
 					<text class="friend-name">{{ app.name }}</text>
 					<text class="friend-desc">{{ app.desc }}</text>
 				</view>
+				<!-- #ifndef APP-HARMONY -->
 				<text class="icon ux-color-grey1" style="font-size: 32rpx;">&#xe5c8;</text>
+				<!-- #endif -->
 			</view>
 
 			<view v-if="partnerApps.length === 0" class="ux-padding ux-text-center">
@@ -48,7 +50,14 @@
 		methods: {
 			openUrl(url) {
 				if (!url) return;
-				uni.openURL(url);
+				// #ifdef APP-PLUS
+				// #ifndef APP-HARMONY
+				plus.runtime.openURL(url);
+				// #endif
+				// #endif
+				// #ifdef H5
+				window.open(url, '_blank');
+				// #endif
 			}
 		}
 	};
