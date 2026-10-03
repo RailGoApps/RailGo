@@ -122,6 +122,33 @@
 			</view>
 		</view>
 		
+		<view class="ux-pl ux-pr">
+			<uni-section type="line" style="background-color: transparent;" title-font-size="35rpx" title="加载动画"></uni-section>
+			<view class="icon-flex-container">
+				<view class="icon-item" v-for="s in loaderStyles" :key="s.key">
+					<view class="style-preview" :class="{ 'style-preview--active': nowLoaderStyle === s.key }" @click="selectLoaderStyle(s.key)">
+						<!-- 智动旋转：旋转三环抱 logo -->
+						<view v-if="s.key === 'zn'" class="preview-loader-zn">
+							<view class="preview-loader-ring"></view>
+							<view class="preview-loader-arc preview-loader-arc--1"></view>
+							<view class="preview-loader-arc preview-loader-arc--2"></view>
+							<view class="preview-loader-logo"></view>
+						</view>
+						<!-- 水波纹：标志自底部逐渐填满 -->
+						<view v-else class="preview-loader-wave">
+							<view class="preview-loader-box">
+								<view class="preview-loader-water"></view>
+							</view>
+						</view>
+					</view>
+					<text class="icon-text">{{ s.name }}</text>
+					<button class="ux-btn" :disabled="nowLoaderStyle === s.key" @click="selectLoaderStyle(s.key)">
+						{{ nowLoaderStyle === s.key ? '已使用' : '使用' }}
+					</button>
+				</view>
+			</view>
+		</view>
+		
 		<view class="custom-modal-overlay" v-if="showCustomRedeemModal">
 		    <view class="custom-modal-content">
 		        <text class="modal-title">图标兑换</text>
@@ -138,6 +165,7 @@
 		        </view>
 		    </view>
 		</view>
+		<railgo-loader></railgo-loader>
 	</view>
 </template>
 
@@ -149,8 +177,13 @@
 	import "@/uni_modules/railgo-dynamic-icon";
 	// #endif
 import {uniGet} from "@/scripts/req.js"; 
+import {showLoader, hideLoader} from "@/scripts/loader.js";
+import RailgoLoader from "@/components/railgo-loader/railgo-loader.vue";
 
 	export default {
+		components: {
+			RailgoLoader
+		},
 		data() {
 			return {
 				items: [],
@@ -162,6 +195,12 @@ import {uniGet} from "@/scripts/req.js";
 					{ key: 'rail', name: '线路图' },
 					{ key: 'card', name: '经典大卡' },
 					{ key: 'bento', name: '渐变卡片' }
+				],
+				// 加载动画样式：zn(智动旋转) / wave(水波纹)
+				nowLoaderStyle: uni.getStorageSync("loaderStyle") || 'zn',
+				loaderStyles: [
+					{ key: 'zn', name: '智动旋转' },
+					{ key: 'wave', name: '水波纹' }
 				],
 							
 				// 默认解锁状态 (通过原有方式)
@@ -213,6 +252,12 @@ import {uniGet} from "@/scripts/req.js";
 				uni.setStorageSync('indexStyle', key);
 				this.nowIndexStyle = key;
 				uni.showToast({ title: '已切换主页风格', icon: 'none' });
+			},
+			selectLoaderStyle(key) {
+				if (this.nowLoaderStyle === key) return;
+				uni.setStorageSync('loaderStyle', key);
+				this.nowLoaderStyle = key;
+				uni.showToast({ title: '已切换加载动画', icon: 'none', duration: 1500 });
 			},
 			updateUnlockStatus() {
 				// 原有解锁逻辑（重新读取图鉴搜索解锁状态）
@@ -444,7 +489,7 @@ import {uniGet} from "@/scripts/req.js";
 
 			// 兑换码逻辑，接收 code 参数
 			async exchangeIcon(code) {
-				uni.showLoading({ title: '兑换中...', mask: true });
+				showLoader('兑换中...');
 
 				try {
 					const response = await uniGet(this.apiUrl, {
@@ -453,7 +498,7 @@ import {uniGet} from "@/scripts/req.js";
 						}
 					});
 
-					uni.hideLoading();
+					hideLoader();
 
 					// 仅检查 success 是否为 true
 					if (response.data && response.data.success === true) {
@@ -493,7 +538,7 @@ import {uniGet} from "@/scripts/req.js";
 					}
 
 				} catch (error) {
-					uni.hideLoading();
+					hideLoader();
 					console.error('兑换码请求失败:', error);
 					uni.showModal({
 						title: '网络错误',
@@ -764,5 +809,79 @@ import {uniGet} from "@/scripts/req.js";
 	    height: 80rpx;
 	    line-height: 80rpx;
 		font-size: 30rpx;
+	}
+	/* 加载动画缩略图 */
+	.preview-loader-zn,
+	.preview-loader-wave {
+		position: absolute;
+		left: 0;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.preview-loader-ring {
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		width: 92rpx;
+		height: 92rpx;
+		margin: -46rpx 0 0 -46rpx;
+		border: 4rpx solid #114598;
+		border-radius: 50%;
+	}
+
+	.preview-loader-arc {
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		border: 4rpx solid transparent;
+		border-top-color: rgba(17, 69, 152, 0.75);
+		border-radius: 50%;
+	}
+
+	.preview-loader-arc--1 {
+		width: 62rpx;
+		height: 62rpx;
+		margin: -31rpx 0 0 -31rpx;
+		transform: rotate(25deg);
+	}
+
+	.preview-loader-arc--2 {
+		width: 76rpx;
+		height: 76rpx;
+		margin: -38rpx 0 0 -38rpx;
+		transform: rotate(-45deg);
+	}
+
+	.preview-loader-logo {
+		position: relative;
+		width: 40rpx;
+		height: 40rpx;
+		border-radius: 8rpx;
+		background: rgba(17, 69, 152, 0.16);
+		border: 2rpx solid #114598;
+	}
+
+	.preview-loader-box {
+		position: relative;
+		width: 68rpx;
+		height: 52rpx;
+		border: 2rpx dashed rgba(17, 69, 152, 0.45);
+		border-radius: 10rpx;
+		overflow: hidden;
+	}
+
+	.preview-loader-water {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		height: 46%;
+		background: #114598;
+		opacity: 0.8;
 	}
 </style>

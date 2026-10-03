@@ -1,0 +1,495 @@
+/**
+ * railgo-nfc 跨端接口定义与共享纯逻辑
+ *
+ * 纯逻辑（URI 前缀表、NDEF 记录编解码、T2T TLV/CC/RFUI）在三端编译为同一份代码，
+ * 保证 Android / iOS / HarmonyOS 读写的字节格式完全一致。
+ */
+
+/* ==================== 错误码 ==================== */
+export const ERR_NOT_SUPPORT = 10001; // 设备不支持 NFC
+export const ERR_NFC_DISABLED = 10002; // NFC 未开启
+export const ERR_NO_TAG = 10003; // 尚未发现标签，请先扫描
+export const ERR_TAG_GONE = 10004; // 标签已离开或连接失效
+export const ERR_NO_NDEF_TECH = 10005; // 标签不支持 NDEF 技术
+export const ERR_NOT_FORMATTED = 10006; // 空白标签未格式化（iOS 无法格式化，见 README）
+export const ERR_FORMAT_FAILED = 10007; // 格式化空白标签失败
+export const ERR_READONLY = 10008; // 标签已锁定/只读
+export const ERR_NOT_ENOUGH_SPACE = 10009; // NDEF 数据超出标签容量
+export const ERR_WRITE_FAILED = 10010; // 写入失败
+export const ERR_READ_FAILED = 10011; // 读取失败
+export const ERR_SCAN_ACTIVE = 10012; // 扫描已在进行中
+export const ERR_INVALID_PARAM = 10013; // 参数不合法
+export const ERR_PLATFORM_UNSUPPORTED = 10014; // 当前平台不支持该能力
+export const ERR_SESSION_TIMEOUT = 10015; // iOS 会话超时（60s 未扫到标签）
+
+/* ==================== 数据类型 ==================== */
+
+/** NFC 开关状态 */
+export type NfcStatusInfo = {
+	supported : boolean,
+	enabled : boolean
+};
+
+/** 一条已解析的 NDEF 记录 */
+export type NdefRecordData = {
+	/** TNF 类型字段 0~7 */
+	tnf : number,
+	/** 归一化记录类型: URI | TEXT | AAR | MIME | EXTERNAL | SMART_POSTER | UNKNOWN | EMPTY | OTHER */
+	recordType : string,
+	/** TNF=URI(1,TNF_WELL_KNOWN 0x55 / TNF_ABS 3) 时的完整 URI，其余为 null */
+	uri : string | null,
+	/** TEXT 记录正文 */
+	text : string | null,
+	/** TEXT 记录语言，如 zh / en */
+	language : string | null,
+	/** AAR 记录包名 */
+	packageName : string | null,
+	/** 记录 ID，hex 字符串 */
+	id : string | null,
+	/** 原始 payload（不含记录头），hex 字符串 */
+	payloadHex : string | null
+};
+
+/** 一次扫描发现/读取的标签信息 */
+export type NfcTagInfo = {
+	/** UID，大写 hex；iOS 无法读取 UID 时为空字符串 */
+	uid : string,
+	/** 技术列表短名，如 [NfcA, Ndef, NdefFormatable]；iOS 返回 [NDEF] */
+	techList : string[],
+	/** NTAG213 | NTAG215 | NTAG216 | NTAG unknown | Type2 等 */
+	tagType : string,
+	/** 用户数据区总字节数（T2T 逐页写入用） */
+	userBytes : number,
+	/** 单条 NDEF 消息最大可写字节数（读不到时为 userBytes-4） */
+	maxNdefSize : number,
+	/** 是否已 NDEF 格式化 */
+	formatted : boolean,
+	/** 是否可写（未锁定） */
+	writable : boolean,
+	/** NDEF 记录；空白标签为 null，已格式化但无内容时为空数组 */
+	records : NdefRecordData[] | null
+};
+
+/** 写记录参数 */
+export type NdefRecordSpec = {
+	/** uri | text | aar */
+	type : string,
+	/** type=uri 时必填，如 myapp://product/detail?pid=10086 */
+	uri ?: string,
+	/** type=text 时必填 */
+	text ?: string,
+	/** text 语言，默认 en */
+	language ?: string,
+	/** type=aar 时必填，Android 包名 */
+	packageName ?: string,
+	/** 记录 ID，hex 字符串，一般留空 */
+	id ?: string
+};
+
+/** startScan 参数 */
+export type StartScanOptions = {
+	onTagDiscovered ?: (tag : NfcTagInfo) => void,
+	onError ?: (code : number, message : string) => void,
+	onScanStopped ?: (reason : string) => void
+};
+
+/** writeNdef 参数 */
+export type WriteOptions = {
+	/** 空白标签是否自动格式化/逐页写入，默认 true；iOS 无格式化能力会返回 ERR_NOT_FORMATTED */
+	formatBlank ?: boolean,
+	success ?: (tag : NfcTagInfo) => void,
+	fail ?: (code : number, message : string) => void
+};
+
+/** NTAG 型号信息 */
+export type NtagModel = {
+	model : string,
+	userBytes : number,
+	/** 最后一个用户页号 */
+	lastPage : number
+};
+
+/* ==================== 字节/字符串工具 ==================== */
+
+export function bytesToHex(bytes : number[]) : string {
+	let s = '';
+	for (let i = 0; i < bytes.length; i++) {
+		const v = bytes[i] & 0xFF;
+		s += (v < 16 ? '0' : '') + v.toString(16).toUpperCase();
+	}
+	return s;
+}
+
+export function hexToBytes(hex : string) : number[] {
+	const out : number[] = [];
+	for (let i = 0; i + 1 < hex.length + 1; i += 2) {
+		out.push(parseInt(hex.substring(i, i + 2), 16));
+	}
+	return out;
+}
+
+export function utf8Encode(str : string) : number[] {
+	const out : number[] = [];
+	for (let i = 0; i < str.length; i++) {
+		let cp = str.charCodeAt(i);
+		if (cp >= 0xD800 && cp <= 0xDBFF && i + 1 < str.length) {
+			const low = str.charCodeAt(i + 1);
+			if (low >= 0xDC00 && low <= 0xDFFF) {
+				cp = 0x10000 + ((cp - 0xD800) << 10) + (low - 0xDC00);
+				i++;
+			}
+		}
+		if (cp < 0x80) {
+			out.push(cp);
+		} else if (cp < 0x800) {
+			out.push(0xC0 | (cp >> 6), 0x80 | (cp & 0x3F));
+		} else if (cp < 0x10000) {
+			out.push(0xE0 | (cp >> 12), 0x80 | ((cp >> 6) & 0x3F), 0x80 | (cp & 0x3F));
+		} else {
+			out.push(0xF0 | (cp >> 18), 0x80 | ((cp >> 12) & 0x3F), 0x80 | ((cp >> 6) & 0x3F), 0x80 | (cp & 0x3F));
+		}
+	}
+	return out;
+}
+
+export function utf8Decode(bytes : number[]) : string {
+	let out = '';
+	let i = 0;
+	while (i < bytes.length) {
+		const b = bytes[i] & 0xFF;
+		let cp = 0;
+		if (b < 0x80) {
+			cp = b;
+			i += 1;
+		} else if (b >= 0xC0 && b < 0xE0 && i + 1 < bytes.length) {
+			cp = ((b & 0x1F) << 6) | (bytes[i + 1] & 0x3F);
+			i += 2;
+		} else if (b >= 0xE0 && b < 0xF0 && i + 2 < bytes.length) {
+			cp = ((b & 0x0F) << 12) | ((bytes[i + 1] & 0x3F) << 6) | (bytes[i + 2] & 0x3F);
+			i += 3;
+		} else if (b >= 0xF0 && i + 3 < bytes.length) {
+			cp = ((b & 0x07) << 18) | ((bytes[i + 1] & 0x3F) << 12) | ((bytes[i + 2] & 0x3F) << 6) | (bytes[i + 3] & 0x3F);
+			i += 4;
+		} else {
+			i += 1;
+			continue;
+		}
+		if (cp > 0xFFFF) {
+			const v = cp - 0x10000;
+			out += String.fromCharCode(0xD800 + (v >> 10));
+			out += String.fromCharCode(0xDC00 + (v & 0x3FF));
+		} else {
+			out += String.fromCharCode(cp);
+		}
+	}
+	return out;
+}
+
+function sliceBytes(bytes : number[], start : number, len : number) : number[] {
+	const out : number[] = [];
+	for (let i = start; i < start + len && i < bytes.length; i++) {
+		out.push(bytes[i] & 0xFF);
+	}
+	return out;
+}
+
+/* ==================== URI 前缀缩写表（NFC Forum RTD_URI 1.0，与 Android NdefRecord 一致） ==================== */
+
+export const URI_PREFIXES : string[] = [
+	'',
+	'http://www.',
+	'https://www.',
+	'http://',
+	'https://',
+	'tel:',
+	'mailto:',
+	'ftp://anonymous:anonymous@',
+	'ftp://ftp.',
+	'ftps://',
+	'sftp://',
+	'smb://',
+	'nfs://',
+	'ftp://',
+	'dav://',
+	'news:',
+	'telnet://',
+	'imap:',
+	'rtsp://',
+	'urn:',
+	'pop:',
+	'sip:',
+	'sips:',
+	'tftp:',
+	'btspp://',
+	'btl2cap://',
+	'btgoep://',
+	'tcpobex://',
+	'irdaobex://',
+	'file://',
+	'urn:epc:id:',
+	'urn:epc:tag:',
+	'urn:epc:pat:',
+	'urn:epc:raw:',
+	'urn:epc:',
+	'urn:nfc:'
+];
+
+/** URI 编码为 payload：自动选择最长匹配前缀码；自定义 scheme（如 myapp://）前缀码为 0x00 */
+export function encodeUriPayload(uri : string) : number[] {
+	let bestCode = 0;
+	for (let c = 1; c < URI_PREFIXES.length; c++) {
+		const p = URI_PREFIXES[c];
+		if (uri.length > p.length && uri.substring(0, p.length) == p) {
+			bestCode = c;
+		}
+	}
+	const rest = uri.substring(bestCode > 0 ? URI_PREFIXES[bestCode].length : 0);
+	return [bestCode].concat(utf8Encode(rest));
+}
+
+export function decodeUriPayload(payload : number[]) : string {
+	if (payload.length == 0) return '';
+	const code = payload[0] & 0xFF;
+	const prefix = code < URI_PREFIXES.length ? URI_PREFIXES[code] : '';
+	return prefix + utf8Decode(sliceBytes(payload, 1, payload.length - 1));
+}
+
+/** Text 记录 payload：[状态字节][语言][正文]（UTF-8） */
+export function encodeTextPayload(text : string, language : string) : number[] {
+	const lang = language.length == 0 ? 'en' : language;
+	const langBytes = utf8Encode(lang);
+	return [langBytes.length & 0x3F].concat(langBytes).concat(utf8Encode(text));
+}
+
+export function decodeTextPayload(payload : number[]) : string[] {
+	// 返回 [text, language]
+	if (payload.length < 1) return ['', ''];
+	const status = payload[0] & 0xFF;
+	const langLen = status & 0x3F;
+	const isUtf16 = (status & 0x80) != 0;
+	const language = utf8Decode(sliceBytes(payload, 1, langLen));
+	const body = sliceBytes(payload, 1 + langLen, payload.length - 1 - langLen);
+	if (isUtf16) {
+		let text = '';
+		for (let i = 0; i + 1 < body.length; i += 2) {
+			text += String.fromCharCode((body[i + 1] << 8) | body[i]);
+		}
+		return [text, language];
+	}
+	return [utf8Decode(body), language];
+}
+
+/* ==================== NDEF 记录帧编解码（跨平台 raw 路径共用） ==================== */
+
+const AAR_TYPE = 'android.com:pkg';
+
+/** 编码单条记录（不做分块；payload<256 用短格式） */
+export function encodeRecordBytes(tnf : number, typeBytes : number[], idBytes : number[], payloadBytes : number[]) : number[] {
+	let header = tnf & 0x07;
+	if (idBytes.length > 0) header |= 0x08;
+	const shortRecord = payloadBytes.length < 0x100;
+	if (shortRecord) header |= 0x10;
+	const out : number[] = [];
+	out.push(header);
+	out.push(typeBytes.length & 0xFF);
+	if (shortRecord) {
+		out.push(payloadBytes.length & 0xFF);
+	} else {
+		out.push((payloadBytes.length >> 24) & 0xFF, (payloadBytes.length >> 16) & 0xFF, (payloadBytes.length >> 8) & 0xFF, payloadBytes.length & 0xFF);
+	}
+	if (idBytes.length > 0) out.push(idBytes.length & 0xFF);
+	for (let i = 0; i < typeBytes.length; i++) out.push(typeBytes[i] & 0xFF);
+	for (let i = 0; i < idBytes.length; i++) out.push(idBytes[i] & 0xFF);
+	for (let i = 0; i < payloadBytes.length; i++) out.push(payloadBytes[i] & 0xFF);
+	return out;
+}
+
+/** 由写入参数构建一条记录的原始字节 */
+export function specToRecordBytes(spec : NdefRecordSpec) : number[] {
+	const idBytes = (spec.id != null && (spec.id as string).length > 0) ? hexToBytes(spec.id as string) : ([] as number[]);
+	const type = spec.type;
+	if (type == 'uri') {
+		return encodeRecordBytes(1, [0x55], idBytes, encodeUriPayload(spec.uri ?? ''));
+	}
+	if (type == 'text') {
+		return encodeRecordBytes(1, [0x54], idBytes, encodeTextPayload(spec.text ?? '', spec.language ?? 'en'));
+	}
+	if (type == 'aar') {
+		return encodeRecordBytes(4, utf8Encode(AAR_TYPE), idBytes, utf8Encode(spec.packageName ?? ''));
+	}
+	return ([] as number[]);
+}
+
+/** 构建 NDEF 消息字节（不含 TLV 框架） */
+export function buildMessageBytes(specs : NdefRecordSpec[]) : number[] {
+	const out : number[] = [];
+	for (let i = 0; i < specs.length; i++) {
+		const r = specToRecordBytes(specs[i]);
+		if (r.length == 0) continue;
+		out = out.concat(r);
+	}
+	return out;
+}
+
+function classifyRecord(tnf : number, typeStr : string) : string {
+	if (tnf == 1) {
+		if (typeStr == 'T') return 'TEXT';
+		if (typeStr == 'U') return 'URI';
+		if (typeStr == 'Sp') return 'SMART_POSTER';
+		return 'OTHER';
+	}
+	if (tnf == 2) return 'MIME';
+	if (tnf == 3) return 'URI';
+	if (tnf == 4) {
+		if (typeStr == AAR_TYPE) return 'AAR';
+		return 'EXTERNAL';
+	}
+	if (tnf == 5) return 'UNKNOWN';
+	if (tnf == 0) return 'EMPTY';
+	return 'OTHER';
+}
+
+/** 解析 NDEF 消息字节为记录数组 */
+export function parseMessageBytes(msg : number[]) : NdefRecordData[] {
+	const records : NdefRecordData[] = [];
+	let i = 0;
+	while (i < msg.length) {
+		const header = msg[i] & 0xFF;
+		const tnf = header & 0x07;
+		const cf = (header & 0x20) != 0;
+		const me = (header & 0x40) != 0;
+		const sr = (header & 0x10) != 0;
+		const il = (header & 0x08) != 0;
+		let p = i + 1;
+		if (p >= msg.length) break;
+		const typeLen = msg[p] & 0xFF;
+		p += 1;
+		let payloadLen = 0;
+		if (sr) {
+			payloadLen = msg[p] & 0xFF;
+			p += 1;
+		} else {
+			payloadLen = ((msg[p] & 0xFF) << 24) | ((msg[p + 1] & 0xFF) << 16) | ((msg[p + 2] & 0xFF) << 8) | (msg[p + 3] & 0xFF);
+			p += 4;
+		}
+		let idLen = 0;
+		if (il) {
+			idLen = msg[p] & 0xFF;
+			p += 1;
+		}
+		const typeBytes = sliceBytes(msg, p, typeLen);
+		p += typeLen;
+		const idBytes = sliceBytes(msg, p, idLen);
+		p += idLen;
+		const payloadBytes = sliceBytes(msg, p, payloadLen);
+		p += payloadLen;
+		const typeStr = utf8Decode(typeBytes);
+
+		// 分块记录（CF）：payload 追加到上一条
+		if (cf && records.length > 0 && (records[records.length - 1].payloadHex ?? '').length > 0) {
+			const prev = records[records.length - 1];
+			const prevPayload = hexToBytes(prev.payloadHex ?? '');
+			const merged = prevPayload.concat(payloadBytes);
+			prev.payloadHex = bytesToHex(merged);
+			i = p;
+			continue;
+		}
+
+		const rec : NdefRecordData = {
+			tnf: tnf,
+			recordType: classifyRecord(tnf, typeStr),
+			uri: null,
+			text: null,
+			language: null,
+			packageName: null,
+			id: idBytes.length > 0 ? bytesToHex(idBytes) : null,
+			payloadHex: bytesToHex(payloadBytes)
+		};
+		if (rec.recordType == 'URI') {
+			if (tnf == 1) {
+				rec.uri = decodeUriPayload(payloadBytes);
+			} else {
+				rec.uri = utf8Decode(payloadBytes);
+			}
+		} else if (rec.recordType == 'TEXT') {
+			const kv = decodeTextPayload(payloadBytes);
+			rec.text = kv[0];
+			rec.language = kv[1];
+		} else if (rec.recordType == 'AAR') {
+			rec.packageName = utf8Decode(payloadBytes);
+		}
+		records.push(rec);
+		i = p;
+		if (me) break;
+	}
+	return records;
+}
+
+/* ==================== T2T（NTAG213/215/216 逐页）逻辑 ==================== */
+
+export const T2T_PAGE_SIZE = 4;
+/** NDEF 消息 TLV 起始页（页 0~3 为厂商区，页 2 为 CC） */
+export const T2T_USER_START_PAGE = 4;
+
+/** GET_VERSION 响应推断 NTAG 型号；无法识别时返回默认 Type2 */
+export function modelFromGetVersion(resp : number[]) : NtagModel {
+	// 响应格式: 00 <len> <product> <subtype> <major> <minor> <storageSize> <selCfg>
+	let sizeByte = -1;
+	if (resp.length >= 8) sizeByte = resp[6] & 0xFF;
+	else if (resp.length >= 7) sizeByte = resp[6] & 0xFF;
+	if (sizeByte == 0x0F) return { model: 'NTAG213', userBytes: 144, lastPage: 39 } as NtagModel;
+	if (sizeByte == 0x11) return { model: 'NTAG215', userBytes: 504, lastPage: 129 } as NtagModel;
+	if (sizeByte == 0x13) return { model: 'NTAG216', userBytes: 888, lastPage: 225 } as NtagModel;
+	return { model: 'Type2 (unknown)', userBytes: 144, lastPage: 39 } as NtagModel;
+}
+
+/** 容量字节 → CC 页内容 [0xE1, 0x10, size/8, 0x00] */
+export function buildCcPage(userBytes : number) : number[] {
+	return [0xE1, 0x10, ((userBytes / 8) & 0xFF), 0x00];
+}
+
+/** 从用户区原始字节提取 NDEF 消息（扫描 TLV：NULL/锁/控制/结束，0xFE=2 字节扩展长度，0xFF=3 字节） */
+export function extractT2tNdef(userBytes : number[]) : number[] {
+	let i = 0;
+	while (i < userBytes.length) {
+		const t = userBytes[i] & 0xFF;
+		if (t == 0x00) { i += 1; continue; }
+		if (t == 0xFE || t == 0xFF) break; // 结束符
+		if (i + 1 >= userBytes.length) break;
+		let l = userBytes[i + 1] & 0xFF;
+	 let dataOff = i + 2;
+		if (l == 0xFF) {
+			// 3 字节扩展长度
+			l = ((userBytes[i + 2] & 0xFF) << 16) | ((userBytes[i + 3] & 0xFF) << 8) | (userBytes[i + 4] & 0xFF);
+			dataOff = i + 5;
+		} else if (l == 0xFE) {
+			// 2 字节扩展长度
+			l = ((userBytes[i + 2] & 0xFF) << 8) | (userBytes[i + 3] & 0xFF);
+			dataOff = i + 4;
+		}
+		if (t == 0x03) return sliceBytes(userBytes, dataOff, l);
+		i = dataOff + l;
+	}
+	return ([] as number[]);
+}
+
+/** 将 NDEF 消息编码进用户区：TLV 框架 + 0xFE 结束符 + 4 字节对齐补 0x00（尾部为 RFUI 保留位，写 0） */
+export function buildT2tUserArea(msgBytes : number[], capacityBytes : number) : number[] {
+	const head : number[] = [];
+	const len = msgBytes.length;
+	if (len < 0xFE) {
+		head.push(0x03, len);
+	} else if (len < 0x10000) {
+		head.push(0x03, 0xFE, (len >> 8) & 0xFF, len & 0xFF);
+	} else {
+		head.push(0x03, 0xFF, (len >> 16) & 0xFF, (len >> 8) & 0xFF, len & 0xFF);
+	}
+	let total = head.concat(msgBytes);
+	total.push(0xFE);
+	// 补齐到 4 字节页对齐（含末页 RFUI 字节，按 NXP 约定写 0x00）
+	while (total.length % T2T_PAGE_SIZE != 0) {
+		total.push(0x00);
+	}
+	if (total.length > capacityBytes) return ([] as number[]);
+	return total;
+}

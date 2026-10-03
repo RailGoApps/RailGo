@@ -1,0 +1,436 @@
+/**
+ * railgo-nfc HarmonyOS 实现（@kit.ConnectivityKit: tag / nfcController）
+ *
+ * 需要权限：ohos.permission.NFC_TAG（见本目录 module.json5）。
+ * 前台扫描使用 tag.registerForegroundDispatch；不同 API 版本回调签名可能为
+ * (err, TagInfo[]) 或直接 TagInfo[]，若编译/运行不符，可改用
+ * tag.on('readerMode', elementName, discTech, cb) + tag.off('readerMode', elementName)。
+ *
+ * 后台调起：标签以 TAG_FOUND want 拉起 Ability，宿主 EntryAbility 需在
+ * onCreate/onNewWant 中把 want 传给 processHarmonyWant()（详见 README）。
+ */
+import { tag, nfcController } from '@kit.ConnectivityKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+import { AbilityName } from '@kit.AbilityKit';
+import {
+	ERR_NOT_SUPPORT, ERR_NFC_DISABLED, ERR_NO_TAG, ERR_NO_NDEF_TECH, ERR_NOT_FORMATTED,
+	ERR_READONLY, ERR_NOT_ENOUGH_SPACE, ERR_WRITE_FAILED, ERR_READ_FAILED, ERR_INVALID_PARAM,
+	NfcStatusInfo, NfcTagInfo, NdefRecordSpec, NdefRecordData, StartScanOptions, WriteOptions,
+	bytesToHex, parseMessageBytes, buildMessageBytes, encodeRecordBytes, extractT2tNdef,
+	buildT2tUserArea, buildCcPage, modelFromGetVersion, T2T_USER_START_PAGE
+} from '../interface.uts'
+
+const TECH_NAMES : string[] = ['', 'NfcA', 'NfcB', 'IsoDep', 'NfcF', 'NfcV', 'Ndef', 'NdefFormatable', 'MifareClassic', 'MifareUltralight', 'Barcode', 'SkipNdef'];
+
+let gOnTagDiscovered : ((tagInfo : NfcTagInfo) => void) | null = null
+let gOnError : ((code : number, message : string) => void) | null = null
+let gOnStopped : ((reason : string) => void) | null = null
+let gScanning = false
+let gElementName : AbilityName | null = null
+let gCurrentTagInfo : tag.TagInfo | null = null
+let gCurrentInfo : NfcTagInfo | null = null
+let gStartupInfos : NfcTagInfo[] = []
+
+function emitError(code : number, message : string) {
+	console.error('[railgo-nfc] ' + code + ': ' + message)
+	if (gOnError != null) gOnError!(code, message)
+}
+
+function currentElementName() : AbilityName | null {
+	if (gElementName != null) return gElementName!
+	const ctx = UTSHarmony.getUIAbilityContext()
+	if (ctx == null) return null
+	gElementName = {
+		bundleName: ctx.abilityInfo.bundleName,
+		moduleName: ctx.abilityInfo.moduleName,
+		abilityName: ctx.abilityInfo.name
+	} as AbilityName
+	return gElementName!
+}
+
+/* ==================== 标签解析 ==================== */
+
+function recordsFromNdefMessage(msg : tag.NdefMessage) : NdefRecordData[] {
+	// 将原生记录重编为字节流，再走跨端统一解码，保证与 Android/iOS 输出一致
+	const bytes : number[] = []
+	const recs = msg.records
+	for (let i = 0; i < recs.length; i++) {
+		const r = recs[i]
+		const one = encodeRecordBytes(r.tnf, r.rtdType, r.id, r.payload)
+		for (let k = 0; k < one.length; k++) bytes.push(one[k])
+	}
+	return parseMessageBytes(bytes)
+}
+
+async function modelViaGetVersion(info : tag.TagInfo) : NtagModelLocal {
+	const res : NtagModelLocal = { model: 'Type2 (unknown)', userBytes: 144, lastPage: 39 }
+	try {
+		const nfcA = tag.getNfcA(info)
+		nfcA.connect()
+		const resp = await nfcA.transceive([0x60])
+		nfcA.close()
+		if (resp.length >= 7) {
+			const m = modelFromGetVersion(resp)
+			res.model = m.model
+			res.userBytes = m.userBytes
+			res.lastPage = m.lastPage
+		}
+	} catch (e) {
+		// 保持默认
+	}
+	return res
+}
+
+type NtagModelLocal = { model : string, userBytes : number, lastPage : number }
+
+async function tagInfoToNfc(info : tag.TagInfo) : Promise<NfcTagInfo> {
+	const uid = bytesToHex(info.uid)
+	const techs : string[] = []
+	for (let i = 0; i < info.technology.length; i++) {
+		const code = info.technology[i]
+		techs.push(code < TECH_NAMES.length ? TECH_NAMES[code] : ('tech_' + code))
+	}
+	const model = await modelViaGetVersion(info)
+
+	let formatted = false
+	let writable = false
+	let records : NdefRecordData[] | null = null
+	let maxNdefSize = model.userBytes - 4
+
+	try {
+		const ndef = tag.getNdef(info)
+		ndef.connect()
+		formatted = true
+		try {
+			writable = ndef.isNdefWritable()
+		} catch (e) {
+			writable = true
+		}
+		try {
+			const msg = await ndef.readNdef()
+			records = recordsFromNdefMessage(msg)
+		} catch (e) {
+			// 读取失败：走 T2T 逐页原始读兜底
+			const raw = await rawReadUserBytes(info, model.lastPage)
+			if (raw.length > 0) {
+				const mb = extractT2tNdef(raw)
+				if (mb.length > 0) records = parseMessageBytes(mb)
+			}
+		}
+		ndef.close()
+	} catch (e) {
+		// 无 NDEF 技术：尝试 NdefFormatable 判定空白可写
+		try {
+			const fmt = tag.getNdefFormatable(info)
+			fmt.connect()
+			fmt.close()
+			writable = true
+			formatted = false
+		} catch (e2) {
+			formatted = false
+		}
+		// 可能已有原始 NDEF（未走标准检测）
+		const raw = await rawReadUserBytes(info, model.lastPage)
+		if (raw.length > 0) {
+			const mb = extractT2tNdef(raw)
+			if (mb.length > 0) {
+				records = parseMessageBytes(mb)
+				formatted = true
+			}
+		}
+	}
+
+	return {
+		uid: uid,
+		techList: techs,
+		tagType: model.model,
+		userBytes: model.userBytes,
+		maxNdefSize: maxNdefSize,
+		formatted: formatted,
+		writable: writable,
+		records: records
+	} as NfcTagInfo
+}
+
+/** T2T 原始逐块读（每块 4 页，READ 0x03） */
+async function rawReadUserBytes(info : tag.TagInfo, lastPage : number) : Promise<number[]> {
+	try {
+		const nfcA = tag.getNfcA(info)
+		nfcA.connect()
+		const out : number[] = []
+		let page = T2T_USER_START_PAGE
+		while (page <= lastPage) {
+			const chunk = await nfcA.transceive([0x03, page])
+			for (let k = 0; k < chunk.length; k++) out.push(chunk[k] & 0xFF)
+			page += 4
+		}
+		nfcA.close()
+		return out
+	} catch (e) {
+		return [] as number[]
+	}
+}
+
+async function processDiscovered(info : tag.TagInfo) {
+	gCurrentTagInfo = info
+	let nfcInfo : NfcTagInfo | null = null
+	try {
+		nfcInfo = await tagInfoToNfc(info)
+	} catch (e) {
+		emitError(ERR_READ_FAILED, '读取标签失败: ' + JSON.stringify(e))
+		return
+	}
+	gCurrentInfo = nfcInfo
+	if (gScanning && gOnTagDiscovered != null) {
+		gOnTagDiscovered!(nfcInfo!)
+	} else {
+		gStartupInfos.push(nfcInfo!)
+	}
+}
+
+/* ==================== 对外 API ==================== */
+
+export function checkStatus() : NfcStatusInfo {
+	let supported = false
+	let enabled = false
+	try {
+		supported = nfcController.isNfcAvailable()
+	} catch (e) { }
+	try {
+		enabled = nfcController.isNfcEnabled()
+	} catch (e) { }
+	return { supported: supported, enabled: enabled } as NfcStatusInfo
+}
+
+export function initNfc(options : StartScanOptions | null) : NfcStatusInfo {
+	if (options != null) {
+		if (options!.onTagDiscovered != null) gOnTagDiscovered = options!.onTagDiscovered
+		if (options!.onError != null) gOnError = options!.onError
+		if (options!.onScanStopped != null) gOnStopped = options!.onScanStopped
+	}
+	while (gStartupInfos.length > 0 && gOnTagDiscovered != null) {
+		gOnTagDiscovered!(gStartupInfos[0])
+		gStartupInfos.shift()
+	}
+	return checkStatus()
+}
+
+export function onTagDiscovered(cb : (tagInfo : NfcTagInfo) => void) : void { gOnTagDiscovered = cb }
+export function offTagDiscovered() : void { gOnTagDiscovered = null }
+export function onError(cb : (code : number, message : string) => void) : void { gOnError = cb }
+export function offError() : void { gOnError = null }
+export function onScanStopped(cb : (reason : string) => void) : void { gOnStopped = cb }
+export function offScanStopped() : void { gOnStopped = null }
+
+export function startScan(options : StartScanOptions | null) : boolean {
+	if (options != null) {
+		if (options!.onTagDiscovered != null) gOnTagDiscovered = options!.onTagDiscovered
+		if (options!.onError != null) gOnError = options!.onError
+		if (options!.onScanStopped != null) gOnStopped = options!.onScanStopped
+	}
+	const status = checkStatus()
+	if (!status.supported) {
+		emitError(ERR_NOT_SUPPORT, '设备不支持 NFC')
+		return false
+	}
+	if (!status.enabled) {
+		emitError(ERR_NFC_DISABLED, 'NFC 未开启，请到系统设置开启')
+		return false
+	}
+	if (gScanning) return true
+	const elementName = currentElementName()
+	if (elementName == null) {
+		emitError(ERR_INVALID_PARAM, '无法获取 UIAbilityContext')
+		return false
+	}
+	try {
+		// discTech: NFC_A=1, NDEF=6, NDEF_FORMATABLE=7, MIFARE_ULTRALIGHT=9
+		tag.registerForegroundDispatch(elementName!, [1, 6, 7, 9], (err : BusinessError, infos : tag.TagInfo[]) => {
+			if (err != null && err.code != 0) {
+				emitError(ERR_READ_FAILED, '前台分发错误: ' + err.message)
+				return
+			}
+			if (infos == null) return
+			for (let i = 0; i < infos.length; i++) {
+				processDiscovered(infos[i])
+			}
+		})
+		gScanning = true
+		return true
+	} catch (e) {
+		emitError(ERR_INVALID_PARAM, '启动扫描失败: ' + JSON.stringify(e))
+		return false
+	}
+}
+
+export function stopScan() : void {
+	if (!gScanning) return
+	const elementName = currentElementName()
+	if (elementName != null) {
+		try {
+			tag.unregisterForegroundDispatch(elementName!)
+		} catch (e) {
+			// 忽略
+		}
+	}
+	gScanning = false
+	if (gOnStopped != null) gOnStopped!('user')
+}
+
+export function isScanning() : boolean {
+	return gScanning
+}
+
+export function takeStartupTag() : NfcTagInfo | null {
+	if (gStartupInfos.length == 0) return null
+	const t = gStartupInfos[0]
+	gStartupInfos.shift()
+	return t
+}
+
+export function getLastTag() : NfcTagInfo | null {
+	return gCurrentInfo
+}
+
+/**
+ * 后台调起时解析 TAG_FOUND want（宿主 EntryAbility 的 onCreate/onNewWant 转发）
+ */
+export function processHarmonyWant(want : any) : NfcTagInfo | null {
+	try {
+		const info = tag.getTagInfo(want as object)
+		processDiscovered(info)
+		if (gStartupInfos.length > 0) {
+			const t = gStartupInfos[0]
+			gStartupInfos.shift()
+			return t
+		}
+		return gCurrentInfo
+	} catch (e) {
+		emitError(ERR_READ_FAILED, '解析 want 失败: ' + JSON.stringify(e))
+		return null
+	}
+}
+
+/* ==================== 写入 NDEF ==================== */
+
+function failWith(options : WriteOptions | null, code : number, msg : string) {
+	emitError(code, msg)
+	if (options != null && options!.fail != null) options!.fail!(code, msg)
+}
+
+/** T2T 逐页写：CC 校验/写入 + TLV 框架 + RFUI 补 0 */
+async function t2tRawWrite(info : tag.TagInfo, msgBytes : number[], model : NtagModelLocal) : Promise<boolean> {
+	const user = buildT2tUserArea(msgBytes, model.userBytes)
+	if (user.length == 0) return false
+	try {
+		const nfcA = tag.getNfcA(info)
+		nfcA.connect()
+		const head = await nfcA.transceive([0x03, 0])
+		if ((head[8] & 0xFF) != 0xE1) {
+			const cc = buildCcPage(model.userBytes)
+			await nfcA.transceive([0xA2, 2, cc[0], cc[1], cc[2], cc[3]])
+		}
+		let page = T2T_USER_START_PAGE
+		for (let i = 0; i < user.length; i += 4) {
+			await nfcA.transceive([0xA2, page, user[i] & 0xFF, user[i + 1] & 0xFF, user[i + 2] & 0xFF, user[i + 3] & 0xFF])
+			page += 1
+		}
+		nfcA.close()
+		return true
+	} catch (e) {
+		return false
+	}
+}
+
+export function writeNdef(records : NdefRecordSpec[], options : WriteOptions | null) : void {
+	const info = gCurrentTagInfo
+	if (info == null) {
+		failWith(options, ERR_NO_TAG, '尚未发现标签，请先 startScan 并等待 onTagDiscovered')
+		return
+	}
+	const msgBytes = buildMessageBytes(records)
+	if (msgBytes.length == 0) {
+		failWith(options, ERR_INVALID_PARAM, '记录参数不合法')
+		return
+	}
+	const formatBlank = options == null || options!.formatBlank == null ? true : options!.formatBlank!
+	doWrite(info, msgBytes, formatBlank, options)
+}
+
+async function doWrite(info : tag.TagInfo, msgBytes : number[], formatBlank : boolean, options : WriteOptions | null) {
+	const done = async () => {
+		try {
+			const nfcInfo = await tagInfoToNfc(info)
+			gCurrentInfo = nfcInfo
+			if (options != null && options!.success != null) options!.success!(nfcInfo)
+		} catch (e) {
+			if (options != null && options!.success != null) options!.success!(getLastTag() ?? ({
+				uid: '', techList: [] as string[], tagType: 'Type2', userBytes: 0, maxNdefSize: 0,
+				formatted: true, writable: false, records: null
+			} as NfcTagInfo))
+		}
+	}
+
+	// 1) 已格式化：标准 NdefTag.writeNdef
+	try {
+		const ndef = tag.getNdef(info)
+		ndef.connect()
+		try {
+			if (!ndef.isNdefWritable()) {
+				ndef.close()
+				failWith(options, ERR_READONLY, '标签已设为只读/已锁定')
+				return
+			}
+		} catch (e) { /* 部分系统版本无该接口，忽略继续写 */ }
+		const msg = tag.ndef.createNdefMessage(msgBytes)
+		await ndef.writeNdef(msg)
+		ndef.close()
+		await done()
+		return
+	} catch (e) {
+		// 落入空白处理
+	}
+
+	if (!formatBlank) {
+		failWith(options, ERR_NOT_FORMATTED, '空白标签未格式化（formatBlank=false）')
+		return
+	}
+
+	// 2) 空白标签：NdefFormatable.format
+	try {
+		const fmt = tag.getNdefFormatable(info)
+		fmt.connect()
+		const msg = tag.ndef.createNdefMessage(msgBytes)
+		await fmt.format(msg)
+		fmt.close()
+		await done()
+		return
+	} catch (e) {
+		// 落入 3) T2T 逐页写兜底
+	}
+	const model = await modelViaGetVersion(info)
+	if (msgBytes.length + 2 > model.userBytes) {
+		failWith(options, ERR_NOT_ENOUGH_SPACE, '数据超出标签用户区容量')
+		return
+	}
+	if (await t2tRawWrite(info, msgBytes, model)) {
+		await done()
+		return
+	}
+	failWith(options, ERR_WRITE_FAILED, '写入失败：标签不支持 NDEF 标准写、格式化与逐页写均被拒绝（可能已加密/锁定）')
+}
+
+/* ==================== 便捷写入 ==================== */
+
+export function uriRecord(uri : string) : NdefRecordSpec {
+	return { type: 'uri', uri: uri } as NdefRecordSpec
+}
+export function textRecord(text : string, language : string) : NdefRecordSpec {
+	return { type: 'text', text: text, language: language } as NdefRecordSpec
+}
+export function aarRecord(packageName : string) : NdefRecordSpec {
+	return { type: 'aar', packageName: packageName } as NdefRecordSpec
+}
+export function writeUri(uri : string, options : WriteOptions | null) : void {
+	writeNdef([uriRecord(uri)], options)
+}

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    railgo-nfc 插件清单。
+    注意：修改本文件或 res/ 后必须重新制作自定义调试基座并云打包才生效。
+    NfcDispatchActivity 类名对应 UTS 编译包名 uts.sdk.modules.railgoNfc（插件 id 驼峰）。
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+	package="io.dcloud.uni_modules.railgoNfc">
+
+	<uses-permission android:name="android.permission.NFC" />
+	<uses-feature
+		android:name="android.hardware.nfc"
+		android:required="false" />
+
+	<application>
+		<activity
+			android:name="uts.sdk.modules.railgoNfc.NfcDispatchActivity"
+			android:exported="true"
+			android:launchMode="singleTop"
+			android:excludeFromRecents="true"
+			android:taskAffinity=""
+			android:theme="@android:style/Theme.Translucent.NoTitleBar">
+
+			<!-- 后台/冷启动：标签含已注册 scheme 的 URI 记录时调起（按需增删 data 项） -->
+			<intent-filter>
+				<action android:name="android.nfc.action.NDEF_DISCOVERED" />
+				<category android:name="android.intent.category.DEFAULT" />
+				<!-- 自定义 scheme 示例：myapp://，请改为你的 App scheme -->
+				<data android:scheme="myapp" />
+			</intent-filter>
+
+			<!-- 后台/冷启动：NTAG(Type2/NFC-A) 等技术匹配调起 -->
+			<intent-filter>
+				<action android:name="android.nfc.action.TECH_DISCOVERED" />
+				<category android:name="android.intent.category.DEFAULT" />
+			</intent-filter>
+			<meta-data
+				android:name="android.nfc.action.TECH_DISCOVERED"
+				android:resource="@xml/railgo_nfc_tech_filter" />
+
+			<!-- 前台扫描：enableForegroundDispatch 的 PendingIntent 目标（filters=null 时走这里） -->
+			<intent-filter>
+				<action android:name="android.nfc.action.TAG_DISCOVERED" />
+				<category android:name="android.intent.category.DEFAULT" />
+			</intent-filter>
+		</activity>
+	</application>
+</manifest>

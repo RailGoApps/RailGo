@@ -4,10 +4,6 @@
 
 		<view class="ux-pl ux-pr ux-pb"><br>
 			
-			<view v-if="loading" class="ux-flex ux-justify-content-center ux-pt-large">
-				<text class="ux-text-small ux-opacity-5">正在获取 {{trainCode}} 车型数据...</text>
-			</view>
-
 			<view v-if="coachData && !loading" class="ux-mt-normal">
 				
 				<view class="ux-bg-white ux-border-radius ux-padding ux-mb-small">
@@ -46,14 +42,29 @@
 			</view>
 
 		</view>
+		<railgo-loader></railgo-loader>
 	</view>
 </template>
 
 <script>
 	// 引入你提供的 UniGet (req.js)
 	import { uniGet } from "@/scripts/req";
+	import { showLoader, hideLoader } from "@/scripts/loader.js";
+	import RailgoLoader from "@/components/railgo-loader/railgo-loader.vue";
 
 	export default {
+		components: {
+			RailgoLoader
+		},
+		watch: {
+			loading(val) {
+				if (val) {
+					showLoader('正在获取 ' + this.trainCode + ' 车型数据...');
+				} else {
+					hideLoader();
+				}
+			}
+		},
 		data() {
 			return {
 				trainCode: '',

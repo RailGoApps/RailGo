@@ -6,9 +6,13 @@
 			<text class="ux-h2">{{ keyword }}</text>
 		</view>
 
-		<!-- 加载中 -->
-		<view v-if="loading" class="ux-text-center ux-padding ux-mt">
-			<text class="ux-color-grey2">搜索中...</text>
+		<!-- 加载中：瀑布流骨架屏 -->
+		<view v-if="loading && !loadError" class="ux-pl ux-pr sk-waterfall">
+			<view v-for="i in 6" :key="i" class="sk-cell">
+				<skeleton w="100%" :h="i % 2 === 0 ? '300rpx' : '380rpx'" radius="12rpx" />
+				<skeleton w="70%" h="28rpx" mt="16rpx" />
+				<skeleton w="40%" h="22rpx" mt="12rpx" />
+			</view>
 		</view>
 
 		<!-- 无结果 -->
@@ -159,6 +163,19 @@
 </script>
 
 <style lang="scss">
+	/* 骨架屏瀑布流 */
+	.sk-waterfall {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		padding-bottom: 40rpx;
+	}
+	.sk-cell {
+		width: 48.5%;
+		margin-bottom: 24rpx;
+	}
+
 	/* 瀑布流单项内容 */
 	.item {
 		padding: 10rpx 10rpx 20rpx;

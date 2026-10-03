@@ -23,13 +23,7 @@
 				</view>
 			</view>
 			
-			<view v-if="loading" class="ux-bg-white ux-padding ux-mt ux-border-radius">
-				<view class="ux-flex ux-justify-content-center ux-align-items-center" style="height: 200rpx;">
-					<text>正在加载车次信息...</text>
-				</view>
-			</view>
-			
-			<view v-else class="ux-bg-white ux-mt ux-border-radius">
+			<view v-if="!loading" class="ux-bg-white ux-mt ux-border-radius">
 				<uni-section title="行程信息" type="line" style="background-color: transparent;" title-font-size="28rpx"></uni-section>
 				
 				<view class="ux-padding">
@@ -79,6 +73,7 @@
 				确认添加
 			</button>
 		</view>
+		<railgo-loader></railgo-loader>
 	</view>
 </template>
 
@@ -87,8 +82,13 @@ import { getTrainTypeColor, getTrainTypeDescription } from "@/scripts/config.js"
 import { doQuery } from "@/scripts/sqlite.js";
 import { uniGet } from "@/scripts/req.js";
 import { toRaw } from "@vue/reactivity";
+import { showLoader, hideLoader } from "@/scripts/loader.js";
+import RailgoLoader from "@/components/railgo-loader/railgo-loader.vue";
 
 export default {
+	components: {
+		RailgoLoader
+	},
 	data() {
 		return {
 			trainNum: '',
@@ -141,6 +141,13 @@ export default {
 		}
 	},
 	watch: {
+		loading(val) {
+			if (val) {
+				showLoader('正在加载车次信息...');
+			} else {
+				hideLoader();
+			}
+		},
 		selectedFromStation() {
 			this.validateRoute();
 		},

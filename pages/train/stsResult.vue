@@ -90,6 +90,7 @@
 				<text class="ux-text-small ux-opacity-4">—— 数据来源: RailGo.Parser ——</text>
 			</view>
 		</view>
+		<railgo-loader></railgo-loader>
 	</view>
 	<uni-popup ref="error_noky" border-radius="10rpx 10rpx 0 0">
 		<uni-popup-dialog title="未查询到符合条件的车次" content="发站或到站中有车站不办理客运业务或无列车停靠。" @close="back"
@@ -182,8 +183,13 @@
 	import { toRaw } from "@vue/reactivity";
 	import { KEYS_STRUCT_STATIONS, KEYS_STRUCT_TRAINS, TRAIN_KIND_COLOR_MAP } from "@/scripts/config.js";
 	import { uniGet } from "@/scripts/req";
+	import { showLoader, hideLoader } from "@/scripts/loader.js";
+	import RailgoLoader from "@/components/railgo-loader/railgo-loader.vue";
 
 	export default {
+		components: {
+			RailgoLoader
+		},
 		data() {
 			return {
 				"keyword": "",
@@ -236,27 +242,27 @@
 				const mode = uni.getStorageSync("mode");
 				if (mode == "network") {
 					try {
-						uni.showLoading({ title: "加载中" });
+						showLoader("加载中");
 						const trainBase = uni.getStorageSync('service_source_train') || 'https://data.railgo.zenglingkun.cn';
 						let apiUrl = trainBase + `/api/train/sts_query?from=${this.from}&to=${this.to}&date=${this.date}`;
 						if (this.isVague) apiUrl += "&city=true";
 						const resp = await uniGet(apiUrl);
 						if (resp.data.error) {
-							uni.hideLoading();
+							hideLoader();
 							this.$refs.error_noky.open();
 							return;
 						}
 						this.data = resp.data;
 						this.showData = this.data;
 						this.radioSortChange({ detail: { value: "departure" } });
-						uni.hideLoading();
-					} catch (e) { uni.hideLoading(); }
+						hideLoader();
+					} catch (e) { hideLoader(); }
 				} else {
 					try {
-						uni.showLoading({ title: "加载中" });
+						showLoader("加载中");
 						let fromStn = toRaw(await doQuery("SELECT trainList FROM stations WHERE telecode='" + this.from + "'", ["trainList"]))[0];
 						let toStn = toRaw(await doQuery("SELECT trainList FROM stations WHERE telecode='" + this.to + "'", ["trainList"]))[0];
-						if (!fromStn || !toStn) { uni.hideLoading(); this.$refs.error_noky.open(); return; }
+						if (!fromStn || !toStn) { hideLoader(); this.$refs.error_noky.open(); return; }
 						let all = toRaw(await doQuery(
 							"SELECT code, number, numberFull, numberKind, timetable, rundays, car FROM trains WHERE number IN ('" +
 							fromStn.trainList.filter(i => toStn.trainList.includes(i)).join("','") + "')", 
@@ -277,8 +283,8 @@
 						});
 						this.showData = this.data;
 						this.radioSortChange({ detail: { value: "departure" } });
-						uni.hideLoading();
-					} catch (e) { uni.hideLoading(); }
+						hideLoader();
+					} catch (e) { hideLoader(); }
 				}
 			},
 			calculateTimeDifference: function(startTime, endTime, daysLater) {

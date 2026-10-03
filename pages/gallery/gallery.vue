@@ -26,11 +26,6 @@
 			</view>
 		</view>
 
-		<!-- 加载中（首次/切换筛选） -->
-		<view v-if="loading" class="ux-text-center ux-padding ux-mt">
-			<text class="ux-color-grey2">加载中...</text>
-		</view>
-
 		<!-- 无结果 -->
 		<view v-if="!loading && photoList.length === 0 && !loadError" class="ux-text-center ux-padding ux-mt">
 			<text class="ux-h6 ux-color-grey2">暂无照片</text>
@@ -108,12 +103,15 @@
 				</view>
 			</view>
 		</view>
+		<railgo-loader></railgo-loader>
 	</view>
 </template>
 
 <script>
 	import { uniGet } from "@/scripts/req";
+	import { showLoader, hideLoader } from "@/scripts/loader.js";
 	import customWaterfallsFlow from "@/uni_modules/custom-waterfalls-flow/components/custom-waterfalls-flow/custom-waterfalls-flow.vue";
+	import RailgoLoader from "@/components/railgo-loader/railgo-loader.vue";
 
 	const API_BASE = 'https://train.idcmoss.cn/api';
 
@@ -125,7 +123,17 @@
 
 	export default {
 		components: {
-			customWaterfallsFlow
+			customWaterfallsFlow,
+			RailgoLoader
+		},
+		watch: {
+			loading(val) {
+				if (val) {
+					showLoader('加载中...');
+				} else {
+					hideLoader();
+				}
+			}
 		},
 		data() {
 			return {

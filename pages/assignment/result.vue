@@ -8,8 +8,20 @@
 			<view v-if="!isValidKeyword" class="ux-text-center ux-padding-small ux-mb ux-h6 ux-text-center ux-text-red">
 				<text class="ux-bold">输入值有误</text>
 			</view>
-			
-			<uni-table border stripe :loading="loading" v-if="isValidKeyword">
+
+			<!-- 骨架屏：查询期间占位 -->
+			<view v-if="skeleton" class="sk-table">
+				<view v-for="i in 6" :key="i" class="sk-tr">
+					<skeleton w="90rpx" h="26rpx" />
+					<skeleton w="110rpx" h="26rpx" />
+					<skeleton w="130rpx" h="26rpx" />
+					<skeleton w="150rpx" h="26rpx" />
+					<skeleton w="110rpx" h="26rpx" />
+					<skeleton flex w="0" h="26rpx" mr="0" />
+				</view>
+			</view>
+
+			<uni-table border stripe :loading="loading" v-if="isValidKeyword && !skeleton">
 				<uni-tr>
 						<uni-th align="center" width="100px">车型</uni-th>
 						<uni-th align="center" width="80px">车号</uni-th>
@@ -28,7 +40,7 @@
 					</uni-tr>
 			</uni-table>
 			
-			<view v-if="data.length === 0 && !loading && isValidKeyword" class="ux-text-center ux-padding">
+			<view v-if="data.length === 0 && !loading && !skeleton && isValidKeyword" class="ux-text-center ux-padding">
 				<text class="ux-opacity-6">—— 暂无数据 ——</text>
 			</view>
 
@@ -47,12 +59,18 @@
 				<text class="ux-text-small ux-opacity-4">—— 数据来源: Moefactory ——</text>
 			</view>
 		</view>
+		<railgo-loader></railgo-loader>
 	</view>
 </template>
 
 <script>
-import {uniPost} from "@/scripts/req.js"; 
+import {uniPost} from "@/scripts/req.js";
+	import {showLoader, hideLoader} from "@/scripts/loader.js";
+	import RailgoLoader from "@/components/railgo-loader/railgo-loader.vue";
 	export default {
+		components: {
+			RailgoLoader
+		},
 		data() {
 			return {
 				"keyword": "",
@@ -63,6 +81,7 @@ import {uniPost} from "@/scripts/req.js";
 				"hasMore": false, 
 				"totalCount": 0, 
 				"loading": false, 
+				"skeleton": false, 
 				"isValidKeyword": true 
 			}
 		},
@@ -95,6 +114,7 @@ import {uniPost} from "@/scripts/req.js";
 			// 检查关键字是否有效，如果有效才进行数据填充
 			if (this.isPureNumber || this.isAlphanumeric) {
 				this.isValidKeyword = true;
+				this.skeleton = true;
 				this.fillInData();
 			} else {
 				this.isValidKeyword = false;
@@ -133,8 +153,8 @@ import {uniPost} from "@/scripts/req.js";
 			fillInData: async function(isPaging = false) {
 				if (!this.isValidKeyword) return; 
 
-				if (!isPaging) {
-					uni.showLoading({ title: "加载中" });
+				if (isPaging) {
+					showLoader("加载中"); // 首屏由骨架屏提示，翻页沿用加载动画
 				}
 				this.loading = true;
 				if (!isPaging) {
@@ -150,7 +170,7 @@ import {uniPost} from "@/scripts/req.js";
 				} else {
 					this.isValidKeyword = false;
 					this.loading = false;
-					uni.hideLoading();
+					this.skeleton = false;
 					return;
 				}
 				
@@ -193,8 +213,11 @@ import {uniPost} from "@/scripts/req.js";
 			        });
 			        this.data = []; // 清空数据
 			    } finally {
-			        uni.hideLoading(); 
+			        if (isPaging) {
+			            hideLoader(); // 翻页沿用加载动画，首屏由骨架屏提示
+			        }
 			        this.loading = false;
+			        this.skeleton = false;
 			    }
 			},
 			
@@ -225,5 +248,23 @@ import {uniPost} from "@/scripts/req.js";
 }
 .ux-text-red {
 	color: #e54d42;
+}
+
+/* 骨架屏 */
+.sk-table {
+	background-color: #ffffff;
+	border-radius: 10rpx;
+	padding: 10rpx 16rpx;
+}
+.sk-tr {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 20rpx;
+	padding: 26rpx 0;
+	border-bottom: 1rpx solid #f2f2f2;
+}
+.sk-tr:last-child {
+	border-bottom: none;
 }
 </style>

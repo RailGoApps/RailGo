@@ -1,0 +1,34 @@
+{
+  "id": "railgo-nfc",
+  "displayName": "railgo-nfc NTAG 标签读写",
+  "version": "1.0.0",
+  "description": "uni-app UTS 三端(Android/iOS/HarmonyOS) NFC NTAG213/215/216 读写插件：NDEF URI/Text/AAR 记录读写、T2T 逐页写入兜底、NFC 标签调起 App",
+  "keywords": [
+    "NFC",
+    "NTAG",
+    "NDEF",
+    "AAR",
+    "UTS"
+  ],
+  "uni_modules": {
+    "dependencies": [],
+    "encrypt": [],
+    "platforms": {
+      "client": {
+        "Vue": {
+          "vue2": "y",
+          "vue3": "y"
+        },
+        "App": {
+          "app-android": "y",
+          "app-ios": "y",
+          "app-harmony": "y"
+        },
+        "H5-mobile": "n",
+        "H5-pc": "n",
+        "小程序": "n",
+        "快应用": "n"
+      }
+    }
+  }
+}

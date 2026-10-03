@@ -150,13 +150,19 @@
 		<view class="ux-flex ux-row ux-justify-content-center" style="margin-top: 60rpx;">
 			<text class="ux-text-small ux-opacity-3">—— 数据来源: crh.lihugang.top & RailGo  ——</text>
 		</view>
+		<railgo-loader></railgo-loader>
 	</view>
 </template>
 
 <script>
 import { uniGet } from "@/scripts/req.js";
+import { showLoader, hideLoader } from "@/scripts/loader.js";
+import RailgoLoader from "@/components/railgo-loader/railgo-loader.vue";
 
 export default {
+	components: {
+		RailgoLoader
+	},
 	data() {
 		return {
 			emuId: "",
@@ -187,7 +193,7 @@ export default {
 		},
 		async fetchCarInfo() {
 			this.loading = true;
-			uni.showLoading({ title: "拉取档案中..." });
+			showLoader("拉取档案中...");
 			
 			try {
 				const assignmentBase = uni.getStorageSync('service_source_emu_assignment') || 'https://emu.railgo.zenglingkun.cn';
@@ -218,7 +224,7 @@ export default {
 				console.error("档案检索失败:", error);
 				uni.redirectTo({ url: '/pages/404/404' });
 			} finally {
-				uni.hideLoading();
+				hideLoader();
 				this.loading = false;
 			}
 		},

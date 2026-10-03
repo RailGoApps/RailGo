@@ -1,0 +1,564 @@
+/**
+ * railgo-nfc Android 实现
+ *
+ * 扫描机制：enableForegroundDispatch + PendingIntent 指向本插件内置的透明
+ * NfcDispatchActivity（UTS 无法 hook onNewIntent，因此借用独立 Activity 接收标签 Intent）。
+ * 后台/冷启动调起：由插件 AndroidManifest.xml 中 NfcDispatchActivity 的
+ * NDEF/TECH/TAG_DISCOVERED intent-filter 完成，解析后进入启动队列。
+ *
+ * 注意：ByteArray 与 UTS number[] 的互转使用了 latin1 编码技巧（n2kb），
+ * 若 HBuilderX 版本对 Charsets/kb2n 语法报错，只需调整这两个小工具函数。
+ */
+import Activity from 'android.app.Activity'
+import Bundle from 'android.os.Bundle'
+import Intent from 'android.content.Intent'
+import ComponentName from 'android.content.ComponentName'
+import PendingIntent from 'android.app.PendingIntent'
+import Build from 'android.os.Build'
+import Class from 'java.lang.Class'
+import Charsets from 'kotlin.Charsets'
+import NfcAdapter from 'android.nfc.NfcAdapter'
+import Tag from 'android.nfc.Tag'
+import Ndef from 'android.nfc.tech.Ndef'
+import NdefFormatable from 'android.nfc.tech.NdefFormatable'
+import NfcA from 'android.nfc.tech.NfcA'
+import MifareUltralight from 'android.nfc.tech.MifareUltralight'
+import NdefMessage from 'android.nfc.NdefMessage'
+import {
+	ERR_NOT_SUPPORT, ERR_NFC_DISABLED, ERR_NO_TAG, ERR_NO_NDEF_TECH, ERR_NOT_FORMATTED,
+	ERR_FORMAT_FAILED, ERR_READONLY, ERR_NOT_ENOUGH_SPACE, ERR_WRITE_FAILED, ERR_READ_FAILED,
+	ERR_INVALID_PARAM,
+	NfcStatusInfo, NfcTagInfo, NdefRecordSpec, NdefRecordData, StartScanOptions, WriteOptions,
+	bytesToHex, hexToBytes, parseMessageBytes, buildMessageBytes, extractT2tNdef, buildT2tUserArea,
+	buildCcPage, modelFromGetVersion, T2T_USER_START_PAGE
+} from '../interface.uts'
+
+/* ==================== 模块状态 ==================== */
+
+let gOnTagDiscovered : ((tag : NfcTagInfo) => void) | null = null
+let gOnError : ((code : number, message : string) => void) | null = null
+let gOnStopped : ((reason : string) => void) | null = null
+let gScanning = false
+let gCurrentTag : Tag | null = null
+let gCurrentInfo : NfcTagInfo | null = null
+let gStartupInfos : NfcTagInfo[] = []
+
+const DISPATCH_ACTIVITY = 'uts.sdk.modules.railgoNfc.NfcDispatchActivity'
+
+/* ==================== 字节互转工具 ==================== */
+
+function kb2n(b : ByteArray) : number[] {
+	const out : number[] = []
+	for (let i = 0; i < b.length; i++) {
+		out.push(b[i] & 0xFF)
+	}
+	return out
+}
+
+/** number[](0~255) → Kotlin ByteArray：latin1 每字符恰为一字节 */
+function n2kb(a : number[]) : ByteArray {
+	let s = ''
+	for (let i = 0; i < a.length; i++) {
+		s += String.fromCharCode(a[i] & 0xFF)
+	}
+	return s.toByteArray(Charsets.ISO_8859_1)
+}
+
+function sliceB(bytes : number[], start : number, len : number) : number[] {
+	const out : number[] = []
+	for (let i = start; i < start + len && i < bytes.length; i++) {
+		out.push(bytes[i] & 0xFF)
+	}
+	return out
+}
+
+function emitError(code : number, message : string) {
+	console.error('[railgo-nfc] ' + code + ': ' + message)
+	if (gOnError != null) gOnError!(code, message)
+}
+
+function getAdapter() : NfcAdapter | null {
+	const ctx = UTSAndroid.getAppContext()
+	if (ctx == null) return null
+	return NfcAdapter.getDefaultAdapter(ctx)
+}
+
+/* ==================== 标签解析 ==================== */
+
+function readVersionModel(tagRef : Tag) : NtagModelLocal {
+	// 返回 [model, userBytes, lastPage]
+	const res: NtagModelLocal = { model: 'Type2 (unknown)', userBytes: 144, lastPage: 39 }
+	const nfcA = NfcA.get(tagRef)
+	if (nfcA == null) return res
+	try {
+		nfcA.connect()
+		const resp = kb2n(nfcA.transceive(n2kb([0x60])))
+		nfcA.close()
+		if (resp.length >= 7) {
+			const m = modelFromGetVersion(resp)
+			res.model = m.model
+			res.userBytes = m.userBytes
+			res.lastPage = m.lastPage
+		}
+	} catch (e : any) {
+		// GET_VERSION 失败按默认处理
+	}
+	return res
+}
+
+type NtagModelLocal = { model : string, userBytes : number, lastPage : number }
+
+/** 通过 MifareUltralight/NfcA 读取用户区原始字节（页 4 起） */
+function readUserBytesRaw(tagRef : Tag, lastPage : number) : number[] {
+	// 优先 MifareUltralight.readPages（每次 4 页）
+	const ml = MifareUltralight.get(tagRef)
+	if (ml != null) {
+		try {
+			ml.connect()
+			const out : number[] = []
+			let page = T2T_USER_START_PAGE
+			while (page <= lastPage) {
+				const chunk = kb2n(ml.readPages(page))
+				for (let k = 0; k < chunk.length; k++) out.push(chunk[k])
+				page += 4
+			}
+			ml.close()
+			const total = (lastPage - T2T_USER_START_PAGE + 1) * 4
+			return sliceB(out, 0, total)
+		} catch (e : any) { /* 落入 NfcA 逐块读 */ }
+	}
+	const nfcA = NfcA.get(tagRef)
+	if (nfcA == null) return [] as number[]
+	try {
+		nfcA.connect()
+		const out : number[] = []
+		let page = T2T_USER_START_PAGE
+		while (page <= lastPage) {
+			const chunk = kb2n(nfcA.transceive(n2kb([0x03, page])))
+			for (let k = 0; k < chunk.length; k++) out.push(chunk[k])
+			page += 4
+		}
+		nfcA.close()
+		const total = (lastPage - T2T_USER_START_PAGE + 1) * 4
+		return sliceB(out, 0, total)
+	} catch (e : any) {
+		return [] as number[]
+	}
+}
+
+function tagToInfo(tagRef : Tag) : NfcTagInfo {
+	const uid = bytesToHex(kb2n(tagRef.getId()))
+	const techs : string[] = []
+	const tl = tagRef.getTechList()
+	for (let i = 0; i < tl.length; i++) {
+		const full = tl[i]
+		const idx = full.lastIndexOf('.')
+		techs.push(idx >= 0 ? full.substring(idx + 1) : full)
+	}
+	const model = readVersionModel(tagRef)
+
+	let formatted = false
+	let writable = false
+	let maxNdefSize = model.userBytes - 4
+	let records : NdefRecordData[] | null = null
+
+	const ndef = Ndef.get(tagRef)
+	if (ndef != null) {
+		formatted = true
+		try {
+			ndef.connect()
+			maxNdefSize = ndef.getMaxSupportedSize()
+			writable = ndef.isWritable()
+			const msg = ndef.getCachedNdefMessage()
+			if (msg != null) {
+				records = parseMessageBytes(kb2n(msg.toByteArray()))
+			} else {
+				records = [] as NdefRecordData[]
+			}
+			ndef.close()
+		} catch (e : any) {
+			ndef.close()
+			// 缓存缺失时走 T2T 逐页读 + TLV 解析兜底
+			const raw = readUserBytesRaw(tagRef, model.lastPage)
+			if (raw.length > 0) {
+				const msgBytes = extractT2tNdef(raw)
+				if (msgBytes.length > 0) records = parseMessageBytes(msgBytes)
+			}
+			writable = true
+		}
+	} else {
+		// 无 Ndef 技术：可能为空白标签，逐页读检查 CC 与 TLV
+		const cc = readUserBytesRaw(tagRef, model.lastPage)
+		if (cc.length > 0) {
+			const msgBytes = extractT2tNdef(cc)
+			if (msgBytes.length > 0) {
+				records = parseMessageBytes(msgBytes)
+				formatted = true
+			}
+		}
+		writable = NdefFormatable.get(tagRef) != null
+	}
+
+	return {
+		uid: uid,
+		techList: techs,
+		tagType: model.model,
+		userBytes: model.userBytes,
+		maxNdefSize: maxNdefSize,
+		formatted: formatted,
+		writable: writable,
+		records: records
+	} as NfcTagInfo
+}
+
+/* ==================== Intent 处理 ==================== */
+
+function parcelExtra(intent : Intent, key : string) : any | null {
+	if (Build.VERSION.SDK_INT >= 33) {
+		return intent.getParcelableExtra(key, Class.forName('android.nfc.Tag'))
+	}
+	return intent.getParcelableExtra(key)
+}
+
+function handleNfcIntent(intent : Intent) {
+	const action = intent.getAction() ?? ''
+	if (action.length == 0) return
+	let info : NfcTagInfo | null = null
+	let rawTag : Tag | null = null
+
+	const tagObj = parcelExtra(intent, NfcAdapter.EXTRA_TAG)
+	if (tagObj != null) {
+		rawTag = tagObj as Tag
+	}
+
+	if (action == NfcAdapter.ACTION_NDEF_DISCOVERED) {
+		// 冷启动 NDEF 分发时可能只有消息没有 Tag 引用
+		const arr = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)
+		if (arr != null && arr.length > 0 && rawTag == null) {
+			const msg = arr[0] as NdefMessage
+			const uidHex = intent.getStringExtra(NfcAdapter.EXTRA_ID) ?? ''
+			info = {
+				uid: uidHex.length % 2 == 0 ? uidHex.toUpperCase() : uidHex,
+				techList: ['Ndef'] as string[],
+				tagType: 'Type2',
+				userBytes: 0,
+				maxNdefSize: 0,
+				formatted: true,
+				writable: false,
+				records: parseMessageBytes(kb2n(msg.toByteArray()))
+			} as NfcTagInfo
+		}
+	}
+
+	if (rawTag != null) {
+		try {
+			info = tagToInfo(rawTag!)
+		} catch (e : any) {
+			emitError(ERR_READ_FAILED, '读取标签失败: ' + e)
+		}
+	}
+
+	if (info == null) return
+	gCurrentTag = rawTag
+	gCurrentInfo = info
+	if (gScanning && gOnTagDiscovered != null) {
+		gOnTagDiscovered!(info!)
+	} else {
+		// 冷启动/未扫描：进入队列，由 takeStartupTag() 或 initNfc() 消费
+		gStartupInfos.push(info!)
+	}
+}
+
+/**
+ * 标签分发接收 Activity（在插件 AndroidManifest.xml 声明）。
+ * 前台扫描时是 PendingIntent 目标；后台/熄屏时由系统按 intent-filter 直接启动。
+ */
+export class NfcDispatchActivity extends Activity {
+
+	override onCreate(savedInstanceState : Bundle | null) : void {
+		super.onCreate(savedInstanceState)
+		this.route(this.getIntent())
+	}
+
+	override onNewIntent(intent : Intent) : void {
+		super.onNewIntent(intent)
+		this.setIntent(intent)
+		this.route(intent)
+	}
+
+	route(intent : Intent | null) {
+		if (intent != null) {
+			handleNfcIntent(intent!)
+		}
+		// 冷启动场景下主 Activity 尚未创建，拉起应用主界面
+		const main = UTSAndroid.getUniActivity()
+		if (main == null) {
+			const launch = this.getPackageManager().getLaunchIntentForPackage(this.getPackageName())
+			if (launch != null) {
+				launch!.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+				this.startActivity(launch!)
+			}
+		}
+		this.finish()
+	}
+}
+
+/* ==================== 对外 API ==================== */
+
+export function checkStatus() : NfcStatusInfo {
+	const adapter = getAdapter()
+	return {
+		supported: adapter != null,
+		enabled: adapter != null && adapter!.isEnabled()
+	} as NfcStatusInfo
+}
+
+/** 注册事件并消费冷启动队列；返回 NFC 状态 */
+export function initNfc(options : StartScanOptions | null) : NfcStatusInfo {
+	if (options != null) {
+		if (options!.onTagDiscovered != null) gOnTagDiscovered = options!.onTagDiscovered
+		if (options!.onError != null) gOnError = options!.onError
+		if (options!.onScanStopped != null) gOnStopped = options!.onScanStopped
+	}
+	// 冷启动期间入队的标签，注册回调后补发
+	while (gStartupInfos.length > 0 && gOnTagDiscovered != null) {
+		gOnTagDiscovered!(gStartupInfos[0])
+		gStartupInfos.shift()
+	}
+	return checkStatus()
+}
+
+export function onTagDiscovered(cb : (tag : NfcTagInfo) => void) : void {
+	gOnTagDiscovered = cb
+}
+export function offTagDiscovered() : void {
+	gOnTagDiscovered = null
+}
+export function onError(cb : (code : number, message : string) => void) : void {
+	gOnError = cb
+}
+export function offError() : void {
+	gOnError = null
+}
+export function onScanStopped(cb : (reason : string) => void) : void {
+	gOnStopped = cb
+}
+export function offScanStopped() : void {
+	gOnStopped = null
+}
+
+function buildDispatchPendingIntent(activity : Activity) : PendingIntent {
+	const pi = Intent(activity, ComponentName(activity.getPackageName(), DISPATCH_ACTIVITY))
+	pi.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK)
+	let flags = PendingIntent.FLAG_UPDATE_CURRENT
+	if (Build.VERSION.SDK_INT >= 31) {
+		// 系统需向该 Intent 填充 EXTRA_TAG，必须 MUTABLE
+		flags = PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+	}
+	return PendingIntent.getActivity(activity, 0, pi, flags)
+}
+
+export function startScan(options : StartScanOptions | null) : boolean {
+	if (options != null) {
+		if (options!.onTagDiscovered != null) gOnTagDiscovered = options!.onTagDiscovered
+		if (options!.onError != null) gOnError = options!.onError
+		if (options!.onScanStopped != null) gOnStopped = options!.onScanStopped
+	}
+	const adapter = getAdapter()
+	if (adapter == null) {
+		emitError(ERR_NOT_SUPPORT, '设备不支持 NFC')
+		return false
+	}
+	if (!adapter!.isEnabled()) {
+		emitError(ERR_NFC_DISABLED, 'NFC 未开启，请到系统设置开启')
+		return false
+	}
+	if (gScanning) return true
+	const activity = UTSAndroid.getUniActivity()
+	if (activity == null) {
+		emitError(ERR_INVALID_PARAM, '无法获取前台 Activity')
+		return false
+	}
+	try {
+		adapter!.enableForegroundDispatch(activity!, buildDispatchPendingIntent(activity!), null, null)
+		gScanning = true
+		return true
+	} catch (e : any) {
+		emitError(ERR_INVALID_PARAM, '启动扫描失败: ' + e)
+		return false
+	}
+}
+
+export function stopScan() : void {
+	if (!gScanning) return
+	const adapter = getAdapter()
+	const activity = UTSAndroid.getUniActivity()
+	if (adapter != null && activity != null) {
+		try {
+			adapter!.disableForegroundDispatch(activity!)
+		} catch (e : any) {
+			// 忽略
+		}
+	}
+	gScanning = false
+	if (gOnStopped != null) gOnStopped!('user')
+}
+
+export function isScanning() : boolean {
+	return gScanning
+}
+
+/** 消费冷启动/离屏时发现的标签（写标签也依赖这里保存的 Tag 引用） */
+export function takeStartupTag() : NfcTagInfo | null {
+	if (gStartupInfos.length == 0) return null
+	const t = gStartupInfos[0]
+	gStartupInfos.shift()
+	return t
+}
+
+export function getLastTag() : NfcTagInfo | null {
+	return gCurrentInfo
+}
+
+/* ==================== T2T 逐页写入（空白标签兜底路径） ==================== */
+
+/** 逐页写入用户区（含 CC 页），返回是否成功；尾页 RFUI 补 0x00 */
+function t2tRawWrite(tagRef : Tag, msgBytes : number[], model : NtagModelLocal) : boolean {
+	const user = buildT2tUserArea(msgBytes, model.userBytes)
+	if (user.length == 0) return false
+	const ml = MifareUltralight.get(tagRef)
+	try {
+		if (ml != null) {
+			ml.connect()
+			// 检查并写入 CC 页（页 2）
+			const head = kb2n(ml.readPages(0))
+			if ((head[8] & 0xFF) != 0xE1) {
+				ml.writePage(2, n2kb(buildCcPage(model.userBytes)))
+			}
+			let page = T2T_USER_START_PAGE
+			for (let i = 0; i < user.length; i += 4) {
+				ml.writePage(page, n2kb(sliceB(user, i, 4)))
+				page += 1
+			}
+			ml.close()
+			return true
+		}
+		const nfcA = NfcA.get(tagRef)
+		if (nfcA == null) return false
+		nfcA.connect()
+		const head = kb2n(nfcA.transceive(n2kb([0x03, 0])))
+		if ((head[8] & 0xFF) != 0xE1) {
+			const cc = buildCcPage(model.userBytes)
+			nfcA.transceive(n2kb([0xA2, 2, cc[0], cc[1], cc[2], cc[3]]))
+		}
+		let page = T2T_USER_START_PAGE
+		for (let i = 0; i < user.length; i += 4) {
+			const d = sliceB(user, i, 4)
+			nfcA.transceive(n2kb([0xA2, page, d[0], d[1], d[2], d[3]]))
+			page += 1
+		}
+		nfcA.close()
+		return true
+	} catch (e : any) {
+		emitError(ERR_WRITE_FAILED, 'T2T 逐页写入失败: ' + e)
+		return false
+	}
+}
+
+/* ==================== 写入 NDEF ==================== */
+
+export function writeNdef(records : NdefRecordSpec[], options : WriteOptions | null) : void {
+	const fail = (code : number, msg : string) => {
+		emitError(code, msg)
+		if (options != null && options!.fail != null) options!.fail!(code, msg)
+	}
+	const done = (info : NfcTagInfo) => {
+		gCurrentInfo = info
+		if (options != null && options!.success != null) options!.success!(info)
+	}
+
+	const tagRef = gCurrentTag
+	if (tagRef == null) {
+		fail(ERR_NO_TAG, '尚未发现标签，请先 startScan 并等待 onTagDiscovered')
+		return
+	}
+	const msgBytes = buildMessageBytes(records)
+	if (msgBytes.length == 0) {
+		fail(ERR_INVALID_PARAM, '记录参数不合法')
+		return
+	}
+	const formatBlank = options == null || options!.formatBlank == null ? true : options!.formatBlank!
+
+	// 1) 已格式化：Ndef.writeNdefMessage
+	const ndef = Ndef.get(tagRef)
+	if (ndef != null) {
+		try {
+			ndef.connect()
+			if (!ndef.isWritable()) {
+				ndef.close()
+				fail(ERR_READONLY, '标签已设为只读/已锁定')
+				return
+			}
+			if (ndef.getMaxSupportedSize() < msgBytes.length) {
+				ndef.close()
+				fail(ERR_NOT_ENOUGH_SPACE, '数据 ' + msgBytes.length + 'B 超出标签容量 ' + ndef.getMaxSupportedSize() + 'B')
+				return
+			}
+			ndef.writeNdefMessage(NdefMessage(n2kb(msgBytes)))
+			ndef.close()
+			done(tagToInfo(tagRef))
+			return
+		} catch (e : any) {
+			try { ndef.close() } catch (e2 : any) { }
+			// 落入 T2T 逐页写
+		}
+	}
+
+	// 2) 空白标签：NdefFormatable.format
+	if (formatBlank) {
+		const fmt = NdefFormatable.get(tagRef)
+		if (fmt != null) {
+			try {
+				fmt.connect()
+				fmt.format(NdefMessage(n2kb(msgBytes)))
+				fmt.close()
+				done(tagToInfo(tagRef))
+				return
+			} catch (e : any) {
+				try { fmt.close() } catch (e2 : any) { }
+				// 落入 T2T 逐页写
+			}
+		}
+		// 3) T2T 逐页写兜底（NTAG213/215/216）
+		const model = readVersionModel(tagRef)
+		if (msgBytes.length + 2 > model.userBytes) {
+			fail(ERR_NOT_ENOUGH_SPACE, '数据超出标签用户区容量')
+			return
+		}
+		if (t2tRawWrite(tagRef, msgBytes, model)) {
+			done(tagToInfo(tagRef))
+			return
+		}
+		fail(ERR_WRITE_FAILED, '写入失败：标签不支持 Ndef/NdefFormatable 或逐页写入被拒绝（可能已加密/锁定）')
+		return
+	}
+	fail(ERR_NOT_FORMATTED, '空白标签未格式化（formatBlank=false）')
+}
+
+/* ==================== 便捷写入 ==================== */
+
+export function uriRecord(uri : string) : NdefRecordSpec {
+	return { type: 'uri', uri: uri } as NdefRecordSpec
+}
+export function textRecord(text : string, language : string) : NdefRecordSpec {
+	return { type: 'text', text: text, language: language } as NdefRecordSpec
+}
+/** AAR：写入 Android 包名，Android 端优先据此调起 App */
+export function aarRecord(packageName : string) : NdefRecordSpec {
+	return { type: 'aar', packageName: packageName } as NdefRecordSpec
+}
+
+/** 常用一步写法：只写一条 URI 记录 */
+export function writeUri(uri : string, options : WriteOptions | null) : void {
+	writeNdef([uriRecord(uri)], options)
+}

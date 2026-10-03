@@ -2,7 +2,28 @@
 	<view class="ux-bg-grey5" style="min-height:100vh;">
 		<back-header></back-header>
 		<view class="ux-padding">
-			<view class="ux-bg-white ux-border-radius">
+			<!-- 头部卡片骨架屏 -->
+			<view v-if="headerSkeleton" class="ux-bg-white ux-border-radius sk-header">
+				<view class="sk-row sk-header-top" style="justify-content: space-between;">
+					<view>
+						<view class="sk-row">
+							<skeleton w="70rpx" h="24rpx" mr="12rpx" />
+							<skeleton w="70rpx" h="24rpx" mr="0" />
+						</view>
+						<skeleton w="140rpx" h="20rpx" mt="16rpx" />
+					</view>
+					<view style="display:flex;flex-direction:column;align-items:flex-end;">
+						<skeleton w="200rpx" h="40rpx" />
+						<skeleton w="140rpx" h="20rpx" mt="14rpx" mr="0" />
+					</view>
+				</view>
+				<!-- 底部电报码条：通栏贴边，与真实卡片一致，避免看起来像压住了下方内容 -->
+				<view class="sk-header-bar">
+					<skeleton w="100%" h="100%" radius="0" mr="0" tone="dark" />
+				</view>
+			</view>
+
+			<view v-else class="ux-bg-white ux-border-radius">
 				<view class="ux-pl ux-pr ux-pb-small ux-pt ux-flex ux-align-items-center ux-justify-content-center">
 					<view>
 						<view class="ux-flex ux-align-items-center ux-justify-content-end">
@@ -32,7 +53,8 @@
 				</view>
 			</view>
 
-			<view class="ux-flex ux-justify-content-center">
+			<!-- 车站类型确定前不渲染选项卡，避免“路线”等临时标签闪现 -->
+			<view v-if="!headerSkeleton" class="ux-flex ux-justify-content-center">
 				<uv-tabs :list="topTabList" lineWidth="60" lineColor="#114598" :activeStyle="{
 							color: '#303133',
 							fontWeight: 'bold',
@@ -45,7 +67,22 @@
 			</view>
 
 			<view class="ux-pt" v-if="selectIndex==0">
-				<view v-if="trains.length!=0">
+				<!-- 车次列表骨架屏 -->
+				<view v-if="listSkeleton" class="sk-list">
+					<view v-for="i in 5" :key="i" class="sk-train">
+						<skeleton w="12rpx" h="104rpx" radius="10rpx 0 0 10rpx" mr="20rpx" />
+						<view style="flex:1;">
+							<skeleton w="45%" h="36rpx" />
+							<skeleton w="65%" h="22rpx" mt="16rpx" />
+						</view>
+						<view class="sk-row">
+							<skeleton w="64rpx" h="26rpx" mr="16rpx" mt="4rpx" />
+							<skeleton w="64rpx" h="26rpx" mr="16rpx" mt="4rpx" />
+							<skeleton w="44rpx" h="26rpx" mr="0" mt="4rpx" />
+						</view>
+					</view>
+				</view>
+				<view v-if="trains.length!=0 && !listSkeleton">
 					<view class="ux-flex">
 						<button class="ux-flex1 ux-mr-small ux-bg-primary ux-color-white" size="mini"
 							@click="openSortMenu()">
@@ -106,7 +143,7 @@
 						</view>
 					</navigator>
 				</view>
-				<view v-if="trains.length==0">
+				<view v-if="trains.length==0 && !listSkeleton">
 					<view class="ux-padding ux-text-center">本站不办理客运业务或无列车停靠</view>
 				</view>
 				<br>
@@ -138,7 +175,16 @@
 			</view>
 			
 			<view class="ux-pt dark-table-wrapper" v-if="topTabList[selectIndex] && topTabList[selectIndex].name === '大屏'" style="margin-top: 20rpx;">
-				<uni-table :loading="bigScreenLoading" emptyText="暂无数据" class="dark-table">
+				<!-- 大屏骨架屏 -->
+				<view v-if="bigScreenSkeleton || bigScreenLoading" class="sk-list">
+					<view class="sk-row" style="margin-bottom: 16rpx;">
+						<skeleton v-for="c in 6" :key="c" flex w="0" h="26rpx" radius="6rpx" mr="10rpx" mt="6rpx" tone="on-dark" />
+					</view>
+					<view v-for="i in 10" :key="i" class="sk-dark-row">
+						<skeleton v-for="c in 6" :key="c" flex w="0" h="24rpx" radius="6rpx" mr="10rpx" tone="on-dark" />
+					</view>
+				</view>
+				<uni-table v-else :loading="bigScreenLoading" emptyText="暂无数据" class="dark-table">
 					<uni-tr>
 						<uni-th align="center">车次</uni-th>
 						<uni-th align="center">状态</uni-th>
@@ -185,7 +231,23 @@
 			
 			<!-- 交通选项卡 -->
 			<view class="ux-pt" v-if="topTabList[selectIndex] && topTabList[selectIndex].name === '交通'">
-				<view v-if="trafficData && trafficData.tabList && trafficData.nodeList && trafficData.nodeList.length > 0" class="traffic-container">
+				<!-- 交通骨架屏 -->
+				<view v-if="trafficData === null" class="sk-list" style="margin-top:20rpx;">
+					<view class="sk-row">
+						<skeleton v-for="c in 4" :key="c" flex w="0" h="56rpx" radius="10rpx" mr="12rpx" />
+					</view>
+					<view v-for="i in 3" :key="i" class="sk-traffic">
+						<skeleton w="34%" h="32rpx" />
+						<skeleton w="60%" h="22rpx" mt="16rpx" />
+						<view class="sk-row" style="margin-top: 20rpx;">
+							<skeleton w="90rpx" h="36rpx" radius="30rpx" mr="12rpx" />
+							<skeleton w="90rpx" h="36rpx" radius="30rpx" mr="12rpx" />
+							<skeleton w="90rpx" h="36rpx" radius="30rpx" mr="0" />
+						</view>
+					</view>
+				</view>
+
+				<view v-else-if="trafficData && trafficData.tabList && trafficData.nodeList && trafficData.nodeList.length > 0" class="traffic-container">
 					<!-- 显示交通设施选项卡 -->
 					<view class="traffic-tabs">
 						<view 
@@ -238,10 +300,6 @@
 					</view>
 				</view>
 
-				
-				<view v-else-if="trafficData === null" class="ux-padding ux-text-center">
-					<text>正在加载交通信息...</text>
-				</view>
 				
 				<view v-else-if="trafficData === false" class="ux-padding ux-text-center">
 					<text>暂无本站交通信息</text>
@@ -368,6 +426,9 @@
 			return {
 				keyword: "",
 				data: {},
+				headerSkeleton: true,
+				listSkeleton: true,
+				bigScreenSkeleton: false,
 				badgeFlag: {
 					"客": "#114598",
 					"货": "#eeba67",
@@ -449,10 +510,6 @@
 				uni.navigateBack();
 			},
 			fillInData: async function(mode) {
-				uni.showLoading({
-					title: "加载中"
-				});
-
 				let success = false;
 				if (mode == "network") {
 					try {
@@ -468,7 +525,6 @@
 								key: 'search',
 								data: c - 1
 							});
-							uni.hideLoading();
 							uni.redirectTo({
 								url: '/pages/404/404'
 							});
@@ -524,7 +580,10 @@
 						console.error("本地数据加载失败", error);
 					}
 				}
-				uni.hideLoading();
+				// 头卡与车次数据已到位，先收起对应骨架屏，避免大屏接口耗时导致下方长时间空白
+				this.headerSkeleton = false;
+				this.listSkeleton = false;
+				this.applySortingAndFiltering();
 				if (success) {
 					// 1. 检查是否为客运站
 					const isPassengerStation = Array.isArray(this.data.type) && this.data.type.includes("客");
@@ -542,17 +601,15 @@
 							// 添加"交通"tab到索引2（"大屏"之后）
 							this.topTabList.splice(2, 0, { name: '交通' });
 						}
-						uni.showLoading({
-							title: '加载大屏数据'
-						})
-						// 4. 异步获取大屏数据
+						// 4. 异步获取大屏数据（用骨架屏占位，不再弹 loading 遮罩）
+						this.bigScreenSkeleton = true;
 						await this.getBigScreenData();
-						uni.hideLoading()
 						
 						// NEW: 初始化大屏数据的展示
 						this.currentDisplayIndex = 0;
 						this.displayedBigScreenData = [];
 						this.loadMoreBigScreenData(); // 初始加载第一页数据
+						this.bigScreenSkeleton = false;
 
 					}
 					
@@ -703,7 +760,9 @@
 				
 				this.bigScreenKind = kind;
 				// 不要在这里清空数据，让 getBigScreenData 函数处理
+				this.bigScreenSkeleton = true;
 				await this.getBigScreenData();
+				this.bigScreenSkeleton = false;
 			},
 			
 			// -------------------------------
@@ -778,10 +837,6 @@
 				const trainForTraffic = this.trains.length > 0 ? this.trains[0].number : '';
 				if (!trainForTraffic) return; // 如果没有列车，则不显示交通选项卡
 				
-				uni.showLoading({
-					title: '加载交通信息'
-				});
-				
 				try {
 					const params = {
 						stationCode: this.data.telecode,
@@ -808,13 +863,11 @@
 					this.trafficDataLoaded = true;
 				} catch (error) {
 					console.error("交通数据加载失败", error);
-					this.trafficData = null;
+					this.trafficData = false;
 					uni.showToast({
 						title: '交通信息加载失败',
 						icon: 'none'
 					});
-				} finally {
-					uni.hideLoading();
 				}
 			},
 			
@@ -1034,5 +1087,51 @@
 		font-size: 24rpx;
 		color: #fff;
 		background-color: #114598;
+	}
+
+	/* 骨架屏 */
+	.sk-list {
+		display: flex;
+		flex-direction: column;
+	}
+	.sk-row {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+	}
+	.sk-header {
+		overflow: hidden;
+		margin-bottom: 24rpx;
+	}
+	.sk-header-top {
+		padding: 30rpx 24rpx 26rpx;
+	}
+	.sk-header-bar {
+		width: 100%;
+		height: 52rpx;
+	}
+	.sk-train {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		background-color: #ffffff;
+		border-radius: 10rpx;
+		padding: 16rpx;
+		margin-top: 20rpx;
+	}
+	.sk-dark-row {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		background-color: #3b506b;
+		border-radius: 6rpx;
+		padding: 18rpx 10rpx;
+		margin-bottom: 8rpx;
+	}
+	.sk-traffic {
+		background-color: #ffffff;
+		border-radius: 10rpx;
+		padding: 24rpx;
+		margin-top: 20rpx;
 	}
 </style>

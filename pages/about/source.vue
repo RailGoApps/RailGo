@@ -6,11 +6,6 @@
 		</view>
 
 		<view class="ux-padding">
-			<!-- 加载中 -->
-			<view v-if="loading" class="ux-text-center ux-padding ux-mt">
-				<text class="ux-color-grey2">正在获取服务列表...</text>
-			</view>
-
 			<!-- 加载失败 -->
 			<view v-if="loadError" class="ux-bg-white ux-border-radius-large ux-padding ux-mt-small">
 				<text class="ux-text-small" style="color: #e74c3c;">获取服务列表失败，请检查网络后重试。</text>
@@ -53,11 +48,14 @@
 				<text class="ux-color-grey2">暂无可用服务</text>
 			</view>
 		</view>
+		<railgo-loader></railgo-loader>
 	</view>
 </template>
 
 <script>
 	import { uniGet } from "@/scripts/req";
+	import { showLoader, hideLoader } from "@/scripts/loader.js";
+	import RailgoLoader from "@/components/railgo-loader/railgo-loader.vue";
 
 	// 服务代码 → 中文名称映射
 	const serviceNameMap = {
@@ -79,6 +77,18 @@
 	};
 
 	export default {
+		components: {
+			RailgoLoader
+		},
+		watch: {
+			loading(val) {
+				if (val) {
+					showLoader('正在获取服务列表...');
+				} else {
+					hideLoader();
+				}
+			}
+		},
 		data() {
 			return {
 				loading: false,

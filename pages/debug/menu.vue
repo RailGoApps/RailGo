@@ -82,13 +82,19 @@
 			</view>
 
 		</view>
+		<railgo-loader></railgo-loader>
 	</view>
 </template>
 
 <script>
 import { uniGet } from "@/scripts/req.js";
+import { showLoader, hideLoader } from "@/scripts/loader.js";
+import RailgoLoader from "@/components/railgo-loader/railgo-loader.vue";
 
 export default {
+	components: {
+		RailgoLoader
+	},
 	data() {
 		return {
 			trainParams: {
@@ -124,9 +130,7 @@ export default {
 				return;
 			}
 			
-			uni.showLoading({
-				title: '请求中...'
-			});
+			showLoader('请求中...');
 			
 			try {
 				const trainBase = uni.getStorageSync('service_source_train') || 'https://data.railgo.zenglingkun.cn';
@@ -134,9 +138,9 @@ export default {
 					trainBase + `/api/train/query?train=${encodeURIComponent(this.trainParams.train)}`
 				);
 				this.trainResult = response.data;
-				uni.hideLoading();
+				hideLoader();
 			} catch (error) {
-				uni.hideLoading();
+				hideLoader();
 				this.trainResult = { error: error.message || '请求失败' };
 				uni.showToast({
 					title: '请求失败',
@@ -153,9 +157,7 @@ export default {
 				return;
 			}
 			
-			uni.showLoading({
-				title: '请求中...'
-			});
+			showLoader('请求中...');
 			
 			try {
 				const stationBase = uni.getStorageSync('service_source_station') || 'https://data.railgo.zenglingkun.cn';
@@ -163,9 +165,9 @@ export default {
 					stationBase + `/api/station/query?telecode=${encodeURIComponent(this.stationParams.telecode)}`
 				);
 				this.stationResult = response.data;
-				uni.hideLoading();
+				hideLoader();
 			} catch (error) {
-				uni.hideLoading();
+				hideLoader();
 				this.stationResult = { error: error.message || '请求失败' };
 				uni.showToast({
 					title: '请求失败',

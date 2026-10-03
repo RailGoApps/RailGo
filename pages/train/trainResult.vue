@@ -337,6 +337,7 @@
 				<text class="ux-text-small ux-opacity-4">—— · ——</text>
 			</view>
 		</view>
+		<railgo-loader></railgo-loader>
 	</view>
 	
 	<!-- 正晚点详情底部弹出卡片 -->
@@ -426,11 +427,14 @@
 	import SijiTianditu from '@/uni_modules/siji-tianditu/components/siji-tianditu/siji-tianditu.vue';
 	import { gcj02ToWgs84 } from "@/scripts/coord_transform";
 	import { getTrainPosition, getMinutesSinceDate } from "@/scripts/trainPosition";
+	import { showLoader, hideLoader } from "@/scripts/loader.js";
+	import RailgoLoader from "@/components/railgo-loader/railgo-loader.vue";
 
 	export default {
 		components: {
 			calendar,
-			SijiTianditu
+			SijiTianditu,
+			RailgoLoader
 		},
 		data() {
 			return {
@@ -648,9 +652,7 @@
 				}
 
 				if (!silent) {
-					uni.showLoading({
-						title: '获取停台数据'
-					});
+					showLoader('获取停台数据');
 				}
 
 				// 确定 kind 参数：始发站（第一个站，index=0）使用 'departure'，其余使用 'arrival'
@@ -720,7 +722,7 @@
 					});
 				} finally {
 					if (!silent) {
-						uni.hideLoading();
+						hideLoader();
 					}
 					return result;
 				}
@@ -977,9 +979,7 @@
 
 			fillInData: async function(mode) {
 
-				uni.showLoading({
-					title: "加载中"
-				}); // [1] 主数据加载开始
+				showLoader("加载中"); // [1] 主数据加载开始
 				let loadSuccess = false; 
 
 				try {
@@ -1238,9 +1238,7 @@
 					let delayLoadSuccess = false;
 					if (loadSuccess && this.carData.timetable.length > 0 && this.isWithinDelayDays) {
 						if (this.train && this.date) {
-							uni.showLoading({
-								title: '加载正晚点数据'
-							}) // [2] 正晚点加载开始
+							showLoader('加载正晚点数据') // [2] 正晚点加载开始
 							try {
 								const delayBase = uni.getStorageSync('service_source_trainDelay') || 'https://rg-api.zenglingkun.cn';
 								const delayResp = await uniGet(
@@ -1256,7 +1254,7 @@
 								console.warn("获取正晚点信息失败（网络可能断开或接口错误）", delayError);
 								this.delay = []; 
 							} finally {
-								uni.hideLoading() // [2] 正晚点加载结束 (确保隐藏)
+								hideLoader() // [2] 正晚点加载结束 (确保隐藏)
 							}
 						}
 					}
@@ -1290,7 +1288,7 @@
 					});
 				} finally {
 					// [1] 主数据加载结束：无论成功、失败或提前返回（离线模式），都确保隐藏最初的“加载中”动画
-					uni.hideLoading(); 
+					hideLoader(); 
 				}
 			},
 			addToMyRoute: function() {

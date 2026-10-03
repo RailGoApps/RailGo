@@ -1,0 +1,5 @@
+{
+	"frameworks": ["CoreNFC"],
+	"deploymentTarget": "13",
+	"validArchitectures": ["arm64"]
+}

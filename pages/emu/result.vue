@@ -15,7 +15,25 @@
 			<view class="ux-text-center ux-padding-small ux-mb ux-h6 info-bar" style="margin-bottom: 35rpx;">
 				<text class="ux-bold">信息仅供参考 请以铁路运营企业实际运用为准</text>
 			</view>
-			
+
+			<!-- 骨架屏：首屏检索期间占位 -->
+			<view v-if="skeleton" class="sk-list">
+				<view v-for="i in 5" :key="i" class="sk-card">
+					<skeleton w="38%" h="34rpx" mr="24rpx" />
+					<skeleton w="84rpx" h="24rpx" />
+					<view class="sk-row">
+						<skeleton w="130rpx" h="26rpx" mr="20rpx" mt="6rpx" />
+						<skeleton flex w="0" h="26rpx" mt="6rpx" />
+					</view>
+					<view class="sk-row">
+						<skeleton w="130rpx" h="26rpx" mr="20rpx" mt="18rpx" />
+						<skeleton w="150rpx" h="34rpx" radius="8rpx" mt="18rpx" />
+						<skeleton w="150rpx" h="34rpx" radius="8rpx" mr="0" mt="18rpx" />
+					</view>
+				</view>
+			</view>
+
+			<block v-if="!skeleton">
 			<block v-if="isQueryTypeRun">
 				<uni-table border="false" stripe="false" :loading="loading" class="custom-table-container" >
 					<uni-tr v-for="(item,index) in displayData" :key="index" class="magic-card no-click">
@@ -85,8 +103,9 @@
 					<text class="ux-text-small ux-opacity-5">上拉加载更多...</text>
 				</view>
 			</block>
+			</block>
 
-			<view v-if="displayData.length === 0 && !loading" class="ux-text-center ux-padding" style="margin-top: 60rpx;">
+			<view v-if="displayData.length === 0 && !loading && !skeleton" class="ux-text-center ux-padding" style="margin-top: 60rpx;">
 				<text class="ux-opacity-6">—— 暂无相关数据 ——</text>
 			</view>
 			
@@ -108,6 +127,7 @@ export default {
 			isQueryTypeRun: true, 
 			keywordType: "",     
 			loading: false,
+			skeleton: true,
 			displayData: [], 
 			allServerData: [],   
 			totalCount: 0,
@@ -161,7 +181,6 @@ export default {
 		async fillInData() {
 			this.loading = true;
 			this.displayData = [];
-			uni.showLoading({ title: '数据检索中...' });
 			
 			try {
 				const runBase = uni.getStorageSync('service_source_emu_run') || 'https://emu.railgo.zenglingkun.cn';
@@ -198,8 +217,8 @@ export default {
 					uni.redirectTo({ url: '/pages/404/404' });
 				}
 			} finally {
-				uni.hideLoading();
 				this.loading = false;
+				this.skeleton = false;
 			}
 		},
 		renderLocalPage() {
@@ -210,11 +229,9 @@ export default {
 		},
 		loadNextLocalPage() {
 			this.loading = true;
-			uni.showLoading({ title: '加载更多...' });
 			setTimeout(() => {
 				this.currentPage++;
 				this.renderLocalPage();
-				uni.hideLoading();
 				this.loading = false;
 			}, 200);
 		},
@@ -418,5 +435,24 @@ export default {
 	color: #bbbbbb !important;
 	font-weight: bold !important;
 	margin: 0 4rpx;
+}
+
+/* ================= 骨架屏 ================= */
+.sk-list {
+	display: flex;
+	flex-direction: column;
+}
+.sk-card {
+	background-color: #ffffff;
+	border-radius: 16rpx;
+	margin-bottom: 24rpx;
+	border-left: 10rpx solid #e3e9f1;
+	padding: 24rpx;
+	box-sizing: border-box;
+}
+.sk-row {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
 }
 </style>

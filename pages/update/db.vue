@@ -83,15 +83,21 @@
 			
 			<button v-if="hasDbUpdate" class="ux-button-primary ux-mt-large" @click="gotoDownload">立即更新数据库</button>
 			<button v-else class="ux-button-disabled ux-mt-large" disabled>数据库已是最新</button>
+				</view>
 			</view>
-		</view>
+		<railgo-loader></railgo-loader>
 	</view>
 </template>
 
 <script>
 import { uniGet } from "@/scripts/req.js";
+import { showLoader, hideLoader } from "@/scripts/loader.js";
+import RailgoLoader from "@/components/railgo-loader/railgo-loader.vue";
 	
 	export default {
+		components: {
+			RailgoLoader
+		},
 		data() {
 			return {
 				loading: true,
@@ -186,16 +192,16 @@ import { uniGet } from "@/scripts/req.js";
 				// 仅限安卓执行此方法
 				if (!this.isAndroid) return;
 				
-				uni.showLoading({ title: '正在获取下载地址...', mask: true });
+				showLoader('正在获取下载地址...');
 				try {
 					const packBase = uni.getStorageSync('service_source_update_pack') || 'https://gateway.zenglingkun.cn';
 					const res = await uniGet(packBase + "/api/v2/url/pack/android");
-					uni.hideLoading();
+					hideLoader();
 					if (res.data && res.data.url) {
 						plus.runtime.openURL(res.data.url);
 					}
 				} catch (e) {
-					uni.hideLoading();
+					hideLoader();
 				}
 			}
 		}
