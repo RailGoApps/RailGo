@@ -1,0 +1,4 @@
+{
+  "minSdkVersion": 21,
+  "dependencies": ["androidx.lifecycle:lifecycle-common:2.1.0"]
+}

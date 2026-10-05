@@ -1,0 +1,249 @@
+/**
+ * railgo-nfc Android 内部核心：标签解析 + 发现队列
+ *
+ * 必须独立于 index.uts：二级文件若 `import ... from './index.uts'` 与入口形成循环引用，
+ * 云打包编译器会静默丢弃该文件 → classes.dex 缺类 → ClassNotFoundException 崩溃（实测验证）。
+ * 依赖方向只能是 index.uts → tag-core.uts ← NfcTagReceiver.uts。
+ */
+import Intent from 'android.content.Intent'
+import NfcAdapter from 'android.nfc.NfcAdapter'
+import Tag from 'android.nfc.Tag'
+import Ndef from 'android.nfc.tech.Ndef'
+import NdefFormatable from 'android.nfc.tech.NdefFormatable'
+import NfcA from 'android.nfc.tech.NfcA'
+import MifareUltralight from 'android.nfc.tech.MifareUltralight'
+import NdefMessage from 'android.nfc.NdefMessage'
+import {
+	NfcTagInfo, NdefRecordData, NtagModel, at, sliceBytes, bytesToHex,
+	parseMessageBytes, extractT2tNdef, modelFromGetVersion, T2T_USER_START_PAGE
+} from '../interface.uts'
+
+/* ==================== 共享状态（写标签依赖这里保存的 Tag 引用） ==================== */
+
+let gCurrentTag : Tag | null = null
+let gCurrentInfo : NfcTagInfo | null = null
+let gStartupInfos : NfcTagInfo[] = []
+
+export function hasPendingStartup() : boolean {
+	return gStartupInfos.length > 0
+}
+
+export function consumeStartupInfo() : NfcTagInfo | null {
+	if (gStartupInfos.length == 0) return null
+	const t = gStartupInfos[0]
+	gStartupInfos.shift()
+	return t
+}
+
+/** 取最近发现的原始 Tag（不清空，供 writeNdef 多次使用） */
+export function peekWriteTag() : Tag | null {
+	return gCurrentTag
+}
+
+export function lastInfo() : NfcTagInfo | null {
+	return gCurrentInfo
+}
+
+export function setLastInfo(info : NfcTagInfo) : void {
+	gCurrentInfo = info
+}
+
+/* ==================== 字节互转工具 ==================== */
+
+/**
+ * ByteArray → number[]：
+ * 禁止 b[i] 下标（原生数组 index 需要 Int，UTS number 传入报参数类型错）。
+ * 用 Kotlin 1.0 stdlib joinToString 转带符号十进制列表字符串，再走 UTS 字符串通道解析。
+ */
+export function kb2n(b : ByteArray) : number[] {
+	// joinToString 属 Kotlin 1.0 stdlib（concatToString 是 1.4+，本编译环境不可用）
+	// 元素为带符号十进制：-3 → 253
+	const out : number[] = []
+	const s = b.joinToString(",")
+	for (const part of s.split(",")) {
+		const t = part.trim()
+		if (t.length == 0) continue
+		const v = parseInt(t, 10)
+		if (v == null) continue
+		let n = v as number
+		if (n < 0) n = n + 256
+		out.push(n)
+	}
+	return out
+}
+
+/** number[](0~255) → Kotlin ByteArray：latin1 每字符恰为一字节 */
+export function n2kb(a : number[]) : ByteArray {
+	let s = ''
+	for (let i = 0; i < a.length; i++) {
+		s += String.fromCharCode((at(a, i) & 0xFF).toInt())
+	}
+	return s.toByteArray(Charsets.ISO_8859_1)
+}
+
+/* ==================== 标签解析 ==================== */
+
+export function readVersionModel(tagRef : Tag) : NtagModel {
+	const nfcA = NfcA.get(tagRef)
+	if (nfcA == null) return { model: 'Type2 (unknown)', userBytes: 144, lastPage: 39 } as NtagModel
+	try {
+		nfcA.connect()
+		const resp = kb2n(nfcA.transceive(n2kb([0x60])))
+		nfcA.close()
+		if (resp.length >= 7) return modelFromGetVersion(resp)
+	} catch (e : any) {
+		// GET_VERSION 失败按默认处理
+	}
+	return { model: 'Type2 (unknown)', userBytes: 144, lastPage: 39 } as NtagModel
+}
+
+/** 通过 MifareUltralight/NfcA 读取用户区原始字节（页 4 起） */
+function readUserBytesRaw(tagRef : Tag, lastPage : number) : number[] {
+	// 优先 MifareUltralight.readPages（每次 4 页）
+	const ml = MifareUltralight.get(tagRef)
+	if (ml != null) {
+		try {
+			ml.connect()
+			const out : number[] = []
+			let page = T2T_USER_START_PAGE
+			while (page <= lastPage) {
+				const chunk = kb2n(ml.readPages(page.toInt()))
+				for (let k = 0; k < chunk.length; k++) out.push(at(chunk, k))
+				page += 4
+			}
+			ml.close()
+			const total = (lastPage - T2T_USER_START_PAGE + 1) * 4
+			return sliceBytes(out, 0, total)
+		} catch (e : any) {
+			// 落入 NfcA 逐块读
+		}
+	}
+	const nfcA = NfcA.get(tagRef)
+	if (nfcA == null) return [] as number[]
+	try {
+		nfcA.connect()
+		const out : number[] = []
+		let page = T2T_USER_START_PAGE
+		while (page <= lastPage) {
+			const chunk = kb2n(nfcA.transceive(n2kb([0x03, page])))
+			for (let k = 0; k < chunk.length; k++) out.push(at(chunk, k))
+			page += 4
+		}
+		nfcA.close()
+		const total = (lastPage - T2T_USER_START_PAGE + 1) * 4
+		return sliceBytes(out, 0, total)
+	} catch (e : any) {
+		return [] as number[]
+	}
+}
+
+export function tagToInfo(tagRef : Tag) : NfcTagInfo {
+	const uid = bytesToHex(kb2n(tagRef.getId()))
+	const techs : string[] = []
+	// 原生 Array<String> 不做下标遍历：joinToString 后走 UTS 字符串数组通道
+	const tls = tagRef.getTechList().joinToString(",")
+	for (const full of tls.split(',')) {
+		if (full.length == 0) continue
+		const idx = full.lastIndexOf('.')
+		techs.push(idx >= 0 ? full.substring(idx + 1) : full)
+	}
+	const model = readVersionModel(tagRef)
+
+	let formatted = false
+	let writable = false
+	let maxNdefSize = model.userBytes - 4
+	let records : NdefRecordData[] | null = null
+
+	const ndef = Ndef.get(tagRef)
+	if (ndef != null) {
+		formatted = true
+		try {
+			ndef.connect()
+			// getMaxSupportedSize/maxSupportedSize 在 UTS 编译环境均不可用，容量按 NTAG 型号推算
+			writable = ndef.isWritable()
+			const msg = ndef.getCachedNdefMessage()
+			if (msg != null) {
+				records = parseMessageBytes(kb2n((msg as NdefMessage).toByteArray()))
+			} else {
+				records = [] as NdefRecordData[]
+			}
+			try { ndef.close() } catch (e2 : any) { }
+		} catch (e : any) {
+			try { ndef.close() } catch (e2 : any) { }
+			// 缓存缺失时走 T2T 逐页读 + TLV 解析兜底
+			const raw = readUserBytesRaw(tagRef, model.lastPage)
+			if (raw.length > 0) {
+				const msgBytes = extractT2tNdef(raw)
+				if (msgBytes.length > 0) records = parseMessageBytes(msgBytes)
+			}
+			writable = true
+		}
+	} else {
+		// 无 Ndef 技术：可能为空白标签，逐页读检查 CC 与 TLV
+		const raw = readUserBytesRaw(tagRef, model.lastPage)
+		if (raw.length > 0) {
+			const msgBytes = extractT2tNdef(raw)
+			if (msgBytes.length > 0) {
+				records = parseMessageBytes(msgBytes)
+				formatted = true
+			}
+		}
+		writable = NdefFormatable.get(tagRef) != null
+	}
+
+	return {
+		uid: uid,
+		techList: techs,
+		tagType: model.model,
+		userBytes: model.userBytes,
+		maxNdefSize: maxNdefSize,
+		formatted: formatted,
+		writable: writable,
+		records: records
+	} as NfcTagInfo
+}
+
+/* ==================== Intent 处理 ==================== */
+
+function parcelExtra(intent : Intent) : any | null {
+	// 双参 getParcelableExtra(name, Class) 重载在 UTS 编译环境参数校验异常，统一用单参（33+ 仅 deprecation 警告，运行可用）
+	return intent.getParcelableExtra(NfcAdapter.EXTRA_TAG)
+}
+
+function handleNfcIntent(intent : Intent) {
+	const act = intent.getAction()
+	if (act == null) return
+
+	let info : NfcTagInfo | null = null
+	let rawTag : Tag | null = null
+
+	const tagObj = parcelExtra(intent)
+	if (tagObj != null) {
+		rawTag = tagObj as Tag
+	}
+
+	// 不解析 EXTRA_NDEF_MESSAGES（原生 Parcelable[] 下标在 UTS 编译环境类型不可靠）：
+	// 前台分发广播必携带 EXTRA_TAG（API19+），统一走 Tag 解析即可。
+
+	if (rawTag != null) {
+		try {
+			info = tagToInfo(rawTag as Tag)
+		} catch (e : any) {
+			// 此处处于广播接收器栈，不能回调 JS，只打日志
+			console.error('[railgo-nfc] read tag failed: ' + e)
+		}
+	}
+
+	if (info == null) return
+	const found = info as NfcTagInfo
+	gCurrentTag = rawTag
+	gCurrentInfo = found
+	// 重要：发现事件一律只入队，绝不在接收器/原生栈内同步回调 JS 函数
+	// （JS 侧通过轮询 hasPendingStartup/consumeStartupInfo 消费）。
+	gStartupInfos.push(found)
+}
+
+/** 供 NfcTagReceiver.onReceive 调用（前台扫描广播，App 已在前台，无需拉起界面） */
+export function handleForegroundIntent(intent : Intent) : void {
+	handleNfcIntent(intent)
+}

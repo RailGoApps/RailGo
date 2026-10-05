@@ -1,309 +1,75 @@
 /**
- * railgo-nfc iOS 实现（CoreNFC）
+ * railgo-nfc iOS 端 —— 空壳占位实现（当前版本未启用 iOS NFC）
  *
- * 关键平台差异（详见 README）：
- * - 只能读写"已 NDEF 格式化"的 NTAG；无 NdefFormatable 等价能力，空白标签返回 ERR_NOT_FORMATTED。
- * - 无法读取 UID（CoreNFC 不暴露），uid 字段为空字符串。
- * - 扫描必须由用户手势触发、会话每次只读一贴；写标签时若先调用 writeNdef 会自动开启贴贴写入会话。
- * - 无 AAR 概念，调起 App 依赖 URI 记录（自定义 scheme / Universal Link）。
+ * 目的：
+ * 1. 保留与 Android 端完全一致的导出函数签名，Vue 页面 `import ... from '@/uni_modules/railgo-nfc'`
+ *    在 iOS 打包时不会因找不到插件/导出而编译失败；
+ * 2. 不引用 CoreNFC、不声明 entitlement，避免签名与打包问题；
+ * 3. 所有 API 仅返回"不支持"，不触碰任何原生能力。
  *
- * 本文件为 Swift 互操作密集区，不同 HBuilderX 版本对标签参数/可选链的映射可能报差异，
- * 编译报错时优先调整 dataToBytes、init 标签参数与 delegate 方法签名三处。
+ * 后续如启用 iOS 支持，用历史版本中的 CoreNFC 实现替换本文件，
+ * 并恢复 app-ios/config.json、Info.plist、UTS.entitlements 三个配置文件。
  */
-import { NFCNDEFReaderSession, NFCNDEFTag, NFCNDEFMessage, NFCNDEFPayload, NFCNDEFStatus, NFCReaderSession } from "CoreNFC";
-import { NSObject, NSError, Data } from "Foundation";
 import {
-	ERR_NOT_SUPPORT, ERR_NO_TAG, ERR_NOT_FORMATTED, ERR_READONLY, ERR_NOT_ENOUGH_SPACE,
-	ERR_WRITE_FAILED, ERR_READ_FAILED, ERR_INVALID_PARAM, ERR_SESSION_TIMEOUT,
-	NfcStatusInfo, NfcTagInfo, NdefRecordSpec, NdefRecordData, StartScanOptions, WriteOptions,
-	encodeRecordBytes, parseMessageBytes, bytesToHex, utf8Encode
+	ERR_PLATFORM_UNSUPPORTED,
+	NfcStatusInfo, NfcTagInfo, NdefRecordSpec, StartScanOptions, WriteOptions
 } from '../interface.uts'
 
-let gOnTagDiscovered : ((tag : NfcTagInfo) => void) | null = null
-let gOnError : ((code : number, message : string) => void) | null = null
-let gOnStopped : ((reason : string) => void) | null = null
-let gSession : NFCNDEFReaderSession | null = null
-let gDelegate : RGNfcDelegate | null = null
-let gScanning = false
-let gCurrentInfo : NfcTagInfo | null = null
-// 写入模式：非 null 时下一次 didDetect 执行写入而非读取
-let gPendingWrite : NdefRecordSpec[] | null = null
-let gWriteOptions : WriteOptions | null = null
-
-function emitError(code : number, message : string) {
-	console.error('[railgo-nfc] ' + code + ': ' + message)
-	if (gOnError != null) gOnError!(code, message)
-}
-
-function dataToBytes(d : Data) : number[] {
-	const out : number[] = []
-	const count = d.count
-	for (let i = 0; i < count; i++) {
-		out.push(d[i] & 0xFF)
-	}
-	return out
-}
-
-function strToData(s : string) : Data | null {
-	return s.data(using: StringEncoding.utf8)
-}
-
-function payloadToRecordData(p : NFCNDEFPayload) : NdefRecordData {
-	const tnf = p.typeNameFormat.rawValue as number
-	const typeBytes = dataToBytes(p.type)
-	const idBytes = dataToBytes(p.identifier)
-	const payloadBytes = dataToBytes(p.payload)
-	// 用与 Android/HarmonyOS 相同的纯逻辑归类解码，保证跨端一致
-	const one = parseMessageBytes(encodeRecordBytes(tnf, typeBytes, idBytes, payloadBytes))
-	if (one.length > 0) return one[0]
-	return {
-		tnf: tnf, recordType: 'OTHER', uri: null, text: null, language: null,
-		packageName: null, id: null, payloadHex: bytesToHex(payloadBytes)
-	} as NdefRecordData
-}
-
-function messageToRecords(msg : NFCNDEFMessage) : NdefRecordData[] {
-	const out : NdefRecordData[] = []
-	const recs = msg.records
-	for (let i = 0; i < recs.length; i++) {
-		out.push(payloadToRecordData(recs[i]))
-	}
-	return out
-}
-
-function buildNdefMessage(specs : NdefRecordSpec[]) : NFCNDEFMessage | null {
-	const recs : NFCNDEFPayload[] = []
-	for (let i = 0; i < specs.length; i++) {
-		const s = specs[i]
-		let p : NFCNDEFPayload | null = null
-		if (s.type == 'uri') {
-			p = NFCNDEFPayload.wellKnownTypeURIPayload(string: s.uri ?? '')
-		} else if (s.type == 'text') {
-			p = NFCNDEFPayload.wellKnownTypeTextPayload(string: s.text ?? '', locale: s.language ?? 'en')
-		} else if (s.type == 'aar') {
-			// TNF=External(4)，类型 android.com:pkg；iOS 会写入但不用于调起
-			const typeD = strToData('android.com:pkg')
-			const pkgD = strToData(s.packageName ?? '')
-			if (typeD != null && pkgD != null) {
-				p = NFCNDEFPayload(format: NFCNDEFPayload.Format(rawValue: 4)!, type: typeD!, identifier: nil, payload: pkgD!)
-			}
-		} else {
-			return null
-		}
-		if (p == null) return null
-		recs.push(p!)
-	}
-	if (recs.length == 0) return null
-	return NFCNDEFMessage(records: recs)
-}
-
-function tagInfoFrom(tag : NFCNDEFTag, records : NdefRecordData[] | null, formatted : boolean, writable : boolean, maxLen : number) : NfcTagInfo {
-	return {
-		uid: '', // CoreNFC 无法读取 UID
-		techList: ['NDEF'] as string[],
-		tagType: 'Type2 (iOS)',
-		userBytes: 0,
-		maxNdefSize: maxLen,
-		formatted: formatted,
-		writable: writable,
-		records: records
-	} as NfcTagInfo
-}
-
-/* ==================== ReaderSession 代理 ==================== */
-
-class RGNfcDelegate extends NSObject implements NFCNDEFReaderSessionDelegate {
-
-	// 读到标签：iOS13+ 的 NFCNDEFTag 通道，可读可写
-	readerSession(session : NFCNDEFReaderSession, didDetect : NFCNDEFTag[]) {
-		const tags = didDetect
-		if (tags.length == 0) return
-		const tag = tags[0]
-
-		if (gPendingWrite != null) {
-			this.doWrite(session, tag)
-			return
-		}
-		this.doRead(session, tag)
-	}
-
-	doRead(session : NFCNDEFReaderSession, tag : NFCNDEFTag) {
-		session.connect(to: tag, completionHandler: (connectedTag : NFCNDEFTag | null, error : Error | null) => {
-			if (error != null) {
-				emitError(ERR_READ_FAILED, '连接标签失败')
-				session.invalidate()
-				return
-			}
-			const t = connectedTag!
-			t.queryNDEFStatus(completionHandler: (status : NFCNDEFStatus, length : Int, statusError : Error | null) => {
-				if (status == NFCNDEFStatus.notSupported) {
-					// 空白或非 NDEF 标签
-					gCurrentInfo = tagInfoFrom(t, null, false, false, 0)
-					if (gOnTagDiscovered != null) gOnTagDiscovered!(gCurrentInfo!)
-					session.invalidate()
-					return
-				}
-				if (status == NFCNDEFStatus.readOnly || status == NFCNDEFStatus.readWrite) {
-					t.readNDEF(completionHandler: (message : NFCNDEFMessage | null, readError : Error | null) => {
-						if (readError != null || message == null) {
-							emitError(ERR_READ_FAILED, '读取 NDEF 失败')
-						} else {
-							gCurrentInfo = tagInfoFrom(t, messageToRecords(message!), status == NFCNDEFStatus.readWrite, status == NFCNDEFStatus.readWrite, length as number)
-							if (gOnTagDiscovered != null) gOnTagDiscovered!(gCurrentInfo!)
-						}
-						session.invalidate()
-					})
-				} else {
-					session.invalidate()
-				}
-			})
-		})
-	}
-
-	doWrite(session : NFCNDEFReaderSession, tag : NFCNDEFTag) {
-		const specs = gPendingWrite!
-		const opts = gWriteOptions
-		const failWrite = (code : number, msg : string) => {
-			gPendingWrite = null
-			gWriteOptions = null
-			emitError(code, msg)
-			if (opts != null && opts!.fail != null) opts!.fail!(code, msg)
-			session.invalidate()
-		}
-		session.connect(to: tag, completionHandler: (connectedTag : NFCNDEFTag | null, error : Error | null) => {
-			if (error != null) { failWrite(ERR_READ_FAILED, '连接标签失败'); return }
-			const t = connectedTag!
-			t.queryNDEFStatus(completionHandler: (status : NFCNDEFStatus, length : Int, statusError : Error | null) => {
-				if (status == NFCNDEFStatus.notSupported || status == NFCNDEFStatus.unknown) {
-					// iOS 无格式化能力，空白标签需先用 Android/HarmonyOS 格式化
-					failWrite(ERR_NOT_FORMATTED, '标签未格式化，iOS 无 NDEF 格式化能力，请先用 Android/鸿蒙端格式化')
-					return
-				}
-				if (status == NFCNDEFStatus.readOnly) {
-					failWrite(ERR_READONLY, '标签已锁定/只读')
-					return
-				}
-				const msg = buildNdefMessage(specs)
-				if (msg == null) { failWrite(ERR_INVALID_PARAM, '记录参数不合法'); return }
-				t.writeNDEF(msg!, completionHandler: (writeError : Error | null) => {
-					if (writeError != null) {
-						failWrite(ERR_WRITE_FAILED, '写入失败: ' + (writeError! as NSError).localizedDescription)
-						return
-					}
-					gPendingWrite = null
-					gWriteOptions = null
-					t.readNDEF(completionHandler: (rmsg : NFCNDEFMessage | null, rerr : Error | null) => {
-						const info = tagInfoFrom(t, rmsg != null ? messageToRecords(rmsg!) : ([] as NdefRecordData[]), true, true, length as number)
-						gCurrentInfo = info
-						if (opts != null && opts!.success != null) opts!.success!(info)
-						session.invalidate()
-					})
-				})
-			})
-		})
-	}
-
-	// 会话结束（超时/取消/完成）
-	readerSession(session : NFCNDEFReaderSession, didInvalidateWithError : Error) {
-		gScanning = false
-		const code = (didInvalidateWithError as NSError).code
-		// 200 = readerSessionInvalidationErrorFirstNDEFTagRead? 常见: 200 用户取消, 201 超时
-		if (gPendingWrite == null) {
-			if (gOnStopped != null) gOnStopped!(didInvalidateWithError.localizedDescription)
-		}
-	}
-
-	readerSessionDidBecomeActive(session : NFCReaderSession) {
-		// no-op
-	}
-}
-
-/* ==================== 对外 API ==================== */
-
 export function checkStatus() : NfcStatusInfo {
-	const supported = NFCNDEFReaderSession.readingAvailable
-	return { supported: supported, enabled: supported } as NfcStatusInfo
+	return { supported: false, enabled: false } as NfcStatusInfo
 }
 
 export function initNfc(options : StartScanOptions | null) : NfcStatusInfo {
 	if (options != null) {
-		if (options!.onTagDiscovered != null) gOnTagDiscovered = options!.onTagDiscovered
-		if (options!.onError != null) gOnError = options!.onError
-		if (options!.onScanStopped != null) gOnStopped = options!.onScanStopped
+		const oe = options.onError
+		if (oe != null) {
+			oe(ERR_PLATFORM_UNSUPPORTED, 'iOS 端 NFC 功能未启用（插件为空壳占位）')
+		}
 	}
 	return checkStatus()
 }
 
-export function onTagDiscovered(cb : (tag : NfcTagInfo) => void) : void { gOnTagDiscovered = cb }
-export function offTagDiscovered() : void { gOnTagDiscovered = null }
-export function onError(cb : (code : number, message : string) => void) : void { gOnError = cb }
-export function offError() : void { gOnError = null }
-export function onScanStopped(cb : (reason : string) => void) : void { gOnStopped = cb }
-export function offScanStopped() : void { gOnStopped = null }
+export function onTagDiscovered(cb : (tag : NfcTagInfo) => void) : void { }
+export function offTagDiscovered() : void { }
+export function onError(cb : (code : number, message : string) => void) : void { }
+export function offError() : void { }
+export function onScanStopped(cb : (reason : string) => void) : void { }
+export function offScanStopped() : void { }
 
 export function startScan(options : StartScanOptions | null) : boolean {
-	if (options != null) {
-		if (options!.onTagDiscovered != null) gOnTagDiscovered = options!.onTagDiscovered
-		if (options!.onError != null) gOnError = options!.onError
-		if (options!.onScanStopped != null) gOnStopped = options!.onScanStopped
-	}
-	if (!NFCNDEFReaderSession.readingAvailable) {
-		emitError(ERR_NOT_SUPPORT, '设备不支持 CoreNFC（iPhone 7 以下或模拟器）')
-		return false
-	}
-	if (gScanning) return true
-	gDelegate = new RGNfcDelegate()
-	gSession = NFCNDEFReaderSession(delegate: gDelegate!, queue: nil, invalidateAfterFirstRead: true)
-	gSession!.alertMessage = '靠近 NFC 标签'
-	gSession!.begin()
-	gScanning = true
-	return true
+	return false
 }
 
-export function stopScan() : void {
-	if (!gScanning && gSession == null) return
-	if (gSession != null) gSession!.invalidate()
-	gSession = null
-	gScanning = false
-	if (gOnStopped != null) gOnStopped!('user')
-}
+export function stopScan() : void { }
 
 export function isScanning() : boolean {
-	return gScanning
+	return false
+}
+
+export function hasStartupTag() : boolean {
+	return false
 }
 
 export function takeStartupTag() : NfcTagInfo | null {
-	return null // iOS 无后台 NFC 调起读标签能力
+	return null
 }
 
 export function getLastTag() : NfcTagInfo | null {
-	return gCurrentInfo
+	return null
 }
 
-/**
- * 写入 NDEF。iOS 需要重新贴贴标签：调用后开启一次性写会话，提示用户贴标签，
- * 贴贴完成后写入并自动结束会话。空白标签返回 ERR_NOT_FORMATTED。
- */
+/** 与 Android 端保持签名一致（空壳恒为空串，不写 AAR） */
+export function getPackageName() : string {
+	return ''
+}
+
 export function writeNdef(records : NdefRecordSpec[], options : WriteOptions | null) : void {
-	if (records.length == 0) {
-		if (options != null && options!.fail != null) options!.fail!(ERR_INVALID_PARAM, '记录为空')
-		return
+	if (options != null) {
+		const of = options.fail
+		if (of != null) {
+			of(ERR_PLATFORM_UNSUPPORTED, 'iOS 端 NFC 功能未启用（插件为空壳占位）')
+		}
 	}
-	if (!NFCNDEFReaderSession.readingAvailable) {
-		if (options != null && options!.fail != null) options!.fail!(ERR_NOT_SUPPORT, '设备不支持 CoreNFC')
-		return
-	}
-	if (gSession != null) {
-		gSession!.invalidate()
-		gSession = null
-		gScanning = false
-	}
-	gPendingWrite = records
-	gWriteOptions = options
-	gDelegate = new RGNfcDelegate()
-	gSession = NFCNDEFReaderSession(delegate: gDelegate!, queue: nil, invalidateAfterFirstRead: true)
-	gSession!.alertMessage = '请靠近并保持 NFC 标签'
-	gSession!.begin()
 }
 
 export function uriRecord(uri : string) : NdefRecordSpec {
@@ -313,7 +79,6 @@ export function textRecord(text : string, language : string) : NdefRecordSpec {
 	return { type: 'text', text: text, language: language } as NdefRecordSpec
 }
 export function aarRecord(packageName : string) : NdefRecordSpec {
-	// iOS 可写入该记录（供 Android 手机调起 App），iOS 自身不消费
 	return { type: 'aar', packageName: packageName } as NdefRecordSpec
 }
 export function writeUri(uri : string, options : WriteOptions | null) : void {

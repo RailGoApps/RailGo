@@ -1,0 +1,907 @@
+{
+  "ABIRoot": {
+    "kind": "Root",
+    "name": "SfioraUniRuntime",
+    "printedName": "SfioraUniRuntime",
+    "children": [
+      {
+        "kind": "Import",
+        "name": "Foundation",
+        "printedName": "Foundation",
+        "declKind": "Import",
+        "moduleName": "SfioraUniRuntime"
+      },
+      {
+        "kind": "Import",
+        "name": "Sfiora",
+        "printedName": "Sfiora",
+        "declKind": "Import",
+        "moduleName": "SfioraUniRuntime"
+      },
+      {
+        "kind": "TypeDecl",
+        "name": "SfioraBridgeCoordinator",
+        "printedName": "SfioraBridgeCoordinator",
+        "children": [
+          {
+            "kind": "Var",
+            "name": "shared",
+            "printedName": "shared",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "SfioraBridgeCoordinator",
+                "printedName": "SfioraUniRuntime.SfioraBridgeCoordinator",
+                "usr": "c:@M@SfioraUniRuntime@objc(cs)SfioraBridgeCoordinator"
+              }
+            ],
+            "declKind": "Var",
+            "usr": "c:@M@SfioraUniRuntime@objc(cs)SfioraBridgeCoordinator(cpy)shared",
+            "mangledName": "$s16SfioraUniRuntime0A17BridgeCoordinatorC6sharedACvpZ",
+            "moduleName": "SfioraUniRuntime",
+            "static": true,
+            "declAttributes": [
+              "HasInitialValue",
+              "Final",
+              "HasStorage",
+              "AccessControl",
+              "ObjC"
+            ],
+            "isLet": true,
+            "hasStorage": true,
+            "accessors": [
+              {
+                "kind": "Accessor",
+                "name": "Get",
+                "printedName": "Get()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "SfioraBridgeCoordinator",
+                    "printedName": "SfioraUniRuntime.SfioraBridgeCoordinator",
+                    "usr": "c:@M@SfioraUniRuntime@objc(cs)SfioraBridgeCoordinator"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "c:@M@SfioraUniRuntime@objc(cs)SfioraBridgeCoordinator(cm)shared",
+                "mangledName": "$s16SfioraUniRuntime0A17BridgeCoordinatorC6sharedACvgZ",
+                "moduleName": "SfioraUniRuntime",
+                "static": true,
+                "implicit": true,
+                "declAttributes": [
+                  "Final",
+                  "ObjC"
+                ],
+                "accessorKind": "get"
+              }
+            ]
+          },
+          {
+            "kind": "Function",
+            "name": "getCapabilities",
+            "printedName": "getCapabilities()",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "NSDictionary",
+                "printedName": "Foundation.NSDictionary",
+                "usr": "c:objc(cs)NSDictionary"
+              }
+            ],
+            "declKind": "Func",
+            "usr": "c:@M@SfioraUniRuntime@objc(cs)SfioraBridgeCoordinator(im)getCapabilities",
+            "mangledName": "$s16SfioraUniRuntime0A17BridgeCoordinatorC15getCapabilitiesSo12NSDictionaryCyF",
+            "moduleName": "SfioraUniRuntime",
+            "declAttributes": [
+              "Final",
+              "AccessControl",
+              "ObjC"
+            ],
+            "funcSelfKind": "NonMutating"
+          },
+          {
+            "kind": "Function",
+            "name": "invokeHostCapability",
+            "printedName": "invokeHostCapability(_:argument:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "NSDictionary",
+                "printedName": "Foundation.NSDictionary",
+                "usr": "c:objc(cs)NSDictionary"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "String",
+                "printedName": "Swift.String",
+                "usr": "s:SS"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "Any?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "ProtocolComposition",
+                    "printedName": "Any"
+                  }
+                ],
+                "usr": "s:Sq"
+              }
+            ],
+            "declKind": "Func",
+            "usr": "c:@M@SfioraUniRuntime@objc(cs)SfioraBridgeCoordinator(im)invokeHostCapability:argument:",
+            "mangledName": "$s16SfioraUniRuntime0A17BridgeCoordinatorC20invokeHostCapability_8argumentSo12NSDictionaryCSS_ypSgtF",
+            "moduleName": "SfioraUniRuntime",
+            "objc_name": "invokeHostCapability:argument:",
+            "declAttributes": [
+              "Final",
+              "AccessControl",
+              "ObjC"
+            ],
+            "funcSelfKind": "NonMutating"
+          },
+          {
+            "kind": "Function",
+            "name": "startScan",
+            "printedName": "startScan(options:success:failure:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Void",
+                "printedName": "()"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "Foundation.NSDictionary?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "NSDictionary",
+                    "printedName": "Foundation.NSDictionary",
+                    "usr": "c:objc(cs)NSDictionary"
+                  }
+                ],
+                "usr": "s:Sq"
+              },
+              {
+                "kind": "TypeFunc",
+                "name": "Function",
+                "printedName": "(Foundation.NSDictionary) -> ()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "NSDictionary",
+                    "printedName": "Foundation.NSDictionary",
+                    "usr": "c:objc(cs)NSDictionary"
+                  }
+                ]
+              },
+              {
+                "kind": "TypeFunc",
+                "name": "Function",
+                "printedName": "(Foundation.NSDictionary) -> ()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "NSDictionary",
+                    "printedName": "Foundation.NSDictionary",
+                    "usr": "c:objc(cs)NSDictionary"
+                  }
+                ]
+              }
+            ],
+            "declKind": "Func",
+            "usr": "c:@M@SfioraUniRuntime@objc(cs)SfioraBridgeCoordinator(im)startScanWithOptions:success:failure:",
+            "mangledName": "$s16SfioraUniRuntime0A17BridgeCoordinatorC9startScan7options7success7failureySo12NSDictionaryCSg_yAIcyAIctF",
+            "moduleName": "SfioraUniRuntime",
+            "objc_name": "startScanWithOptions:success:failure:",
+            "declAttributes": [
+              "Final",
+              "AccessControl",
+              "ObjC"
+            ],
+            "funcSelfKind": "NonMutating"
+          },
+          {
+            "kind": "Function",
+            "name": "cancelScan",
+            "printedName": "cancelScan()",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Void",
+                "printedName": "()"
+              }
+            ],
+            "declKind": "Func",
+            "usr": "c:@M@SfioraUniRuntime@objc(cs)SfioraBridgeCoordinator(im)cancelScan",
+            "mangledName": "$s16SfioraUniRuntime0A17BridgeCoordinatorC10cancelScanyyF",
+            "moduleName": "SfioraUniRuntime",
+            "declAttributes": [
+              "Final",
+              "AccessControl",
+              "ObjC"
+            ],
+            "funcSelfKind": "NonMutating"
+          },
+          {
+            "kind": "Function",
+            "name": "isScanning",
+            "printedName": "isScanning()",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Bool",
+                "printedName": "Swift.Bool",
+                "usr": "s:Sb"
+              }
+            ],
+            "declKind": "Func",
+            "usr": "c:@M@SfioraUniRuntime@objc(cs)SfioraBridgeCoordinator(im)isScanning",
+            "mangledName": "$s16SfioraUniRuntime0A17BridgeCoordinatorC10isScanningSbyF",
+            "moduleName": "SfioraUniRuntime",
+            "declAttributes": [
+              "Final",
+              "AccessControl",
+              "ObjC"
+            ],
+            "funcSelfKind": "NonMutating"
+          },
+          {
+            "kind": "Function",
+            "name": "writeNdef",
+            "printedName": "writeNdef(message:options:success:failure:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Void",
+                "printedName": "()"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "NSDictionary",
+                "printedName": "Foundation.NSDictionary",
+                "usr": "c:objc(cs)NSDictionary"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "Foundation.NSDictionary?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "NSDictionary",
+                    "printedName": "Foundation.NSDictionary",
+                    "usr": "c:objc(cs)NSDictionary"
+                  }
+                ],
+                "usr": "s:Sq"
+              },
+              {
+                "kind": "TypeFunc",
+                "name": "Function",
+                "printedName": "(Foundation.NSDictionary) -> ()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "NSDictionary",
+                    "printedName": "Foundation.NSDictionary",
+                    "usr": "c:objc(cs)NSDictionary"
+                  }
+                ]
+              },
+              {
+                "kind": "TypeFunc",
+                "name": "Function",
+                "printedName": "(Foundation.NSDictionary) -> ()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "NSDictionary",
+                    "printedName": "Foundation.NSDictionary",
+                    "usr": "c:objc(cs)NSDictionary"
+                  }
+                ]
+              }
+            ],
+            "declKind": "Func",
+            "usr": "c:@M@SfioraUniRuntime@objc(cs)SfioraBridgeCoordinator(im)writeNdefWithMessage:options:success:failure:",
+            "mangledName": "$s16SfioraUniRuntime0A17BridgeCoordinatorC9writeNdef7message7options7success7failureySo12NSDictionaryC_AJSgyAJcyAJctF",
+            "moduleName": "SfioraUniRuntime",
+            "objc_name": "writeNdefWithMessage:options:success:failure:",
+            "declAttributes": [
+              "Final",
+              "AccessControl",
+              "ObjC"
+            ],
+            "funcSelfKind": "NonMutating"
+          },
+          {
+            "kind": "Function",
+            "name": "initializeNdef",
+            "printedName": "initializeNdef(message:marker:options:success:failure:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Void",
+                "printedName": "()"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "NSDictionary",
+                "printedName": "Foundation.NSDictionary",
+                "usr": "c:objc(cs)NSDictionary"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "NSDictionary",
+                "printedName": "Foundation.NSDictionary",
+                "usr": "c:objc(cs)NSDictionary"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "Foundation.NSDictionary?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "NSDictionary",
+                    "printedName": "Foundation.NSDictionary",
+                    "usr": "c:objc(cs)NSDictionary"
+                  }
+                ],
+                "usr": "s:Sq"
+              },
+              {
+                "kind": "TypeFunc",
+                "name": "Function",
+                "printedName": "(Foundation.NSDictionary) -> ()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "NSDictionary",
+                    "printedName": "Foundation.NSDictionary",
+                    "usr": "c:objc(cs)NSDictionary"
+                  }
+                ]
+              },
+              {
+                "kind": "TypeFunc",
+                "name": "Function",
+                "printedName": "(Foundation.NSDictionary) -> ()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "NSDictionary",
+                    "printedName": "Foundation.NSDictionary",
+                    "usr": "c:objc(cs)NSDictionary"
+                  }
+                ]
+              }
+            ],
+            "declKind": "Func",
+            "usr": "c:@M@SfioraUniRuntime@objc(cs)SfioraBridgeCoordinator(im)initializeNdefWithMessage:marker:options:success:failure:",
+            "mangledName": "$s16SfioraUniRuntime0A17BridgeCoordinatorC14initializeNdef7message6marker7options7success7failureySo12NSDictionaryC_A2KSgyAKcyAKctF",
+            "moduleName": "SfioraUniRuntime",
+            "objc_name": "initializeNdefWithMessage:marker:options:success:failure:",
+            "declAttributes": [
+              "Final",
+              "AccessControl",
+              "ObjC"
+            ],
+            "funcSelfKind": "NonMutating"
+          },
+          {
+            "kind": "Function",
+            "name": "cancelWrite",
+            "printedName": "cancelWrite()",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Void",
+                "printedName": "()"
+              }
+            ],
+            "declKind": "Func",
+            "usr": "c:@M@SfioraUniRuntime@objc(cs)SfioraBridgeCoordinator(im)cancelWrite",
+            "mangledName": "$s16SfioraUniRuntime0A17BridgeCoordinatorC11cancelWriteyyF",
+            "moduleName": "SfioraUniRuntime",
+            "declAttributes": [
+              "Final",
+              "AccessControl",
+              "ObjC"
+            ],
+            "funcSelfKind": "NonMutating"
+          },
+          {
+            "kind": "Function",
+            "name": "isWriting",
+            "printedName": "isWriting()",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Bool",
+                "printedName": "Swift.Bool",
+                "usr": "s:Sb"
+              }
+            ],
+            "declKind": "Func",
+            "usr": "c:@M@SfioraUniRuntime@objc(cs)SfioraBridgeCoordinator(im)isWriting",
+            "mangledName": "$s16SfioraUniRuntime0A17BridgeCoordinatorC9isWritingSbyF",
+            "moduleName": "SfioraUniRuntime",
+            "declAttributes": [
+              "Final",
+              "AccessControl",
+              "ObjC"
+            ],
+            "funcSelfKind": "NonMutating"
+          },
+          {
+            "kind": "Function",
+            "name": "stop",
+            "printedName": "stop()",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Void",
+                "printedName": "()"
+              }
+            ],
+            "declKind": "Func",
+            "usr": "c:@M@SfioraUniRuntime@objc(cs)SfioraBridgeCoordinator(im)stop",
+            "mangledName": "$s16SfioraUniRuntime0A17BridgeCoordinatorC4stopyyF",
+            "moduleName": "SfioraUniRuntime",
+            "declAttributes": [
+              "Final",
+              "AccessControl",
+              "ObjC"
+            ],
+            "funcSelfKind": "NonMutating"
+          },
+          {
+            "kind": "Function",
+            "name": "invokeJSON",
+            "printedName": "invokeJSON(_:argumentsJSON:completion:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Void",
+                "printedName": "()"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "String",
+                "printedName": "Swift.String",
+                "usr": "s:SS"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "String",
+                "printedName": "Swift.String",
+                "usr": "s:SS"
+              },
+              {
+                "kind": "TypeFunc",
+                "name": "Function",
+                "printedName": "(Swift.String) -> ()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "String",
+                    "printedName": "Swift.String",
+                    "usr": "s:SS"
+                  }
+                ]
+              }
+            ],
+            "declKind": "Func",
+            "usr": "c:@M@SfioraUniRuntime@objc(cs)SfioraBridgeCoordinator(im)invokeJSON:argumentsJSON:completion:",
+            "mangledName": "$s16SfioraUniRuntime0A17BridgeCoordinatorC10invokeJSON_09argumentsG010completionySS_SSySSctF",
+            "moduleName": "SfioraUniRuntime",
+            "objc_name": "invokeJSON:argumentsJSON:completion:",
+            "declAttributes": [
+              "Final",
+              "AccessControl",
+              "ObjC",
+              "RawDocComment"
+            ],
+            "funcSelfKind": "NonMutating"
+          }
+        ],
+        "declKind": "Class",
+        "usr": "c:@M@SfioraUniRuntime@objc(cs)SfioraBridgeCoordinator",
+        "mangledName": "$s16SfioraUniRuntime0A17BridgeCoordinatorC",
+        "moduleName": "SfioraUniRuntime",
+        "objc_name": "SfioraBridgeCoordinator",
+        "declAttributes": [
+          "Final",
+          "AccessControl",
+          "ObjCMembers",
+          "ObjC",
+          "RawDocComment"
+        ],
+        "superclassUsr": "c:objc(cs)NSObject",
+        "hasMissingDesignatedInitializers": true,
+        "inheritsConvenienceInitializers": true,
+        "superclassNames": [
+          "ObjectiveC.NSObject"
+        ],
+        "conformances": [
+          {
+            "kind": "Conformance",
+            "name": "_KeyValueCodingAndObserving",
+            "printedName": "_KeyValueCodingAndObserving",
+            "usr": "s:10Foundation27_KeyValueCodingAndObservingP",
+            "mangledName": "$s10Foundation27_KeyValueCodingAndObservingP"
+          },
+          {
+            "kind": "Conformance",
+            "name": "_KeyValueCodingAndObservingPublishing",
+            "printedName": "_KeyValueCodingAndObservingPublishing",
+            "usr": "s:10Foundation37_KeyValueCodingAndObservingPublishingP",
+            "mangledName": "$s10Foundation37_KeyValueCodingAndObservingPublishingP"
+          },
+          {
+            "kind": "Conformance",
+            "name": "CVarArg",
+            "printedName": "CVarArg",
+            "usr": "s:s7CVarArgP",
+            "mangledName": "$ss7CVarArgP"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Copyable",
+            "printedName": "Copyable",
+            "usr": "s:s8CopyableP",
+            "mangledName": "$ss8CopyableP"
+          },
+          {
+            "kind": "Conformance",
+            "name": "CustomDebugStringConvertible",
+            "printedName": "CustomDebugStringConvertible",
+            "usr": "s:s28CustomDebugStringConvertibleP",
+            "mangledName": "$ss28CustomDebugStringConvertibleP"
+          },
+          {
+            "kind": "Conformance",
+            "name": "CustomStringConvertible",
+            "printedName": "CustomStringConvertible",
+            "usr": "s:s23CustomStringConvertibleP",
+            "mangledName": "$ss23CustomStringConvertibleP"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Equatable",
+            "printedName": "Equatable",
+            "usr": "s:SQ",
+            "mangledName": "$sSQ"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Escapable",
+            "printedName": "Escapable",
+            "usr": "s:s9EscapableP",
+            "mangledName": "$ss9EscapableP"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Hashable",
+            "printedName": "Hashable",
+            "usr": "s:SH",
+            "mangledName": "$sSH"
+          }
+        ]
+      },
+      {
+        "kind": "Import",
+        "name": "CoreFoundation",
+        "printedName": "CoreFoundation",
+        "declKind": "Import",
+        "moduleName": "SfioraUniRuntime"
+      },
+      {
+        "kind": "Import",
+        "name": "Foundation",
+        "printedName": "Foundation",
+        "declKind": "Import",
+        "moduleName": "SfioraUniRuntime"
+      },
+      {
+        "kind": "TypeDecl",
+        "name": "SfioraBridgeHostCapabilities",
+        "printedName": "SfioraBridgeHostCapabilities",
+        "children": [
+          {
+            "kind": "Function",
+            "name": "response",
+            "printedName": "response(method:argument:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "NSDictionary",
+                "printedName": "Foundation.NSDictionary",
+                "usr": "c:objc(cs)NSDictionary"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "String",
+                "printedName": "Swift.String",
+                "usr": "s:SS"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "Any?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "ProtocolComposition",
+                    "printedName": "Any"
+                  }
+                ],
+                "hasDefaultArg": true,
+                "usr": "s:Sq"
+              }
+            ],
+            "declKind": "Func",
+            "usr": "s:16SfioraUniRuntime0A22BridgeHostCapabilitiesO8response6method8argumentSo12NSDictionaryCSS_ypSgtFZ",
+            "mangledName": "$s16SfioraUniRuntime0A22BridgeHostCapabilitiesO8response6method8argumentSo12NSDictionaryCSS_ypSgtFZ",
+            "moduleName": "SfioraUniRuntime",
+            "static": true,
+            "declAttributes": [
+              "AccessControl"
+            ],
+            "funcSelfKind": "NonMutating"
+          }
+        ],
+        "declKind": "Enum",
+        "usr": "s:16SfioraUniRuntime0A22BridgeHostCapabilitiesO",
+        "mangledName": "$s16SfioraUniRuntime0A22BridgeHostCapabilitiesO",
+        "moduleName": "SfioraUniRuntime",
+        "declAttributes": [
+          "AccessControl",
+          "RawDocComment"
+        ],
+        "conformances": [
+          {
+            "kind": "Conformance",
+            "name": "Copyable",
+            "printedName": "Copyable",
+            "usr": "s:s8CopyableP",
+            "mangledName": "$ss8CopyableP"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Escapable",
+            "printedName": "Escapable",
+            "usr": "s:s9EscapableP",
+            "mangledName": "$ss9EscapableP"
+          }
+        ]
+      },
+      {
+        "kind": "Import",
+        "name": "CoreFoundation",
+        "printedName": "CoreFoundation",
+        "declKind": "Import",
+        "moduleName": "SfioraUniRuntime"
+      },
+      {
+        "kind": "Import",
+        "name": "Foundation",
+        "printedName": "Foundation",
+        "declKind": "Import",
+        "moduleName": "SfioraUniRuntime"
+      },
+      {
+        "kind": "Import",
+        "name": "Sfiora",
+        "printedName": "Sfiora",
+        "declKind": "Import",
+        "moduleName": "SfioraUniRuntime"
+      },
+      {
+        "kind": "Import",
+        "name": "Foundation",
+        "printedName": "Foundation",
+        "declKind": "Import",
+        "moduleName": "SfioraUniRuntime"
+      },
+      {
+        "kind": "Import",
+        "name": "Sfiora",
+        "printedName": "Sfiora",
+        "declKind": "Import",
+        "moduleName": "SfioraUniRuntime"
+      },
+      {
+        "kind": "Import",
+        "name": "CoreFoundation",
+        "printedName": "CoreFoundation",
+        "declKind": "Import",
+        "moduleName": "SfioraUniRuntime"
+      },
+      {
+        "kind": "Import",
+        "name": "Foundation",
+        "printedName": "Foundation",
+        "declKind": "Import",
+        "moduleName": "SfioraUniRuntime"
+      },
+      {
+        "kind": "Import",
+        "name": "Sfiora",
+        "printedName": "Sfiora",
+        "declKind": "Import",
+        "moduleName": "SfioraUniRuntime"
+      }
+    ],
+    "json_format_version": 8
+  },
+  "ConstValues": [
+    {
+      "filePath": "\/Users\/developer\/workspace\/code\/sfiora\/adapters\/shared\/ios\/Sources\/SfioraBridgeSupport\/SfioraBridgeOptions.swift",
+      "kind": "Array",
+      "offset": 397,
+      "length": 108,
+      "value": "[\"mode\", \"timeoutMilliseconds\", \"android\", \"ios\", \"messages\"]"
+    },
+    {
+      "filePath": "\/Users\/developer\/workspace\/code\/sfiora\/adapters\/shared\/ios\/Sources\/SfioraBridgeSupport\/SfioraBridgeOptions.swift",
+      "kind": "Array",
+      "offset": 556,
+      "length": 100,
+      "value": "[\"presentation\", \"deepReadEnabled\", \"presenceCheckDelayMilliseconds\"]"
+    },
+    {
+      "filePath": "\/Users\/developer\/workspace\/code\/sfiora\/adapters\/shared\/ios\/Sources\/SfioraBridgeSupport\/SfioraBridgeOptions.swift",
+      "kind": "Array",
+      "offset": 703,
+      "length": 23,
+      "value": "[\"pollingTechnologies\"]"
+    },
+    {
+      "filePath": "\/Users\/developer\/workspace\/code\/sfiora\/adapters\/shared\/ios\/Sources\/SfioraBridgeSupport\/SfioraBridgeOptions.swift",
+      "kind": "Array",
+      "offset": 789,
+      "length": 67,
+      "value": "[\"iso14443\", \"iso15693\", \"iso18092\"]"
+    },
+    {
+      "filePath": "\/Users\/developer\/workspace\/code\/sfiora\/adapters\/shared\/ios\/Sources\/SfioraBridgeSupport\/SfioraBridgeOptions.swift",
+      "kind": "BooleanLiteral",
+      "offset": 6151,
+      "length": 5,
+      "value": "false"
+    },
+    {
+      "filePath": "\/Users\/developer\/workspace\/code\/sfiora\/adapters\/shared\/ios\/Sources\/SfioraBridgeSupport\/SfioraBridgePresentationMessages.swift",
+      "kind": "Array",
+      "offset": 399,
+      "length": 302,
+      "value": "[\"title\", \"instruction\", \"cancel\", \"done\", \"success\", \"failureTitle\", \"timeout\", \"nfcDisabled\", \"nfcUnsupported\", \"multipleTags\", \"reading\", \"tagLost\", \"unsupportedTag\", \"readFailed\"]"
+    },
+    {
+      "filePath": "\/Users\/developer\/workspace\/code\/sfiora\/adapters\/shared\/ios\/Sources\/SfioraBridgeSupport\/SfioraBridgePresentationMessages.swift",
+      "kind": "Array",
+      "offset": 750,
+      "length": 425,
+      "value": "[\"title\", \"instruction\", \"cancel\", \"done\", \"success\", \"failureTitle\", \"timeout\", \"nfcDisabled\", \"nfcUnsupported\", \"multipleTags\", \"checking\", \"writing\", \"verifying\", \"tagLost\", \"tagReadOnly\", \"capacityExceeded\", \"unsupportedTag\", \"writeFailed\", \"verificationFailed\"]"
+    },
+    {
+      "filePath": "\/Users\/developer\/workspace\/code\/sfiora\/adapters\/shared\/ios\/Sources\/SfioraBridgeSupport\/SfioraBridgeWriteRequest.swift",
+      "kind": "Array",
+      "offset": 410,
+      "length": 11,
+      "value": "[\"records\"]"
+    },
+    {
+      "filePath": "\/Users\/developer\/workspace\/code\/sfiora\/adapters\/shared\/ios\/Sources\/SfioraBridgeSupport\/SfioraBridgeWriteRequest.swift",
+      "kind": "Array",
+      "offset": 471,
+      "length": 18,
+      "value": "[\"domain\", \"type\"]"
+    },
+    {
+      "filePath": "\/Users\/developer\/workspace\/code\/sfiora\/adapters\/shared\/ios\/Sources\/SfioraBridgeSupport\/SfioraBridgeWriteRequest.swift",
+      "kind": "Array",
+      "offset": 544,
+      "length": 58,
+      "value": "[\"timeoutMilliseconds\", \"messages\"]"
+    },
+    {
+      "filePath": "\/Users\/developer\/workspace\/code\/sfiora\/adapters\/shared\/ios\/Sources\/SfioraBridgeSupport\/SfioraBridgeWriteRequest.swift",
+      "kind": "Array",
+      "offset": 656,
+      "length": 111,
+      "value": "[\"kind\", \"text\", \"languageCode\", \"encoding\", \"identifierBase64\"]"
+    },
+    {
+      "filePath": "\/Users\/developer\/workspace\/code\/sfiora\/adapters\/shared\/ios\/Sources\/SfioraBridgeSupport\/SfioraBridgeWriteRequest.swift",
+      "kind": "Array",
+      "offset": 820,
+      "length": 66,
+      "value": "[\"kind\", \"uri\", \"identifierBase64\"]"
+    },
+    {
+      "filePath": "\/Users\/developer\/workspace\/code\/sfiora\/adapters\/shared\/ios\/Sources\/SfioraBridgeSupport\/SfioraBridgeWriteRequest.swift",
+      "kind": "Array",
+      "offset": 940,
+      "length": 97,
+      "value": "[\"kind\", \"mediaType\", \"payloadBase64\", \"identifierBase64\"]"
+    },
+    {
+      "filePath": "\/Users\/developer\/workspace\/code\/sfiora\/adapters\/shared\/ios\/Sources\/SfioraBridgeSupport\/SfioraBridgeWriteRequest.swift",
+      "kind": "Array",
+      "offset": 1095,
+      "length": 110,
+      "value": "[\"kind\", \"domain\", \"type\", \"payloadBase64\", \"identifierBase64\"]"
+    },
+    {
+      "filePath": "\/Users\/developer\/workspace\/code\/sfiora\/adapters\/shared\/ios\/Sources\/SfioraBridgeSupport\/SfioraBridgeWriteRequest.swift",
+      "kind": "StringLiteral",
+      "offset": 1261,
+      "length": 68,
+      "value": "\"^(?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{2}==|[A-Za-z0-9+\/]{3}=)?$\""
+    },
+    {
+      "filePath": "\/Users\/developer\/workspace\/code\/sfiora\/adapters\/shared\/ios\/Sources\/SfioraBridgeSupport\/SfioraBridgeWriteRequest.swift",
+      "kind": "BooleanLiteral",
+      "offset": 9909,
+      "length": 5,
+      "value": "false"
+    },
+    {
+      "filePath": "\/Users\/developer\/workspace\/code\/sfiora\/adapters\/shared\/ios\/Sources\/SfioraBridgeSupport\/SfioraBridgeWriteRequest.swift",
+      "kind": "BooleanLiteral",
+      "offset": 10228,
+      "length": 5,
+      "value": "false"
+    },
+    {
+      "filePath": "\/Users\/developer\/workspace\/code\/sfiora\/adapters\/shared\/ios\/Sources\/SfioraBridgeSupport\/SfioraBridgeWriteRequest.swift",
+      "kind": "BooleanLiteral",
+      "offset": 11045,
+      "length": 5,
+      "value": "false"
+    }
+  ]
+}

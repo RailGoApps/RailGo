@@ -1,6 +1,7 @@
 <template>
 	<view class="ux-bg-grey5" style="min-height:100vh;">
 		<back-header></back-header>
+		<railgo-nfc></railgo-nfc>
 		<view class="ux-padding">
 			<!-- 头部卡片骨架屏 -->
 			<view v-if="headerSkeleton" class="ux-bg-white ux-border-radius sk-header">

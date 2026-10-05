@@ -1,0 +1,10 @@
+{
+  "deploymentTarget": "13.0",
+  "identifier": "com.sandrox.sfiora.uniapp.uts",
+  "validArchitectures": [
+    "arm64"
+  ],
+  "frameworks": [
+    "CoreNFC.framework"
+  ]
+}

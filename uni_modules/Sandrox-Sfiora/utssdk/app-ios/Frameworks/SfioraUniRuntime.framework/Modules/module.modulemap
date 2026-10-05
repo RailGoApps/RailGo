@@ -1,0 +1,10 @@
+framework module SfioraUniRuntime {
+  umbrella header "SfioraUniRuntime.h"
+  export *
+
+  module * { export * }
+}
+
+module SfioraUniRuntime.Swift {
+  header "SfioraUniRuntime-Swift.h"
+}

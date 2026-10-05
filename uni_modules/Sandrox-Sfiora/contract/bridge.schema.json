@@ -1,0 +1,925 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/sandroxy/sfiora/schema/bridge-contract-1",
+  "title": "Sfiora bridge values",
+  "description": "Machine-readable contract for values crossing the Sfiora bridge.",
+  "x-bridge-methods": [
+    "getCapabilities",
+    "startScan",
+    "cancelScan",
+    "isScanning",
+    "writeNdef",
+    "initializeNdef",
+    "cancelWrite",
+    "isWriting",
+    "acquireForegroundDispatch",
+    "releaseForegroundDispatch",
+    "getForegroundDispatchState",
+    "getPresentationState",
+    "waitForPresentationEnd"
+  ],
+  "anyOf": [
+    {
+      "$ref": "#/$defs/NfcTagSnapshot"
+    },
+    {
+      "$ref": "#/$defs/NfcCapabilities"
+    },
+    {
+      "$ref": "#/$defs/NfcError"
+    },
+    {
+      "$ref": "#/$defs/NfcScanOptions"
+    },
+    {
+      "$ref": "#/$defs/NfcNdefMessageInput"
+    },
+    {
+      "$ref": "#/$defs/NfcWriteOptions"
+    },
+    {
+      "$ref": "#/$defs/NfcWriteResult"
+    },
+    {
+      "$ref": "#/$defs/NfcNdefExternalTypeMarker"
+    },
+    {
+      "$ref": "#/$defs/NfcNdefInitializationResult"
+    },
+    {
+      "$ref": "#/$defs/NfcForegroundDispatchState"
+    },
+    {
+      "$ref": "#/$defs/NfcPresentationState"
+    },
+    {
+      "$ref": "#/$defs/NfcWaitForPresentationEndOptions"
+    }
+  ],
+  "$defs": {
+    "NfcScanOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "default": "automatic",
+          "enum": [
+            "automatic",
+            "ndef",
+            "discover"
+          ]
+        },
+        "timeoutMilliseconds": {
+          "default": 30000,
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 60000
+        },
+        "android": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "presentation": {
+              "default": "managed",
+              "enum": [
+                "managed",
+                "none"
+              ]
+            },
+            "deepReadEnabled": {
+              "default": false,
+              "type": "boolean"
+            },
+            "presenceCheckDelayMilliseconds": {
+              "default": 250,
+              "type": "integer",
+              "minimum": 50,
+              "maximum": 5000
+            }
+          }
+        },
+        "ios": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pollingTechnologies": {
+              "default": [
+                "iso14443",
+                "iso15693"
+              ],
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "iso14443",
+                  "iso15693",
+                  "iso18092"
+                ]
+              }
+            }
+          }
+        },
+        "messages": {
+          "$ref": "#/$defs/NfcScanMessages"
+        }
+      }
+    },
+    "PresentationMessage": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "NfcScanMessages": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "instruction",
+        "cancel",
+        "done",
+        "success",
+        "failureTitle",
+        "timeout",
+        "nfcDisabled",
+        "nfcUnsupported",
+        "multipleTags",
+        "reading",
+        "tagLost",
+        "unsupportedTag",
+        "readFailed"
+      ],
+      "properties": {
+        "title": { "$ref": "#/$defs/PresentationMessage" },
+        "instruction": { "$ref": "#/$defs/PresentationMessage" },
+        "cancel": { "$ref": "#/$defs/PresentationMessage" },
+        "done": { "$ref": "#/$defs/PresentationMessage" },
+        "success": { "$ref": "#/$defs/PresentationMessage" },
+        "failureTitle": { "$ref": "#/$defs/PresentationMessage" },
+        "timeout": { "$ref": "#/$defs/PresentationMessage" },
+        "nfcDisabled": { "$ref": "#/$defs/PresentationMessage" },
+        "nfcUnsupported": { "$ref": "#/$defs/PresentationMessage" },
+        "multipleTags": { "$ref": "#/$defs/PresentationMessage" },
+        "reading": { "$ref": "#/$defs/PresentationMessage" },
+        "tagLost": { "$ref": "#/$defs/PresentationMessage" },
+        "unsupportedTag": { "$ref": "#/$defs/PresentationMessage" },
+        "readFailed": { "$ref": "#/$defs/PresentationMessage" }
+      }
+    },
+    "NfcNdefTextRecordInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "text",
+        "languageCode"
+      ],
+      "properties": {
+        "kind": {
+          "const": "text"
+        },
+        "text": {
+          "type": "string"
+        },
+        "languageCode": {
+          "type": "string",
+          "pattern": "^(?!-)(?!.*-$)[A-Za-z0-9-]{1,63}$"
+        },
+        "encoding": {
+          "default": "UTF-8",
+          "enum": [
+            "UTF-8",
+            "UTF-16"
+          ]
+        },
+        "identifierBase64": {
+          "$ref": "#/$defs/Base64String"
+        }
+      }
+    },
+    "NfcNdefUriRecordInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "uri"
+      ],
+      "properties": {
+        "kind": {
+          "const": "uri"
+        },
+        "uri": {
+          "type": "string",
+          "minLength": 1
+        },
+        "identifierBase64": {
+          "$ref": "#/$defs/Base64String"
+        }
+      }
+    },
+    "NfcNdefMimeRecordInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "mediaType",
+        "payloadBase64"
+      ],
+      "properties": {
+        "kind": {
+          "const": "mime"
+        },
+        "mediaType": {
+          "type": "string",
+          "minLength": 3
+        },
+        "payloadBase64": {
+          "$ref": "#/$defs/Base64String"
+        },
+        "identifierBase64": {
+          "$ref": "#/$defs/Base64String"
+        }
+      }
+    },
+    "NfcNdefExternalRecordInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "domain",
+        "type",
+        "payloadBase64"
+      ],
+      "properties": {
+        "kind": {
+          "const": "external"
+        },
+        "domain": {
+          "type": "string",
+          "pattern": "^[a-z0-9.-]+$"
+        },
+        "type": {
+          "type": "string",
+          "pattern": "^[a-z0-9.-]+$"
+        },
+        "payloadBase64": {
+          "$ref": "#/$defs/Base64String"
+        },
+        "identifierBase64": {
+          "$ref": "#/$defs/Base64String"
+        }
+      }
+    },
+    "NfcNdefMessageInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "records"
+      ],
+      "properties": {
+        "records": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/NfcNdefTextRecordInput"
+              },
+              {
+                "$ref": "#/$defs/NfcNdefUriRecordInput"
+              },
+              {
+                "$ref": "#/$defs/NfcNdefMimeRecordInput"
+              },
+              {
+                "$ref": "#/$defs/NfcNdefExternalRecordInput"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "NfcNdefExternalTypeMarker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "domain",
+        "type"
+      ],
+      "properties": {
+        "domain": {
+          "type": "string",
+          "pattern": "^[a-z0-9.-]+$"
+        },
+        "type": {
+          "type": "string",
+          "pattern": "^[a-z0-9.-]+$"
+        }
+      }
+    },
+    "NfcWriteOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMilliseconds": {
+          "default": 30000,
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 60000
+        },
+        "messages": {
+          "$ref": "#/$defs/NfcWriteMessages"
+        }
+      }
+    },
+    "NfcWriteMessages": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "instruction",
+        "cancel",
+        "done",
+        "success",
+        "failureTitle",
+        "timeout",
+        "nfcDisabled",
+        "nfcUnsupported",
+        "multipleTags",
+        "checking",
+        "writing",
+        "verifying",
+        "tagLost",
+        "tagReadOnly",
+        "capacityExceeded",
+        "unsupportedTag",
+        "writeFailed",
+        "verificationFailed"
+      ],
+      "properties": {
+        "title": { "$ref": "#/$defs/PresentationMessage" },
+        "instruction": { "$ref": "#/$defs/PresentationMessage" },
+        "cancel": { "$ref": "#/$defs/PresentationMessage" },
+        "done": { "$ref": "#/$defs/PresentationMessage" },
+        "success": { "$ref": "#/$defs/PresentationMessage" },
+        "failureTitle": { "$ref": "#/$defs/PresentationMessage" },
+        "timeout": { "$ref": "#/$defs/PresentationMessage" },
+        "nfcDisabled": { "$ref": "#/$defs/PresentationMessage" },
+        "nfcUnsupported": { "$ref": "#/$defs/PresentationMessage" },
+        "multipleTags": { "$ref": "#/$defs/PresentationMessage" },
+        "checking": { "$ref": "#/$defs/PresentationMessage" },
+        "writing": { "$ref": "#/$defs/PresentationMessage" },
+        "verifying": { "$ref": "#/$defs/PresentationMessage" },
+        "tagLost": { "$ref": "#/$defs/PresentationMessage" },
+        "tagReadOnly": { "$ref": "#/$defs/PresentationMessage" },
+        "capacityExceeded": { "$ref": "#/$defs/PresentationMessage" },
+        "unsupportedTag": { "$ref": "#/$defs/PresentationMessage" },
+        "writeFailed": { "$ref": "#/$defs/PresentationMessage" },
+        "verificationFailed": { "$ref": "#/$defs/PresentationMessage" }
+      }
+    },
+    "NfcCapabilities": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "platform",
+        "supported",
+        "enabled",
+        "readerModeSupported",
+        "features"
+      ],
+      "properties": {
+        "platform": {
+          "enum": [
+            "android",
+            "ios"
+          ]
+        },
+        "supported": {
+          "type": "boolean"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "readerModeSupported": {
+          "type": "boolean"
+        },
+        "features": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "NfcNativeError": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "message"
+      ],
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer"
+        }
+      }
+    },
+    "NfcError": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "message",
+        "recoverable"
+      ],
+      "properties": {
+        "code": {
+          "enum": [
+            "NFC_UNSUPPORTED",
+            "NFC_DISABLED",
+            "SCAN_BUSY",
+            "USER_CANCELLED",
+            "SCAN_TIMEOUT",
+            "TAG_LOST",
+            "UNSUPPORTED_TAG",
+            "READ_FAILED",
+            "WRITE_BUSY",
+            "WRITE_TIMEOUT",
+            "SESSION_CLOSE_TIMEOUT",
+            "PRESENTATION_TIMEOUT",
+            "TAG_READ_ONLY",
+            "NDEF_CAPACITY_EXCEEDED",
+            "WRITE_FAILED",
+            "WRITE_VERIFICATION_FAILED",
+            "INVALID_OPTIONS",
+            "INTERNAL_ERROR"
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "recoverable": {
+          "type": "boolean"
+        },
+        "nativeError": {
+          "$ref": "#/$defs/NfcNativeError"
+        }
+      }
+    },
+    "Base64String": {
+      "type": "string",
+      "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/][AQgw]==|[A-Za-z0-9+/]{2}[AEIMQUYcgkosw048]=)?$"
+    },
+    "NfcBytes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hex",
+        "base64",
+        "length"
+      ],
+      "properties": {
+        "hex": {
+          "type": "string",
+          "pattern": "^(?:[0-9A-F]{2})*$"
+        },
+        "base64": {
+          "type": "string"
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "NdefRecord": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "index",
+        "tnf",
+        "tnfName",
+        "typeHex",
+        "typeBase64",
+        "idHex",
+        "idBase64",
+        "payloadHex",
+        "payloadBase64"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tnf": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 7
+        },
+        "tnfName": {
+          "type": "string"
+        },
+        "typeHex": {
+          "type": "string"
+        },
+        "typeBase64": {
+          "type": "string"
+        },
+        "idHex": {
+          "type": "string"
+        },
+        "idBase64": {
+          "type": "string"
+        },
+        "payloadHex": {
+          "type": "string"
+        },
+        "payloadBase64": {
+          "type": "string"
+        },
+        "typeAscii": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "languageCode": {
+          "type": "string"
+        },
+        "textEncoding": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        },
+        "mimeType": {
+          "type": "string"
+        },
+        "externalType": {
+          "type": "string"
+        }
+      }
+    },
+    "Ndef": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "status",
+        "recordCount",
+        "records"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "writable",
+            "readOnly",
+            "read",
+            "unsupported",
+            "readError"
+          ]
+        },
+        "recordCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NdefRecord"
+          }
+        },
+        "readError": {
+          "$ref": "#/$defs/NfcNativeError"
+        }
+      }
+    },
+    "NfcTagSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "platform",
+        "discoveredAtEpochMs",
+        "id",
+        "technologies",
+        "nativeTechnologies",
+        "platformDetails",
+        "warnings"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "platform": {
+          "enum": [
+            "android",
+            "ios"
+          ]
+        },
+        "discoveredAtEpochMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "id": {
+          "$ref": "#/$defs/NfcBytes"
+        },
+        "technologies": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "ndef",
+              "ndefFormatable",
+              "nfcA",
+              "nfcB",
+              "nfcF",
+              "nfcV",
+              "isoDep",
+              "mifareClassic",
+              "mifareUltralight",
+              "mifareUnknown",
+              "mifarePlus",
+              "mifareDesfire",
+              "iso7816",
+              "iso15693",
+              "felica",
+              "nfcBarcode",
+              "unknown"
+            ]
+          }
+        },
+        "nativeTechnologies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "platformDetails": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "android": {
+              "type": "object"
+            },
+            "ios": {
+              "type": "object"
+            }
+          }
+        },
+        "ndef": {
+          "$ref": "#/$defs/Ndef"
+        },
+        "readOnlyProbes": {
+          "type": "object"
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "NfcWriteResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "platform",
+        "operation",
+        "completedAtEpochMs",
+        "verified",
+        "bytesWritten",
+        "recordCount",
+        "messageHex",
+        "messageBase64",
+        "tag"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "platform": {
+          "enum": [
+            "android",
+            "ios"
+          ]
+        },
+        "operation": {
+          "const": "writeNdef"
+        },
+        "completedAtEpochMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "verified": {
+          "const": true
+        },
+        "bytesWritten": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "recordCount": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "messageHex": {
+          "type": "string",
+          "pattern": "^(?:[0-9A-F]{2})+$"
+        },
+        "messageBase64": {
+          "$ref": "#/$defs/Base64String"
+        },
+        "tag": {
+          "$ref": "#/$defs/NfcTagSnapshot"
+        }
+      }
+    },
+    "NfcNdefInitializationMarkerResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "domain",
+        "type",
+        "externalType"
+      ],
+      "properties": {
+        "domain": {
+          "type": "string",
+          "pattern": "^[a-z0-9.-]+$"
+        },
+        "type": {
+          "type": "string",
+          "pattern": "^[a-z0-9.-]+$"
+        },
+        "externalType": {
+          "type": "string",
+          "pattern": "^[a-z0-9.-]+:[a-z0-9.-]+$"
+        }
+      }
+    },
+    "NfcNdefPreservedResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "platform",
+        "operation",
+        "completedAtEpochMs",
+        "action",
+        "marker",
+        "tag"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "platform": { "enum": ["android", "ios"] },
+        "operation": { "const": "initializeNdef" },
+        "completedAtEpochMs": { "type": "integer", "minimum": 0 },
+        "action": { "const": "preserved" },
+        "marker": {
+          "$ref": "#/$defs/NfcNdefInitializationMarkerResult"
+        },
+        "tag": { "$ref": "#/$defs/NfcTagSnapshot" }
+      }
+    },
+    "NfcNdefInitializedResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "platform",
+        "operation",
+        "completedAtEpochMs",
+        "action",
+        "marker",
+        "verified",
+        "bytesWritten",
+        "recordCount",
+        "messageHex",
+        "messageBase64",
+        "tag"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "platform": { "enum": ["android", "ios"] },
+        "operation": { "const": "initializeNdef" },
+        "completedAtEpochMs": { "type": "integer", "minimum": 0 },
+        "action": { "const": "initialized" },
+        "marker": {
+          "$ref": "#/$defs/NfcNdefInitializationMarkerResult"
+        },
+        "verified": { "const": true },
+        "bytesWritten": { "type": "integer", "minimum": 1 },
+        "recordCount": { "type": "integer", "minimum": 1 },
+        "messageHex": {
+          "type": "string",
+          "pattern": "^(?:[0-9A-F]{2})+$"
+        },
+        "messageBase64": { "$ref": "#/$defs/Base64String" },
+        "tag": { "$ref": "#/$defs/NfcTagSnapshot" }
+      }
+    },
+    "NfcNdefInitializationResult": {
+      "oneOf": [
+        { "$ref": "#/$defs/NfcNdefPreservedResult" },
+        { "$ref": "#/$defs/NfcNdefInitializedResult" }
+      ]
+    },
+    "NfcForegroundDispatchState": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "platform": {
+          "enum": [
+            "android",
+            "ios"
+          ]
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "state": {
+          "enum": [
+            "disabled",
+            "active",
+            "paused",
+            "unavailable",
+            "nfcDisabled",
+            "failed"
+          ]
+        },
+        "error": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "platform",
+        "revision",
+        "state",
+        "error"
+      ]
+    },
+    "NfcPresentationState": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "platform": {
+          "enum": [
+            "android",
+            "ios"
+          ]
+        },
+        "supported": {
+          "type": "boolean"
+        },
+        "activePresentationIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "platform",
+        "supported",
+        "activePresentationIds"
+      ]
+    },
+    "NfcWaitForPresentationEndOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60000,
+          "default": 5000
+        }
+      },
+      "required": []
+    },
+    "NfcForegroundOwnerId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}(?![\\s\\S])"
+    }
+  }
+}

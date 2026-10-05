@@ -287,7 +287,6 @@
 			const urlScheme = plus.runtime.arguments;
 			
 			if (urlScheme) {				
-				// 假设 Url Scheme 格式为: railgo://pagePath?param1=value1&param2=value2
 				const schemeRegex = /^railgo:\/\/([^\?]+)(\??.*)$/i;
 				const match = urlScheme.match(schemeRegex);
 				

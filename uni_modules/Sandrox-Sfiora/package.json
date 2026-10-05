@@ -1,0 +1,124 @@
+{
+  "id": "Sandrox-Sfiora",
+  "displayName": "Sfiora 通用 NFC 读写",
+  "version": "1.2.0",
+  "description": "为 uni-app 与 uni-app x Android/iOS App 提供 NFC 标签读取、验证写入和标记初始化。",
+  "keywords": [
+    "NFC",
+    "NDEF",
+    "UTS",
+    "uni-app",
+    "uni-app-x"
+],
+  "repository": "https://github.com/sandroxy/sfiora",
+  "license": "Apache-2.0",
+  "engines": {
+    "HBuilderX": "^5.24",
+    "uni-app": "^5.24",
+    "uni-app-x": "^5.24"
+  },
+  "dcloudext": {
+    "type": "uts",
+    "sale": {
+      "regular": {
+        "price": "0.00"
+      },
+      "sourcecode": {
+        "price": "0.00"
+      }
+    },
+    "contact": {
+      "qq": ""
+    },
+    "declaration": {
+      "ads": "无",
+      "data": "插件在设备上读取、处理并返回 NFC 标签数据，按调用方提供的内容写入标签；不向作者服务器上传数据，不包含统计 SDK，也不在宿主设备持久化标签内容。数据的后续使用与存储由调用方负责。",
+      "permissions": "Android NFC 权限；iOS NFCReaderUsageDescription 和 TAG entitlement。"
+    },
+    "npmurl": "",
+    "darkmode": "√",
+    "i18n": "x",
+    "widescreen": "x"
+  },
+  "uni_modules": {
+    "dependencies": [],
+    "encrypt": [],
+    "platforms": {
+      "cloud": {
+        "tcb": "x",
+        "aliyun": "x",
+        "alipay": "x"
+      },
+      "client": {
+        "uni-app": {
+          "vue": {
+            "vue2": {
+                "extVersion": "1.1.0",
+                "minVersion": ""
+            },
+            "vue3": {
+                "extVersion": "1.1.0",
+                "minVersion": ""
+            }
+          },
+          "web": {
+            "safari": "x",
+            "chrome": "x"
+          },
+          "app": {
+            "vue": {
+                "extVersion": "1.1.0",
+                "minVersion": ""
+            },
+            "nvue": "x",
+            "android": {
+              "extVersion": "1.1.0",
+              "minVersion": "23"
+            },
+            "ios": {
+              "extVersion": "1.1.0",
+              "minVersion": "15"
+            },
+            "harmony": "x"
+          },
+          "mp": {
+            "weixin": "x",
+            "alipay": "x",
+            "toutiao": "x",
+            "baidu": "x",
+            "kuaishou": "x",
+            "jd": "x",
+            "harmony": "x",
+            "qq": "x",
+            "lark": "x",
+            "xhs": "x"
+          },
+          "quickapp": {
+            "huawei": "x",
+            "union": "x"
+          }
+        },
+        "uni-app-x": {
+          "web": {
+            "safari": "x",
+            "chrome": "x"
+          },
+          "app": {
+            "android": {
+              "extVersion": "1.1.0",
+              "minVersion": "23"
+            },
+            "ios": {
+              "extVersion": "1.1.0",
+              "minVersion": "15"
+            },
+            "harmony": "x"
+          },
+          "mp": {
+            "weixin": "x"
+          }
+        }
+      }
+    }
+  }
+}

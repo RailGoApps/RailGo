@@ -1,6 +1,7 @@
 <template>
 	<view class="ux-bg-grey5" style="min-height:100vh;">
 	<back-header></back-header>
+	<railgo-nfc></railgo-nfc><!-- TODO: preview 为 H5 临时预览开关，上线前移除 -->
 		<view class="ux-pl ux-pr ux-pb">
 
 			<view class="ux-bg-white ux-border-radius" style="overflow:hidden;">

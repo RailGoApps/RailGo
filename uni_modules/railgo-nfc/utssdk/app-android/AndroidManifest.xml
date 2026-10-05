@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    railgo-nfc 插件清单。
+    railgo-nfc 插件清单（结构参照 Sfiora 成品插件：manifest 不声明任何需要冷启动
+    调起的 intent-filter，前台扫描分发给导出关闭的内部广播接收器）。
     注意：修改本文件或 res/ 后必须重新制作自定义调试基座并云打包才生效。
-    NfcDispatchActivity 类名对应 UTS 编译包名 uts.sdk.modules.railgoNfc（插件 id 驼峰）。
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 	package="io.dcloud.uni_modules.railgoNfc">
@@ -13,36 +13,26 @@
 		android:required="false" />
 
 	<application>
-		<activity
-			android:name="uts.sdk.modules.railgoNfc.NfcDispatchActivity"
-			android:exported="true"
-			android:launchMode="singleTop"
-			android:excludeFromRecents="true"
-			android:taskAffinity=""
-			android:theme="@android:style/Theme.Translucent.NoTitleBar">
+		<!--
+			DCloud 规定：带 data/extras 的 Intent 启动 io.dcloud.PandoraEntry
+			（NFC NDEF/scheme 调起即属此场景）必须声明该 activity-alias，否则运行时
+			IllegalStateException "you must have io.dcloud.PandoraEntry.Activity alias" 崩溃。
+			manifest.json 的 "schemes":"railgo" 生成的 URL-scheme 过滤器挂在 PandoraEntry 上，
+			标签 URI 调起统一由它接收，App.vue onShow 里已有 railgo:// 深链路由。
+		-->
+		<activity-alias
+			android:name="io.dcloud.PandoraEntry.Activity"
+			android:targetActivity="io.dcloud.PandoraEntry"
+			android:exported="true" />
 
-			<!-- 后台/冷启动：标签含已注册 scheme 的 URI 记录时调起（按需增删 data 项） -->
-			<intent-filter>
-				<action android:name="android.nfc.action.NDEF_DISCOVERED" />
-				<category android:name="android.intent.category.DEFAULT" />
-				<!-- 自定义 scheme 示例：myapp://，请改为你的 App scheme -->
-				<data android:scheme="myapp" />
-			</intent-filter>
-
-			<!-- 后台/冷启动：NTAG(Type2/NFC-A) 等技术匹配调起 -->
-			<intent-filter>
-				<action android:name="android.nfc.action.TECH_DISCOVERED" />
-				<category android:name="android.intent.category.DEFAULT" />
-			</intent-filter>
-			<meta-data
-				android:name="android.nfc.action.TECH_DISCOVERED"
-				android:resource="@xml/railgo_nfc_tech_filter" />
-
-			<!-- 前台扫描：enableForegroundDispatch 的 PendingIntent 目标（filters=null 时走这里） -->
-			<intent-filter>
-				<action android:name="android.nfc.action.TAG_DISCOVERED" />
-				<category android:name="android.intent.category.DEFAULT" />
-			</intent-filter>
-		</activity>
+		<!--
+			前台扫描接收器：enableForegroundDispatch 的 PendingIntent.getBroadcast 目标。
+			exported=false：只接自家 PendingIntent 的显式广播；系统 NFC 分发不会直达
+			该接收器（Android 也不允许后台 NFC 分发给 receiver），因此不需要、也不能
+			声明任何 NFC intent-filter。类名对应 UTS 编译包名 uts.sdk.modules.railgoNfc。
+		-->
+		<receiver
+			android:name="uts.sdk.modules.railgoNfc.NfcTagReceiver"
+			android:exported="false" />
 	</application>
 </manifest>

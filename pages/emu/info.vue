@@ -1,6 +1,7 @@
 <template>
 	<view class="ux-bg-grey5" style="min-height:100vh; padding-bottom: 40rpx;">
 		<back-header></back-header>
+		<railgo-nfc></railgo-nfc>
 
 		<view class="ux-pl ux-pr ux-pb" v-if="!loading && emuData.id">
 			<view class="ux-bg-white ux-border-radius">

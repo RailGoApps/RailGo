@@ -1,0 +1,3 @@
+framework module Sfiora {
+  header "Sfiora-Swift.h"
+}

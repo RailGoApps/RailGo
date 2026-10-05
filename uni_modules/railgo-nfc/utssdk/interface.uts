@@ -3,6 +3,9 @@
  *
  * 纯逻辑（URI 前缀表、NDEF 记录编解码、T2T TLV/CC/RFUI）在三端编译为同一份代码，
  * 保证 Android / iOS / HarmonyOS 读写的字节格式完全一致。
+ *
+ * 注意：UTS 编译到 Kotlin 后数组下标访问返回可空 Number?，所有下标读取必须经
+ * at()/sAt() 判空，不能直接在取下标结果上做运算符调用。
  */
 
 /* ==================== 错误码 ==================== */
@@ -36,7 +39,7 @@ export type NdefRecordData = {
 	tnf : number,
 	/** 归一化记录类型: URI | TEXT | AAR | MIME | EXTERNAL | SMART_POSTER | UNKNOWN | EMPTY | OTHER */
 	recordType : string,
-	/** TNF=URI(1,TNF_WELL_KNOWN 0x55 / TNF_ABS 3) 时的完整 URI，其余为 null */
+	/** URI 记录完整 URI，其余为 null */
 	uri : string | null,
 	/** TEXT 记录正文 */
 	text : string | null,
@@ -60,7 +63,7 @@ export type NfcTagInfo = {
 	tagType : string,
 	/** 用户数据区总字节数（T2T 逐页写入用） */
 	userBytes : number,
-	/** 单条 NDEF 消息最大可写字节数（读不到时为 userBytes-4） */
+	/** 单条 NDEF 消息最大可写字节数 */
 	maxNdefSize : number,
 	/** 是否已 NDEF 格式化 */
 	formatted : boolean,
@@ -74,7 +77,7 @@ export type NfcTagInfo = {
 export type NdefRecordSpec = {
 	/** uri | text | aar */
 	type : string,
-	/** type=uri 时必填，如 myapp://product/detail?pid=10086 */
+	/** type=uri 时必填，如 railgo://pages/train/trainResult?train=G1 */
 	uri ?: string,
 	/** type=text 时必填 */
 	text ?: string,
@@ -109,21 +112,47 @@ export type NtagModel = {
 	lastPage : number
 };
 
+/* ==================== 下标安全访问（UTS→Kotlin 可空规避） ==================== */
+
+export function at(arr : number[], i : number) : number {
+	if (i < 0 || i >= arr.length) return 0;
+	const v = arr[i];
+	if (v == null) return 0;
+	return v;
+}
+
+export function sAt(arr : string[], i : number) : string {
+	if (i < 0 || i >= arr.length) return '';
+	const v = arr[i];
+	if (v == null) return '';
+	return v;
+}
+
+/** charCodeAt 在 Kotlin 下返回可空 Int，统一判空收口 */
+export function codeAt(str : string, i : number) : number {
+	if (i < 0 || i >= str.length) return 0;
+	const v = str.charCodeAt(i);
+	if (v == null) return 0;
+	return v;
+}
+
 /* ==================== 字节/字符串工具 ==================== */
 
 export function bytesToHex(bytes : number[]) : string {
 	let s = '';
 	for (let i = 0; i < bytes.length; i++) {
-		const v = bytes[i] & 0xFF;
+		const v = at(bytes, i) & 0xFF;
 		s += (v < 16 ? '0' : '') + v.toString(16).toUpperCase();
 	}
 	return s;
 }
 
 export function hexToBytes(hex : string) : number[] {
+	const h = hex.toLowerCase();
 	const out : number[] = [];
-	for (let i = 0; i + 1 < hex.length + 1; i += 2) {
-		out.push(parseInt(hex.substring(i, i + 2), 16));
+	for (const p of h.split('')) {
+		const v = parseInt(p, 16);
+		if (v != null) out.push(v);
 	}
 	return out;
 }
@@ -131,9 +160,9 @@ export function hexToBytes(hex : string) : number[] {
 export function utf8Encode(str : string) : number[] {
 	const out : number[] = [];
 	for (let i = 0; i < str.length; i++) {
-		let cp = str.charCodeAt(i);
+		let cp = codeAt(str, i);
 		if (cp >= 0xD800 && cp <= 0xDBFF && i + 1 < str.length) {
-			const low = str.charCodeAt(i + 1);
+			const low = codeAt(str, i + 1);
 			if (low >= 0xDC00 && low <= 0xDFFF) {
 				cp = 0x10000 + ((cp - 0xD800) << 10) + (low - 0xDC00);
 				i++;
@@ -156,19 +185,19 @@ export function utf8Decode(bytes : number[]) : string {
 	let out = '';
 	let i = 0;
 	while (i < bytes.length) {
-		const b = bytes[i] & 0xFF;
+		const b = at(bytes, i) & 0xFF;
 		let cp = 0;
 		if (b < 0x80) {
 			cp = b;
 			i += 1;
 		} else if (b >= 0xC0 && b < 0xE0 && i + 1 < bytes.length) {
-			cp = ((b & 0x1F) << 6) | (bytes[i + 1] & 0x3F);
+			cp = ((b & 0x1F) << 6) | (at(bytes, i + 1) & 0x3F);
 			i += 2;
 		} else if (b >= 0xE0 && b < 0xF0 && i + 2 < bytes.length) {
-			cp = ((b & 0x0F) << 12) | ((bytes[i + 1] & 0x3F) << 6) | (bytes[i + 2] & 0x3F);
+			cp = ((b & 0x0F) << 12) | ((at(bytes, i + 1) & 0x3F) << 6) | (at(bytes, i + 2) & 0x3F);
 			i += 3;
 		} else if (b >= 0xF0 && i + 3 < bytes.length) {
-			cp = ((b & 0x07) << 18) | ((bytes[i + 1] & 0x3F) << 12) | ((bytes[i + 2] & 0x3F) << 6) | (bytes[i + 3] & 0x3F);
+			cp = ((b & 0x07) << 18) | ((at(bytes, i + 1) & 0x3F) << 12) | ((at(bytes, i + 2) & 0x3F) << 6) | (at(bytes, i + 3) & 0x3F);
 			i += 4;
 		} else {
 			i += 1;
@@ -185,10 +214,10 @@ export function utf8Decode(bytes : number[]) : string {
 	return out;
 }
 
-function sliceBytes(bytes : number[], start : number, len : number) : number[] {
+export function sliceBytes(bytes : number[], start : number, len : number) : number[] {
 	const out : number[] = [];
 	for (let i = start; i < start + len && i < bytes.length; i++) {
-		out.push(bytes[i] & 0xFF);
+		out.push(at(bytes, i) & 0xFF);
 	}
 	return out;
 }
@@ -234,23 +263,23 @@ export const URI_PREFIXES : string[] = [
 	'urn:nfc:'
 ];
 
-/** URI 编码为 payload：自动选择最长匹配前缀码；自定义 scheme（如 myapp://）前缀码为 0x00 */
+/** URI 编码为 payload：自动选择最长匹配前缀码；自定义 scheme（如 railgo://）前缀码为 0x00 */
 export function encodeUriPayload(uri : string) : number[] {
 	let bestCode = 0;
 	for (let c = 1; c < URI_PREFIXES.length; c++) {
-		const p = URI_PREFIXES[c];
+		const p = sAt(URI_PREFIXES, c);
 		if (uri.length > p.length && uri.substring(0, p.length) == p) {
 			bestCode = c;
 		}
 	}
-	const rest = uri.substring(bestCode > 0 ? URI_PREFIXES[bestCode].length : 0);
+	const rest = uri.substring(bestCode > 0 ? sAt(URI_PREFIXES, bestCode).length : 0);
 	return [bestCode].concat(utf8Encode(rest));
 }
 
 export function decodeUriPayload(payload : number[]) : string {
 	if (payload.length == 0) return '';
-	const code = payload[0] & 0xFF;
-	const prefix = code < URI_PREFIXES.length ? URI_PREFIXES[code] : '';
+	const code = at(payload, 0) & 0xFF;
+	const prefix = code < URI_PREFIXES.length ? sAt(URI_PREFIXES, code) : '';
 	return prefix + utf8Decode(sliceBytes(payload, 1, payload.length - 1));
 }
 
@@ -264,7 +293,7 @@ export function encodeTextPayload(text : string, language : string) : number[] {
 export function decodeTextPayload(payload : number[]) : string[] {
 	// 返回 [text, language]
 	if (payload.length < 1) return ['', ''];
-	const status = payload[0] & 0xFF;
+	const status = at(payload, 0) & 0xFF;
 	const langLen = status & 0x3F;
 	const isUtf16 = (status & 0x80) != 0;
 	const language = utf8Decode(sliceBytes(payload, 1, langLen));
@@ -272,7 +301,7 @@ export function decodeTextPayload(payload : number[]) : string[] {
 	if (isUtf16) {
 		let text = '';
 		for (let i = 0; i + 1 < body.length; i += 2) {
-			text += String.fromCharCode((body[i + 1] << 8) | body[i]);
+			text += String.fromCharCode(((at(body, i + 1) & 0xFF) << 8) | (at(body, i) & 0xFF));
 		}
 		return [text, language];
 	}
@@ -298,15 +327,16 @@ export function encodeRecordBytes(tnf : number, typeBytes : number[], idBytes : 
 		out.push((payloadBytes.length >> 24) & 0xFF, (payloadBytes.length >> 16) & 0xFF, (payloadBytes.length >> 8) & 0xFF, payloadBytes.length & 0xFF);
 	}
 	if (idBytes.length > 0) out.push(idBytes.length & 0xFF);
-	for (let i = 0; i < typeBytes.length; i++) out.push(typeBytes[i] & 0xFF);
-	for (let i = 0; i < idBytes.length; i++) out.push(idBytes[i] & 0xFF);
-	for (let i = 0; i < payloadBytes.length; i++) out.push(payloadBytes[i] & 0xFF);
+	for (let i = 0; i < typeBytes.length; i++) out.push(at(typeBytes, i) & 0xFF);
+	for (let i = 0; i < idBytes.length; i++) out.push(at(idBytes, i) & 0xFF);
+	for (let i = 0; i < payloadBytes.length; i++) out.push(at(payloadBytes, i) & 0xFF);
 	return out;
 }
 
 /** 由写入参数构建一条记录的原始字节 */
 export function specToRecordBytes(spec : NdefRecordSpec) : number[] {
-	const idBytes = (spec.id != null && (spec.id as string).length > 0) ? hexToBytes(spec.id as string) : ([] as number[]);
+	const specId = spec.id;
+	const idBytes = (specId != null && (specId as string).length > 0) ? hexToBytes(specId as string) : ([] as number[]);
 	const type = spec.type;
 	if (type == 'uri') {
 		return encodeRecordBytes(1, [0x55], idBytes, encodeUriPayload(spec.uri ?? ''));
@@ -324,9 +354,12 @@ export function specToRecordBytes(spec : NdefRecordSpec) : number[] {
 export function buildMessageBytes(specs : NdefRecordSpec[]) : number[] {
 	const out : number[] = [];
 	for (let i = 0; i < specs.length; i++) {
-		const r = specToRecordBytes(specs[i]);
-		if (r.length == 0) continue;
-		out = out.concat(r);
+		const spec = specs[i];
+		if (spec == null) continue;
+		const r = specToRecordBytes(spec);
+		for (let k = 0; k < r.length; k++) {
+			out.push(at(r, k));
+		}
 	}
 	return out;
 }
@@ -354,7 +387,7 @@ export function parseMessageBytes(msg : number[]) : NdefRecordData[] {
 	const records : NdefRecordData[] = [];
 	let i = 0;
 	while (i < msg.length) {
-		const header = msg[i] & 0xFF;
+		const header = at(msg, i) & 0xFF;
 		const tnf = header & 0x07;
 		const cf = (header & 0x20) != 0;
 		const me = (header & 0x40) != 0;
@@ -362,19 +395,19 @@ export function parseMessageBytes(msg : number[]) : NdefRecordData[] {
 		const il = (header & 0x08) != 0;
 		let p = i + 1;
 		if (p >= msg.length) break;
-		const typeLen = msg[p] & 0xFF;
+		const typeLen = at(msg, p) & 0xFF;
 		p += 1;
 		let payloadLen = 0;
 		if (sr) {
-			payloadLen = msg[p] & 0xFF;
+			payloadLen = at(msg, p) & 0xFF;
 			p += 1;
 		} else {
-			payloadLen = ((msg[p] & 0xFF) << 24) | ((msg[p + 1] & 0xFF) << 16) | ((msg[p + 2] & 0xFF) << 8) | (msg[p + 3] & 0xFF);
+			payloadLen = ((at(msg, p) & 0xFF) << 24) | ((at(msg, p + 1) & 0xFF) << 16) | ((at(msg, p + 2) & 0xFF) << 8) | (at(msg, p + 3) & 0xFF);
 			p += 4;
 		}
 		let idLen = 0;
 		if (il) {
-			idLen = msg[p] & 0xFF;
+			idLen = at(msg, p) & 0xFF;
 			p += 1;
 		}
 		const typeBytes = sliceBytes(msg, p, typeLen);
@@ -386,13 +419,17 @@ export function parseMessageBytes(msg : number[]) : NdefRecordData[] {
 		const typeStr = utf8Decode(typeBytes);
 
 		// 分块记录（CF）：payload 追加到上一条
-		if (cf && records.length > 0 && (records[records.length - 1].payloadHex ?? '').length > 0) {
+		if (cf && records.length > 0) {
 			const prev = records[records.length - 1];
-			const prevPayload = hexToBytes(prev.payloadHex ?? '');
-			const merged = prevPayload.concat(payloadBytes);
-			prev.payloadHex = bytesToHex(merged);
-			i = p;
-			continue;
+			if (prev != null) {
+				const prevHex = prev.payloadHex;
+				if (prevHex != null && (prevHex as string).length > 0) {
+					const merged = hexToBytes(prevHex as string).concat(payloadBytes);
+					prev.payloadHex = bytesToHex(merged);
+					i = p;
+					continue;
+				}
+			}
 		}
 
 		const rec : NdefRecordData = {
@@ -413,8 +450,8 @@ export function parseMessageBytes(msg : number[]) : NdefRecordData[] {
 			}
 		} else if (rec.recordType == 'TEXT') {
 			const kv = decodeTextPayload(payloadBytes);
-			rec.text = kv[0];
-			rec.language = kv[1];
+			rec.text = sAt(kv, 0);
+			rec.language = sAt(kv, 1);
 		} else if (rec.recordType == 'AAR') {
 			rec.packageName = utf8Decode(payloadBytes);
 		}
@@ -434,9 +471,7 @@ export const T2T_USER_START_PAGE = 4;
 /** GET_VERSION 响应推断 NTAG 型号；无法识别时返回默认 Type2 */
 export function modelFromGetVersion(resp : number[]) : NtagModel {
 	// 响应格式: 00 <len> <product> <subtype> <major> <minor> <storageSize> <selCfg>
-	let sizeByte = -1;
-	if (resp.length >= 8) sizeByte = resp[6] & 0xFF;
-	else if (resp.length >= 7) sizeByte = resp[6] & 0xFF;
+	const sizeByte = resp.length >= 7 ? (at(resp, 6) & 0xFF) : -1;
 	if (sizeByte == 0x0F) return { model: 'NTAG213', userBytes: 144, lastPage: 39 } as NtagModel;
 	if (sizeByte == 0x11) return { model: 'NTAG215', userBytes: 504, lastPage: 129 } as NtagModel;
 	if (sizeByte == 0x13) return { model: 'NTAG216', userBytes: 888, lastPage: 225 } as NtagModel;
@@ -452,19 +487,19 @@ export function buildCcPage(userBytes : number) : number[] {
 export function extractT2tNdef(userBytes : number[]) : number[] {
 	let i = 0;
 	while (i < userBytes.length) {
-		const t = userBytes[i] & 0xFF;
+		const t = at(userBytes, i) & 0xFF;
 		if (t == 0x00) { i += 1; continue; }
 		if (t == 0xFE || t == 0xFF) break; // 结束符
 		if (i + 1 >= userBytes.length) break;
-		let l = userBytes[i + 1] & 0xFF;
-	 let dataOff = i + 2;
+		let l = at(userBytes, i + 1) & 0xFF;
+		let dataOff = i + 2;
 		if (l == 0xFF) {
 			// 3 字节扩展长度
-			l = ((userBytes[i + 2] & 0xFF) << 16) | ((userBytes[i + 3] & 0xFF) << 8) | (userBytes[i + 4] & 0xFF);
+			l = ((at(userBytes, i + 2) & 0xFF) << 16) | ((at(userBytes, i + 3) & 0xFF) << 8) | (at(userBytes, i + 4) & 0xFF);
 			dataOff = i + 5;
 		} else if (l == 0xFE) {
 			// 2 字节扩展长度
-			l = ((userBytes[i + 2] & 0xFF) << 8) | (userBytes[i + 3] & 0xFF);
+			l = ((at(userBytes, i + 2) & 0xFF) << 8) | (at(userBytes, i + 3) & 0xFF);
 			dataOff = i + 4;
 		}
 		if (t == 0x03) return sliceBytes(userBytes, dataOff, l);
@@ -484,7 +519,7 @@ export function buildT2tUserArea(msgBytes : number[], capacityBytes : number) : 
 	} else {
 		head.push(0x03, 0xFF, (len >> 16) & 0xFF, (len >> 8) & 0xFF, len & 0xFF);
 	}
-	let total = head.concat(msgBytes);
+	const total = head.concat(msgBytes);
 	total.push(0xFE);
 	// 补齐到 4 字节页对齐（含末页 RFUI 字节，按 NXP 约定写 0x00）
 	while (total.length % T2T_PAGE_SIZE != 0) {

@@ -1,0 +1,481 @@
+// swift-interface-format-version: 1.0
+// swift-compiler-version: Apple Swift version 6.3.3 effective-5.10 (swiftlang-6.3.3.1.3 clang-2100.1.1.101)
+// swift-module-flags: -target arm64-apple-ios13.0 -enable-objc-interop -enable-library-evolution -swift-version 5 -O -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -module-name Sfiora
+// swift-module-flags-ignorable: -no-verify-emitted-module-interface -formal-cxx-interoperability-mode=off -interface-compiler-version 6.3.3
+import CoreNFC
+import Foundation
+import Swift
+import UIKit
+import _Concurrency
+import _CoreNFC_UIKit
+import _StringProcessing
+import _SwiftConcurrencyShims
+public struct NdefExternalType : Swift.Equatable, Swift.Hashable, Swift.Sendable {
+  public let domain: Swift.String
+  public let type: Swift.String
+  public let value: Swift.String
+  public init(domain: Swift.String, type: Swift.String) throws
+  public func matches(_ record: Sfiora.NdefRecord) -> Swift.Bool
+  public static func == (a: Sfiora.NdefExternalType, b: Sfiora.NdefExternalType) -> Swift.Bool
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+public struct NdefMessage : Swift.Equatable, Swift.Hashable, Swift.Sendable {
+  public let records: [Sfiora.NdefRecord]
+  public init(records: [Sfiora.NdefRecord]) throws
+  public var byteCount: Swift.Int {
+    get
+  }
+  public var serializedData: Foundation.Data {
+    get
+  }
+  public static func == (a: Sfiora.NdefMessage, b: Sfiora.NdefMessage) -> Swift.Bool
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+public struct NdefRecord : Swift.Equatable, Swift.Hashable, Swift.Sendable {
+  public let typeNameFormat: Sfiora.NdefTypeNameFormat
+  public let type: Foundation.Data
+  public let identifier: Foundation.Data
+  public let payload: Foundation.Data
+  public init(typeNameFormat: Sfiora.NdefTypeNameFormat, type: Foundation.Data, identifier: Foundation.Data = Data(), payload: Foundation.Data) throws
+  public static func text(_ text: Swift.String, languageCode: Swift.String, encoding: Sfiora.NdefTextEncoding = .utf8, identifier: Foundation.Data = Data()) throws -> Sfiora.NdefRecord
+  public static func uri(_ uri: Swift.String, identifier: Foundation.Data = Data()) throws -> Sfiora.NdefRecord
+  public static func mime(mediaType: Swift.String, payload: Foundation.Data, identifier: Foundation.Data = Data()) throws -> Sfiora.NdefRecord
+  public static func external(domain: Swift.String, type: Swift.String, payload: Foundation.Data, identifier: Foundation.Data = Data()) throws -> Sfiora.NdefRecord
+  public var decodedText: Sfiora.NdefText? {
+    get
+  }
+  public var decodedUri: Swift.String? {
+    get
+  }
+  public var mediaType: Swift.String? {
+    get
+  }
+  public var externalType: Swift.String? {
+    get
+  }
+  public static func == (a: Sfiora.NdefRecord, b: Sfiora.NdefRecord) -> Swift.Bool
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+public enum NdefTypeNameFormat : Swift.UInt8, Swift.Sendable {
+  case empty
+  case wellKnown
+  case mimeMedia
+  case absoluteUri
+  case externalType
+  case unknown
+  public init?(rawValue: Swift.UInt8)
+  public typealias RawValue = Swift.UInt8
+  public var rawValue: Swift.UInt8 {
+    get
+  }
+}
+public enum NdefTextEncoding : Swift.String, Swift.Sendable {
+  case utf8
+  case utf16
+  public init?(rawValue: Swift.String)
+  public typealias RawValue = Swift.String
+  public var rawValue: Swift.String {
+    get
+  }
+}
+public enum NdefError : Swift.Error, Swift.Equatable, Foundation.LocalizedError, Swift.Sendable {
+  case emptyMessage
+  case emptyRecordMustNotContainData
+  case missingType(typeNameFormat: Sfiora.NdefTypeNameFormat)
+  case typeNotAllowed(typeNameFormat: Sfiora.NdefTypeNameFormat)
+  case typeTooLong(byteCount: Swift.Int)
+  case identifierTooLong(byteCount: Swift.Int)
+  case payloadTooLong(byteCount: Swift.Int)
+  case messageEncodingFailed
+  case invalidLanguageCode
+  case textEncodingFailed
+  case emptyUri
+  case invalidMimeType
+  case invalidExternalType
+  public var errorDescription: Swift.String? {
+    get
+  }
+  public static func == (a: Sfiora.NdefError, b: Sfiora.NdefError) -> Swift.Bool
+}
+public struct NdefText : Swift.Equatable, Swift.Hashable, Swift.Sendable {
+  public let text: Swift.String
+  public let languageCode: Swift.String
+  public let encoding: Sfiora.NdefTextEncoding
+  public static func == (a: Sfiora.NdefText, b: Sfiora.NdefText) -> Swift.Bool
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+public enum NfcFeature : Swift.String, Swift.CaseIterable, Swift.Equatable, Swift.Sendable {
+  case discover
+  case ndef
+  case ndefWrite
+  case ndefInitialize
+  case ndefCompatibility
+  case iso14443
+  case iso15693
+  case iso18092ByHostConfiguration
+  public init?(rawValue: Swift.String)
+  public typealias AllCases = [Sfiora.NfcFeature]
+  public typealias RawValue = Swift.String
+  nonisolated public static var allCases: [Sfiora.NfcFeature] {
+    get
+  }
+  public var rawValue: Swift.String {
+    get
+  }
+}
+public struct NfcCapabilities : Swift.Equatable, Swift.Sendable {
+  public let supported: Swift.Bool
+  public let enabled: Swift.Bool
+  public let features: [Sfiora.NfcFeature]
+  public init(supported: Swift.Bool, enabled: Swift.Bool)
+  public init(supported: Swift.Bool, enabled: Swift.Bool, features: [Sfiora.NfcFeature])
+  public static var current: Sfiora.NfcCapabilities {
+    get
+  }
+  public var readerModeSupported: Swift.Bool {
+    get
+  }
+  public var dictionary: [Swift.String : Any] {
+    get
+  }
+  public static func == (a: Sfiora.NfcCapabilities, b: Sfiora.NfcCapabilities) -> Swift.Bool
+}
+public enum NfcClientState : Swift.String, Swift.Equatable, Swift.Sendable {
+  case idle
+  case reading
+  case writing
+  public init?(rawValue: Swift.String)
+  public typealias RawValue = Swift.String
+  public var rawValue: Swift.String {
+    get
+  }
+}
+@objc @_inheritsConvenienceInitializers @_hasMissingDesignatedInitializers final public class NfcClient : ObjectiveC.NSObject {
+  @objc override convenience dynamic public init()
+  @objc deinit
+  final public var capabilities: Sfiora.NfcCapabilities {
+    get
+  }
+  final public var state: Sfiora.NfcClientState {
+    get
+  }
+  final public var stateChangeHandler: ((Sfiora.NfcClientState) -> Swift.Void)? {
+    get
+    set
+  }
+  final public var isReading: Swift.Bool {
+    get
+  }
+  final public var isWriting: Swift.Bool {
+    get
+  }
+  final public func startRead(configuration: Sfiora.NfcReadConfiguration = .standard, completion: @escaping (Swift.Result<Sfiora.NfcTagSnapshot, Sfiora.NfcError>) -> Swift.Void)
+  final public func startWrite(message: Sfiora.NdefMessage, configuration: Sfiora.NfcWriteConfiguration = .standard, completion: @escaping (Swift.Result<Sfiora.NfcWriteResult, Sfiora.NfcError>) -> Swift.Void)
+  final public func startInitialize(message: Sfiora.NdefMessage, marker: Sfiora.NdefExternalType, configuration: Sfiora.NfcWriteConfiguration = .standard, completion: @escaping (Swift.Result<Sfiora.NfcInitializationResult, Sfiora.NfcError>) -> Swift.Void) throws
+  final public func cancelRead()
+  final public func cancelWrite()
+  final public func stop()
+}
+public enum NfcReadMode : Swift.String, Swift.Equatable, Swift.Sendable {
+  case automatic
+  case ndef
+  case discover
+  public init?(rawValue: Swift.String)
+  public typealias RawValue = Swift.String
+  public var rawValue: Swift.String {
+    get
+  }
+}
+public enum NfcPollingTechnology : Swift.String, Swift.Hashable, Swift.Sendable {
+  case iso14443
+  case iso15693
+  case iso18092
+  public init?(rawValue: Swift.String)
+  public typealias RawValue = Swift.String
+  public var rawValue: Swift.String {
+    get
+  }
+}
+public enum NfcConfigurationError : Swift.Error, Swift.Equatable, Foundation.LocalizedError, Swift.Sendable {
+  case invalidTimeout(milliseconds: Swift.Int)
+  case emptyPollingTechnologies
+  case emptyMessage(name: Swift.String)
+  public var errorDescription: Swift.String? {
+    get
+  }
+  public static func == (a: Sfiora.NfcConfigurationError, b: Sfiora.NfcConfigurationError) -> Swift.Bool
+}
+public struct NfcReadConfiguration : Swift.Equatable, Swift.Sendable {
+  public static let minimumTimeoutMilliseconds: Swift.Int
+  public static let maximumTimeoutMilliseconds: Swift.Int
+  public let mode: Sfiora.NfcReadMode
+  public let timeoutMilliseconds: Swift.Int
+  public let pollingTechnologies: Swift.Set<Sfiora.NfcPollingTechnology>
+  public let presentationMessages: Sfiora.NfcReaderPresentationMessages
+  public var alertMessage: Swift.String {
+    get
+  }
+  public var successMessage: Swift.String {
+    get
+  }
+  public var multipleTagsMessage: Swift.String {
+    get
+  }
+  public static let standard: Sfiora.NfcReadConfiguration
+  public init(mode: Sfiora.NfcReadMode = .automatic, timeoutMilliseconds: Swift.Int = 30_000, pollingTechnologies: Swift.Set<Sfiora.NfcPollingTechnology> = [.iso14443, .iso15693], alertMessage: Swift.String = "Hold your iPhone near an NFC tag.", successMessage: Swift.String = "NFC tag read successfully.", multipleTagsMessage: Swift.String = "More than one tag was detected. Present only one tag.") throws
+  public init(mode: Sfiora.NfcReadMode = .automatic, timeoutMilliseconds: Swift.Int = 30_000, pollingTechnologies: Swift.Set<Sfiora.NfcPollingTechnology> = [.iso14443, .iso15693], presentationMessages: Sfiora.NfcReaderPresentationMessages) throws
+  public static func == (a: Sfiora.NfcReadConfiguration, b: Sfiora.NfcReadConfiguration) -> Swift.Bool
+}
+public struct NfcWriteConfiguration : Swift.Equatable, Swift.Sendable {
+  public let timeoutMilliseconds: Swift.Int
+  public let presentationMessages: Sfiora.NfcWriterPresentationMessages
+  public var alertMessage: Swift.String {
+    get
+  }
+  public var successMessage: Swift.String {
+    get
+  }
+  public var multipleTagsMessage: Swift.String {
+    get
+  }
+  public static let standard: Sfiora.NfcWriteConfiguration
+  public init(timeoutMilliseconds: Swift.Int = 30_000, alertMessage: Swift.String = "Hold your iPhone near the NFC tag to write.", successMessage: Swift.String = "NFC tag written and verified.", multipleTagsMessage: Swift.String = "More than one tag was detected. Present only one tag.") throws
+  public init(timeoutMilliseconds: Swift.Int = 30_000, presentationMessages: Sfiora.NfcWriterPresentationMessages) throws
+  public static func == (a: Sfiora.NfcWriteConfiguration, b: Sfiora.NfcWriteConfiguration) -> Swift.Bool
+}
+public enum NfcErrorCode : Swift.String, Swift.Equatable, Swift.Sendable {
+  case nfcUnsupported
+  case nfcDisabled
+  case scanBusy
+  case writeBusy
+  case userCancelled
+  case scanTimeout
+  case writeTimeout
+  case sessionCloseTimeout
+  case presentationTimeout
+  case tagLost
+  case unsupportedTag
+  case readFailed
+  case tagReadOnly
+  case ndefCapacityExceeded
+  case writeFailed
+  case writeVerificationFailed
+  case invalidOptions
+  case internalError
+  public init?(rawValue: Swift.String)
+  public typealias RawValue = Swift.String
+  public var rawValue: Swift.String {
+    get
+  }
+}
+public struct NfcNativeError : Swift.Equatable, Swift.Sendable {
+  public let type: Swift.String
+  public let domain: Swift.String
+  public let code: Swift.Int
+  public let message: Swift.String
+  public init(type: Swift.String, domain: Swift.String, code: Swift.Int, message: Swift.String)
+  public init(_ error: any Swift.Error)
+  public var dictionary: [Swift.String : Any] {
+    get
+  }
+  public static func == (a: Sfiora.NfcNativeError, b: Sfiora.NfcNativeError) -> Swift.Bool
+}
+public struct NfcError : Swift.Error, Swift.Equatable, Foundation.LocalizedError, Swift.Sendable {
+  public let code: Sfiora.NfcErrorCode
+  public let message: Swift.String
+  public let recoverable: Swift.Bool
+  public let nativeError: Sfiora.NfcNativeError?
+  public init(code: Sfiora.NfcErrorCode, message: Swift.String, recoverable: Swift.Bool, nativeError: Sfiora.NfcNativeError? = nil)
+  public var errorDescription: Swift.String? {
+    get
+  }
+  public var dictionary: [Swift.String : Any] {
+    get
+  }
+  public static func == (a: Sfiora.NfcError, b: Sfiora.NfcError) -> Swift.Bool
+}
+public struct NfcReaderPresentationMessages : Swift.Equatable, Swift.Sendable {
+  public let instruction: Swift.String
+  public let success: Swift.String
+  public let timeout: Swift.String
+  public let multipleTags: Swift.String
+  public let reading: Swift.String
+  public let tagLost: Swift.String
+  public let unsupportedTag: Swift.String
+  public let readFailed: Swift.String
+  public static let standard: Sfiora.NfcReaderPresentationMessages
+  public init(instruction: Swift.String, success: Swift.String, timeout: Swift.String, multipleTags: Swift.String, reading: Swift.String, tagLost: Swift.String, unsupportedTag: Swift.String, readFailed: Swift.String)
+  public static func == (a: Sfiora.NfcReaderPresentationMessages, b: Sfiora.NfcReaderPresentationMessages) -> Swift.Bool
+}
+public struct NfcWriterPresentationMessages : Swift.Equatable, Swift.Sendable {
+  public let instruction: Swift.String
+  public let success: Swift.String
+  public let timeout: Swift.String
+  public let multipleTags: Swift.String
+  public let checking: Swift.String
+  public let writing: Swift.String
+  public let verifying: Swift.String
+  public let tagLost: Swift.String
+  public let tagReadOnly: Swift.String
+  public let capacityExceeded: Swift.String
+  public let unsupportedTag: Swift.String
+  public let writeFailed: Swift.String
+  public let verificationFailed: Swift.String
+  public static let standard: Sfiora.NfcWriterPresentationMessages
+  public init(instruction: Swift.String, success: Swift.String, timeout: Swift.String, multipleTags: Swift.String, checking: Swift.String, writing: Swift.String, verifying: Swift.String, tagLost: Swift.String, tagReadOnly: Swift.String, capacityExceeded: Swift.String, unsupportedTag: Swift.String, writeFailed: Swift.String, verificationFailed: Swift.String)
+  public static func == (a: Sfiora.NfcWriterPresentationMessages, b: Sfiora.NfcWriterPresentationMessages) -> Swift.Bool
+}
+public struct NfcWriteResult : Swift.Equatable, Swift.Sendable {
+  public let tag: Sfiora.NfcTagSnapshot
+  public let message: Sfiora.NdefMessage
+  public let completedAtEpochMilliseconds: Swift.Int64
+  public var verified: Swift.Bool {
+    get
+  }
+  public var bytesWritten: Swift.Int {
+    get
+  }
+  public var recordCount: Swift.Int {
+    get
+  }
+  public var dictionary: [Swift.String : Any] {
+    get
+  }
+  public func jsonData(prettyPrinted: Swift.Bool = false) throws -> Foundation.Data
+  public func jsonString(prettyPrinted: Swift.Bool = false) throws -> Swift.String
+  public static func == (a: Sfiora.NfcWriteResult, b: Sfiora.NfcWriteResult) -> Swift.Bool
+}
+public enum NfcInitializationAction : Swift.String, Swift.Equatable, Swift.Sendable {
+  case preserved
+  case initialized
+  public init?(rawValue: Swift.String)
+  public typealias RawValue = Swift.String
+  public var rawValue: Swift.String {
+    get
+  }
+}
+public struct NfcInitializationResult : Swift.Equatable, Swift.Sendable {
+  public let action: Sfiora.NfcInitializationAction
+  public let marker: Sfiora.NdefExternalType
+  public let tag: Sfiora.NfcTagSnapshot
+  public let writtenMessage: Sfiora.NdefMessage?
+  public let completedAtEpochMilliseconds: Swift.Int64
+  public var verified: Swift.Bool {
+    get
+  }
+  public var bytesWritten: Swift.Int {
+    get
+  }
+  public var recordCount: Swift.Int {
+    get
+  }
+  public var dictionary: [Swift.String : Any] {
+    get
+  }
+  public func jsonData(prettyPrinted: Swift.Bool = false) throws -> Foundation.Data
+  public func jsonString(prettyPrinted: Swift.Bool = false) throws -> Swift.String
+  public static func == (a: Sfiora.NfcInitializationResult, b: Sfiora.NfcInitializationResult) -> Swift.Bool
+}
+public enum NfcTechnology : Swift.String, Swift.Equatable, Swift.Hashable, Swift.Sendable {
+  case nfcA
+  case nfcB
+  case nfcF
+  case nfcV
+  case isoDep
+  case iso7816
+  case iso15693
+  case mifare
+  case mifareClassic
+  case mifareUltralight
+  case mifarePlus
+  case mifareDesfire
+  case mifareUnknown
+  case felica
+  case ndef
+  case ndefFormatable
+  case nfcBarcode
+  case unknown
+  public init?(rawValue: Swift.String)
+  public typealias RawValue = Swift.String
+  public var rawValue: Swift.String {
+    get
+  }
+}
+public enum NfcNdefStatus : Swift.String, Swift.Equatable, Swift.Sendable {
+  case notChecked
+  case notSupported
+  case readOnly
+  case readWrite
+  case read
+  case readError
+  case unknown
+  public init?(rawValue: Swift.String)
+  public typealias RawValue = Swift.String
+  public var rawValue: Swift.String {
+    get
+  }
+}
+public enum NfcTagSnapshotError : Swift.Error, Swift.Equatable, Swift.Sendable {
+  case invalidBridgeValue
+  case stringEncodingFailed
+  public static func == (a: Sfiora.NfcTagSnapshotError, b: Sfiora.NfcTagSnapshotError) -> Swift.Bool
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+public struct NfcTagSnapshot : Swift.Equatable, Swift.Sendable {
+  public static let schemaVersion: Swift.Int
+  public let identifier: Foundation.Data?
+  public let technologies: [Sfiora.NfcTechnology]
+  public let nativeTechnologies: [Swift.String]
+  public let ndefStatus: Sfiora.NfcNdefStatus
+  public let ndefAccessStatus: Sfiora.NfcNdefStatus?
+  public let ndefCapacityBytes: Swift.Int?
+  public let ndefWritable: Swift.Bool?
+  public let ndefCanMakeReadOnly: Swift.Bool?
+  public let ndefType: Swift.String?
+  public let ndefMessage: Sfiora.NdefMessage?
+  public let ndefReadError: Sfiora.NfcNativeError?
+  public let warnings: [Swift.String]
+  public let discoveredAtEpochMilliseconds: Swift.Int64
+  public var dictionary: [Swift.String : Any] {
+    get
+  }
+  public func jsonData(prettyPrinted: Swift.Bool = false) throws -> Foundation.Data
+  public func jsonString(prettyPrinted: Swift.Bool = false) throws -> Swift.String
+  public static func == (a: Sfiora.NfcTagSnapshot, b: Sfiora.NfcTagSnapshot) -> Swift.Bool
+}
+extension Sfiora.NdefTypeNameFormat : Swift.Equatable {}
+extension Sfiora.NdefTypeNameFormat : Swift.Hashable {}
+extension Sfiora.NdefTypeNameFormat : Swift.RawRepresentable {}
+extension Sfiora.NdefTextEncoding : Swift.Equatable {}
+extension Sfiora.NdefTextEncoding : Swift.Hashable {}
+extension Sfiora.NdefTextEncoding : Swift.RawRepresentable {}
+extension Sfiora.NfcFeature : Swift.Hashable {}
+extension Sfiora.NfcFeature : Swift.RawRepresentable {}
+extension Sfiora.NfcClientState : Swift.Hashable {}
+extension Sfiora.NfcClientState : Swift.RawRepresentable {}
+extension Sfiora.NfcReadMode : Swift.Hashable {}
+extension Sfiora.NfcReadMode : Swift.RawRepresentable {}
+extension Sfiora.NfcPollingTechnology : Swift.RawRepresentable {}
+extension Sfiora.NfcErrorCode : Swift.Hashable {}
+extension Sfiora.NfcErrorCode : Swift.RawRepresentable {}
+extension Sfiora.NfcInitializationAction : Swift.Hashable {}
+extension Sfiora.NfcInitializationAction : Swift.RawRepresentable {}
+extension Sfiora.NfcTechnology : Swift.RawRepresentable {}
+extension Sfiora.NfcNdefStatus : Swift.Hashable {}
+extension Sfiora.NfcNdefStatus : Swift.RawRepresentable {}
+extension Sfiora.NfcTagSnapshotError : Swift.Hashable {}

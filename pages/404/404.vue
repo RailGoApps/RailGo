@@ -46,7 +46,8 @@
 				videoUrls: [
 					"//player.bilibili.com/player.html?isOutside=true&aid=112892259142606&bvid=BV1xNi3edEj7&cid=500001636041729&p=1",
 					"//player.bilibili.com/player.html?isOutside=true&aid=525793456&bvid=BV1RM411s78B&cid=1050085824&p=1",
-					"//player.bilibili.com/player.html?isOutside=true&aid=853706936&bvid=BV1vL4y1c7EL&cid=711536979&p=1"
+					"//player.bilibili.com/player.html?isOutside=true&aid=853706936&bvid=BV1vL4y1c7EL&cid=711536979&p=1",
+					"//player.bilibili.com/player.html?isOutside=true&aid=117277471021133&bvid=BV1HXex6aEWP&cid=41924363069&p=1"
 				],
 				randomVideoUrl: "",
 				videoStyle: {},

@@ -1,0 +1,128 @@
+import { InvokeSfioraNative } from './interface.uts'
+
+// UTS Error.code is numeric on iOS; preserve our string code in a Promise rejection value.
+export class SfioraError {
+  name: string = 'SfioraError'
+  code: string = 'INTERNAL_ERROR'
+  message: string = 'The NFC operation failed'
+  recoverable: boolean = false
+  nativeError: UTSJSONObject | null = null
+
+  constructor(payload: UTSJSONObject) {
+    this.code = payload.getString('code') ?? 'INTERNAL_ERROR'
+    this.message = payload.getString('message') ?? 'The NFC operation failed'
+    this.recoverable = payload.getBoolean('recoverable') ?? false
+    this.nativeError = payload.getJSON('nativeError')
+  }
+}
+
+function invalidResponse(): SfioraError {
+  return new SfioraError({
+    code: 'INTERNAL_ERROR', message: 'The native NFC bridge returned an invalid response', recoverable: false,
+  })
+}
+
+function invoke(transport: InvokeSfioraNative, method: string, json: string | null): Promise<UTSJSONObject> {
+  return new Promise<UTSJSONObject>((resolve, reject) => {
+    if (json == null) {
+      reject(new SfioraError({ code: 'INVALID_OPTIONS', message: 'NFC arguments must be JSON values', recoverable: true }))
+      return
+    }
+    transport(method, json!, (resultJson: string) => {
+      const result = JSON.parseObject(resultJson)
+      if (result == null) {
+        reject(invalidResponse())
+        return
+      }
+      const response = result!
+      if (response.getBoolean('ok') == true) {
+        resolve(response)
+        return
+      }
+      const error = response.getJSON('error')
+      reject(error == null ? invalidResponse() : new SfioraError(error!))
+    })
+  })
+}
+
+export function invokeObject(transport: InvokeSfioraNative, method: string, args: UTSJSONObject[]): Promise<UTSJSONObject> {
+  return objectResult(invoke(transport, method, JSON.stringify(args)))
+}
+
+export function invokeOwner(transport: InvokeSfioraNative, method: string, ownerId: string): Promise<UTSJSONObject> {
+  return objectResult(invoke(transport, method, JSON.stringify([ownerId])))
+}
+
+function objectResult(result: Promise<UTSJSONObject>): Promise<UTSJSONObject> {
+  return result.then((envelope: UTSJSONObject): Promise<UTSJSONObject> => {
+    return new Promise<UTSJSONObject>((resolve, reject) => {
+      const data = envelope.getJSON('data')
+      if (data == null) {
+        reject(invalidResponse())
+        return
+      }
+      resolve(data!)
+    })
+  })
+}
+
+export function invokeBoolean(transport: InvokeSfioraNative, method: string): Promise<boolean> {
+  return invoke(transport, method, '[]').then((envelope: UTSJSONObject): Promise<boolean> => {
+    return new Promise<boolean>((resolve, reject) => {
+      const data = envelope.getBoolean('data')
+      if (data == null) {
+        reject(invalidResponse())
+        return
+      }
+      resolve(data!)
+    })
+  })
+}
+
+export function invokeVoid(transport: InvokeSfioraNative, method: string, args: UTSJSONObject[] = []): Promise<void> {
+  return invoke(transport, method, JSON.stringify(args)).then((_envelope: UTSJSONObject): void => {})
+}
+
+export function waitForNativeIdle(transport: InvokeSfioraNative, options?: UTSJSONObject): Promise<void> {
+  const configured = options?.getNumber('timeoutMilliseconds')
+  const timeout = configured ?? 5000
+  const hasTimeout = options != null && UTSJSONObject.keys(options!).indexOf('timeoutMilliseconds') >= 0
+  if ((hasTimeout && configured == null) || !Number.isFinite(timeout) || Math.floor(timeout) != timeout || timeout < 1 || timeout > 60000) {
+    return new Promise<void>((_resolve, reject) => {
+      reject(new SfioraError({
+        code: 'INVALID_OPTIONS', message: 'timeoutMilliseconds must be an integer from 1 to 60000', recoverable: true,
+      }))
+    })
+  }
+  return new Promise<boolean>((resolve, reject) => {
+    let settled = false
+    let pollTimer: number | null = null
+    let deadlineTimer: number | null = null
+    function finish(error: any | null): void {
+      if (settled) return
+      settled = true
+      if (deadlineTimer != null) clearTimeout(deadlineTimer!)
+      if (pollTimer != null) clearTimeout(pollTimer!)
+      if (error != null) reject(error)
+      else resolve(true)
+    }
+    function poll(): void {
+      invokeBoolean(transport, 'isScanning').then((scanning: boolean): void => {
+        if (settled) return
+        invokeBoolean(transport, 'isWriting').then((writing: boolean): void => {
+          if (settled) return
+          if (!scanning && !writing) finish(null)
+          else pollTimer = setTimeout(() => { poll() }, 50)
+        }).catch((error: any | null): void => { finish(error ?? invalidResponse()) })
+      }).catch((error: any | null): void => { finish(error ?? invalidResponse()) })
+    }
+    deadlineTimer = setTimeout(() => {
+      finish(new SfioraError({
+        code: 'SESSION_CLOSE_TIMEOUT',
+        message: 'NFC did not become idle before the wait deadline; its session may still be active',
+        recoverable: true,
+      }))
+    }, timeout.toInt())
+    poll()
+  }).then((_idle: boolean): void => {})
+}

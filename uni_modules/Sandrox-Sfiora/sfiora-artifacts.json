@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "version": "1.2.0",
+  "nativeArtifacts": {
+    "android": {
+      "sfiora.aar": "d3a8cf768b52b60627f464c75dc645bbda131ff740f83b61fd32dfb0dfbf6948",
+      "sfiora-ui.aar": "5731f704b70e13d56f66882a8a56f7558ea994cc75c2b95f1b553161f9fc2887",
+      "sfiora-bridge-support.aar": "b2bea803e50f131d1f9cf96f9ddfa29a7bdb10615dcf4cd66a6f35ba83a4c229"
+    },
+    "ios": {
+      "sfiora.xcframework.zip": "2a32af45a14029d7b25c9245f6cac878802a13177870436569b4661eeb4bb8b8"
+    }
+  }
+}
