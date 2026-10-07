@@ -14,25 +14,37 @@
 
 	<application>
 		<!--
-			DCloud 规定：带 data/extras 的 Intent 启动 io.dcloud.PandoraEntry
-			（NFC NDEF/scheme 调起即属此场景）必须声明该 activity-alias，否则运行时
+			DCloud 规定：用带 data/extras 的 Intent 直接启动 io.dcloud.PandoraEntry
+			（NFC NDEF 调起即属此场景）必须声明该 activity-alias，否则运行时
 			IllegalStateException "you must have io.dcloud.PandoraEntry.Activity alias" 崩溃。
-			manifest.json 的 "schemes":"railgo" 生成的 URL-scheme 过滤器挂在 PandoraEntry 上，
-			标签 URI 调起统一由它接收，App.vue onShow 里已有 railgo:// 深链路由。
+
+			⚠️ NDEF_DISCOVERED 过滤器必须挂在这个 alias 上：
+			manifest.json 的 schemes 只生成 VIEW+BROWSABLE，而 Android 后台标签分发
+			只按 NDEF_DISCOVERED→TECH→TAG→AAR 顺序匹配，VIEW 过滤器不参与；
+			没有 NDEF 过滤器时标签只能靠 AAR 兜底"裸启动"进 App 主页（丢失页面路由）。
+			加上本过滤器后，railgo://页面?参数 直达 PandoraEntry → plus.runtime.arguments
+			→ App.vue onShow 深链路由。alias 此前已声明，不存在双重匹配/选择框问题。
 		-->
 		<activity-alias
 			android:name="io.dcloud.PandoraEntry.Activity"
 			android:targetActivity="io.dcloud.PandoraEntry"
-			android:exported="true" />
+			android:exported="true">
+			<intent-filter>
+				<action android:name="android.nfc.action.NDEF_DISCOVERED" />
+				<category android:name="android.intent.category.DEFAULT" />
+				<data android:scheme="railgo" />
+			</intent-filter>
+		</activity-alias>
 
 		<!--
 			前台扫描接收器：enableForegroundDispatch 的 PendingIntent.getBroadcast 目标。
+			⚠️ 类由 NfcTagReceiver.kt 原生混编实现（包名 com.railgo.nfc）：
+			.uts 二级文件里的 class 会被 uni-app 云打包合并编译静默丢弃，组件类不能写在 .uts。
 			exported=false：只接自家 PendingIntent 的显式广播；系统 NFC 分发不会直达
-			该接收器（Android 也不允许后台 NFC 分发给 receiver），因此不需要、也不能
-			声明任何 NFC intent-filter。类名对应 UTS 编译包名 uts.sdk.modules.railgoNfc。
+			receiver（Android 机制），因此不需要、也不能声明任何 NFC intent-filter。
 		-->
 		<receiver
-			android:name="uts.sdk.modules.railgoNfc.NfcTagReceiver"
+			android:name="com.railgo.nfc.NfcTagReceiver"
 			android:exported="false" />
 	</application>
 </manifest>

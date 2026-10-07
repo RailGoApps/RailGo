@@ -47,6 +47,19 @@
 				nowIcon: uni.getStorageSync("nowIcon") || 'crh',
 				updateLogs: [
 					{
+						version: "v2.0.7 (20007)",
+						date: "2026-10-07",
+						items: [
+							"Feature: 部分页面支持NFC碰一碰查询",
+							"Changed: 车站车次列表、大屏换新API",
+							"Feature: 支持显示车站服务提供情况",
+							"Feature: 支持骨架屏、更好的加载动画",
+							"Feature: 车次页正晚点大小卡切换",
+							"Fixed: 一些已知问题"
+							
+						]
+					},
+					{
 						version: "v2.0.6 (20006)",
 						date: "2026-09-12",
 						items: [

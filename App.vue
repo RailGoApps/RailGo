@@ -1,7 +1,7 @@
 <script>
 	const nauth = false;
-	const version = "2.0.6 Build 20006"
-	const version_number = 30
+	const version = "2.0.7 Build 20007"
+	const version_number = 31
 	import {uniGet, fetchServiceEndpoints, applyFirstServiceSources} from "./scripts/req";
 	// #ifndef H5
 	// #ifndef APP-HARMONY
@@ -156,6 +156,71 @@
 	    const day = String(now.getDate()).padStart(2, '0');
 	    return `${year}${month}${day}`;
 	}
+
+	// Url Scheme 深链处理（冷启动经 onShow 延迟读、热启动经 newintent 事件读；
+	// 注意：plus.runtime.arguments 单赋值 '' 清空会导致属性永久为空（社区实测），
+	// 必须 null→'' 双重置；onShow 时机可能早于 DCloud 更新 arguments，故延迟读取）
+	function clearSchemeArguments() {
+		// #ifdef APP
+		try {
+			plus.runtime.arguments = null;
+			plus.runtime.arguments = '';
+		} catch (e) { }
+		// #endif
+	}
+
+	function processUrlScheme(source) {
+		// #ifdef APP
+		const urlScheme = plus.runtime.arguments;
+		if (!urlScheme) return;
+		const schemeRegex = /^railgo:\/\/([^\?]+)(\??.*)$/i;
+		const match = urlScheme.match(schemeRegex);
+		console.log('[scheme] from ' + source + ':', urlScheme)
+		if (match) {
+			let pagePath = match[1]; // /pages/train/trainResult
+			let queryString = match[2]; // ?keyword=G1&date=20251125 或 空字符串
+
+			// 1. 检查 'date' 参数是否存在
+			const hasDate = queryString.includes('date=');
+
+			if (!hasDate) {
+				// 2. 如果不存在，获取当前日期并添加
+				const todayDate = getTodayDate();
+				const newParam = `date=${todayDate}`;
+
+				if (queryString === '') {
+					// 没有其他参数，直接加参
+					queryString = `?${newParam}`;
+				} else {
+					// 加参
+					queryString = `${queryString}&${newParam}`;
+				}
+
+				console.log("Missing date parameter, added:", newParam);
+			}
+
+			// 构造URL
+			const targetUrl = `/${pagePath}${queryString}`; // uni-app 页面路径需要以 / 开头
+
+			console.log("Target URL for jump:", targetUrl);
+
+			// 清空参数必须在跳转前：防止跳转后新页面触发的 onShow 重复处理
+			clearSchemeArguments();
+
+			// jump
+			uni.reLaunch({
+				url: targetUrl,
+				fail: (res) => {
+					console.error("Url Scheme 跳转失败:", res);
+					uni.reLaunch({ url: '/pages/index/index' });
+				}
+			});
+		} else {
+			console.warn("Url Scheme 格式不符合 'railgo://pagePath' 规范:", urlScheme);
+			clearSchemeArguments();
+		}
+		// #endif
+	}
 	
 	let firstBackTime = 0;
 	export default {
@@ -273,6 +338,13 @@
 				})
 			}
 			// #ifdef APP
+			// 热启动 scheme 调起（App 已在后台被 railgo:// 再次拉起）：
+			// onNewIntent 到达时 plus.runtime.arguments 才更新，onShow 不可靠，官方通道是 newintent 全局事件
+			plus.globalEvent.addEventListener('newintent', function() {
+				setTimeout(function() {
+					processUrlScheme('newintent');
+				}, 200);
+			});
 			if (uni.getStorageSync('mode') == "local") {
 				await loadDB()
 			}
@@ -283,56 +355,10 @@
 		},
 		onShow: function() {
 			// #ifdef APP
-			// 获取 Url Scheme 启动参数
-			const urlScheme = plus.runtime.arguments;
-			
-			if (urlScheme) {				
-				const schemeRegex = /^railgo:\/\/([^\?]+)(\??.*)$/i;
-				const match = urlScheme.match(schemeRegex);
-				
-				if (match) {
-					let pagePath = match[1]; // /pages/train/trainResult
-					let queryString = match[2]; // ?keyword=G1&date=20251125 或 空字符串
-					
-					// 1. 检查 'date' 参数是否存在
-					const hasDate = queryString.includes('date=');
-					
-					if (!hasDate) {
-						// 2. 如果不存在，获取当前日期并添加
-						const todayDate = getTodayDate();
-						const newParam = `date=${todayDate}`;
-						
-						if (queryString === '') {
-							// 没有其他参数，直接加参
-							queryString = `?${newParam}`;
-						} else {
-							// 加参
-							queryString = `${queryString}&${newParam}`;
-						}
-						
-						console.log("Missing date parameter, added:", newParam);
-					}
-					
-					// 构造URL
-					const targetUrl = `/${pagePath}${queryString}`; // uni-app 页面路径需要以 / 开头
-					
-					console.log("Target URL for jump:", targetUrl);
-					
-					// jump
-					uni.reLaunch({
-						url: targetUrl,
-						fail: (res) => {
-							console.error("Url Scheme 跳转失败:", res);
-							uni.reLaunch({ url: '/pages/index/index' });
-						}
-					});
-				} else {
-					console.warn("Url Scheme 格式不符合 'railgo://pagePath' 规范:", urlScheme);
-				}
-				
-				// 清空参数，防止 App 从后台激活时重复处理旧参数
-				plus.runtime.arguments = '';
-			}
+			// 冷启动/回前台的 Url Scheme 处理；延迟读取以避开 DCloud 更新 arguments 的时序
+			setTimeout(function() {
+				processUrlScheme('onShow');
+			}, 300);
 			// #endif
 			
 			// 检查是否需要显示更新欢迎弹窗（移出APP条件编译）

@@ -14,12 +14,12 @@ uni_modules/railgo-nfc/
     ├── interface.uts            # 跨端类型、错误码、NDEF/T2T 纯逻辑（三端共用编解码）
     ├── app-android/
     │   ├── index.uts            # 对外 API 入口（NfcAdapter 前台分发 + T2T 逐页读写）
-    │   ├── tag-core.uts         # 标签解析 + 发现队列（共享核心）
-    │   ├── NfcTagReceiver.uts   # 前台扫描标签广播接收器（Sfiora 同款模式）；
-    │   │                        # ⚠️ 依赖必须单向 index → 其他文件，二级文件 import './index.uts'
-    │   │                        # 会形成循环被编译器静默丢弃 → dex 缺类崩溃
+    │   ├── tag-core.uts         # 标签解析（共享 UTS 函数）
+    │   ├── NfcTagReceiver.kt    # 前台扫描接收器 + Tag 队列（包名 com.railgo.nfc）。
+    │   │                        # ⚠️ uni-app 云打包把插件所有 .uts 合并成单个 index.kt，
+    │   │                        # .uts 二级文件里的 class 会被静默丢弃 → manifest 组件类必须用 .kt 混编
     │   ├── config.json          # minSdkVersion 21
-    │   └── AndroidManifest.xml  # NFC 权限 + PandoraEntry.Activity alias + NfcTagReceiver（无 intent-filter）
+    │   └── AndroidManifest.xml  # NFC 权限 + PandoraEntry.Activity alias + com.railgo.nfc.NfcTagReceiver（无 intent-filter）
     ├── app-ios/
     │   ├── index.uts            # CoreNFC NFCNDEFReaderSession
     │   ├── config.json          # frameworks: CoreNFC, target 13
@@ -44,7 +44,7 @@ uni_modules/railgo-nfc/
 | `onError(cb)` / `offError()` | ⚠️ 空实现（已停用） |
 | `onScanStopped(cb)` / `offScanStopped()` | ⚠️ 空实现（已停用） |
 | `hasStartupTag(): boolean` | 队列中是否有已发现的标签（**轮询判据**，boolean 跨桥可靠） |
-| `takeStartupTag(): NfcTagInfo \| null` | 消费冷启动/离屏时读到的标签（调起场景）；须先判 `hasStartupTag()`，并对 `t.uid` 二次校验 |
+| `takeStartupTag(): NfcTagInfo \| null` | 消费接收器收到的标签；**轻量解析**（仅 uid/techList，不建 RF 会话，保持 Tag 可写）；须先判 `hasStartupTag()`，并对 `t.uid` 二次校验 |
 | `getLastTag(): NfcTagInfo \| null` | 最近一次发现的标签 |
 | `writeNdef(records, options?)` | 写多条记录；`options.formatBlank` 默认 true。`success/fail` 在本次调用栈内同步触发，**安全可用** |
 | `writeUri(uri, options?)` | 只写一条 URI 记录的便捷方法 |
@@ -103,20 +103,17 @@ nfc.writeNdef([
   fail: (code, msg) => uni.showToast({ title: `失败 ${code}`, icon: 'none' })
 })
 
-// 冷启动调起：App.vue onLaunch/onShow 中
-if (nfc.hasStartupTag()) {
-  const startup = nfc.takeStartupTag()   // Android 有效；iOS 恒为 null
-}
+// 调起场景：railgo:// scheme 深链走 App.vue onShow 的 plus.runtime.arguments 路由（不经插件队列）
 ```
 
 ## NFC 标签调起 App
 
 ### Android
 1. **AAR**：写入 `aarRecord(包名)`（组件端写标签时自动附带，包名来自 `getPackageName()`）。标签含 AAR 时系统把调起限定到该包 → **贴标直跳 App，不弹"选择应用"**（未安装则无动作）。前提：亮屏（非锁屏界面）+ NFC 开启。
-2. **URI 调起链路（当前架构）**：标签 URI 记录 `railgo://页面路径?参数` 由 **manifest.json 的 `app-plus.distribute.android.schemes`（已配 `railgo`）生成的 PandoraEntry 过滤器**接收；插件 AndroidManifest 为 DCloud 要求的 `io.dcloud.PandoraEntry.Activity` activity-alias 补声明（缺失会 IllegalStateException 崩溃）。深链路由在 App.vue onShow 的 `plus.runtime.arguments` 解析中完成。
-3. **前台扫描**：`enableForegroundDispatch` 的 `PendingIntent.getBroadcast` 指向 `NfcTagReceiver`（`exported=false`、**不声明任何 NFC intent-filter**）。标签以显式广播送达现有 App 进程，不起新 Activity；系统 NFC 后台分发不会直达 receiver（Android 机制），调起场景统一走上面 1/2 的 Activity 链路。
+2. **URI 调起链路（当前架构）**：标签 URI 记录 `railgo://页面路径?参数` 由插件 AndroidManifest 中 **`io.dcloud.PandoraEntry.Activity` activity-alias 上的 `NDEF_DISCOVERED`（scheme=railgo）过滤器**接收。⚠️ manifest.json 的 `schemes` 只生成 VIEW+BROWSABLE 过滤器，Android 后台标签分发（NDEF→TECH→TAG→AAR）不匹配 VIEW——缺 NDEF_DISCOVERED 过滤器时只会靠 AAR 兜底"裸启动"进主页，页面参数丢失。alias 本体也必须存在（缺失 IllegalStateException 崩溃）。深链路由在 App.vue onShow 的 `plus.runtime.arguments` 解析中完成。
+3. **前台扫描**：`enableForegroundDispatch` 的 `PendingIntent.getBroadcast` 指向 `com.railgo.nfc.NfcTagReceiver`（.kt 混编类，`exported=false`、无 NFC intent-filter）。接收器只把原始 Tag 入静态队列；`takeStartupTag()` 出队并在 JS 调用栈内解析。
 4. 注意：Android 16+ 含 http/https URI 的标签改走 `ACTION_VIEW`，Android 17+ 需用户点"打开链接"通知（系统策略，自定义 scheme + AAR 不受影响）。
-5. `NfcTagReceiver` 类名对应插件编译包名 `uts.sdk.modules.railgoNfc`（插件 id `railgo-nfc` 驼峰化）。
+5. 组件类包名为 `com.railgo.nfc`（.kt 文件声明），不走 `uts.sdk.modules.railgoNfc`——该包由 UTS 合并编译生成，手写组件类放 .uts 会被丢弃。
 
 ### iOS
 - CoreNFC 无后台标签调起读标签能力（系统仅支持 NDEF 文本类 URI 弹通知）。调起依赖标签首条 URI 记录：自定义 scheme（`myapp://`）或 Universal Link。

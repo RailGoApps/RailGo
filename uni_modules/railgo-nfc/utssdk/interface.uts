@@ -148,11 +148,14 @@ export function bytesToHex(bytes : number[]) : string {
 }
 
 export function hexToBytes(hex : string) : number[] {
+	// 两位一组解析；逐字符解析会把 "04A1" 错拆成 4 个字节
 	const h = hex.toLowerCase();
 	const out : number[] = [];
-	for (const p of h.split('')) {
-		const v = parseInt(p, 16);
-		if (v != null) out.push(v);
+	let i = 0;
+	while (i + 2 <= h.length) {
+		const v = parseInt(h.substring(i, i + 2), 16);
+		if (v != null) out.push(v as number);
+		i += 2;
 	}
 	return out;
 }
@@ -312,9 +315,11 @@ export function decodeTextPayload(payload : number[]) : string[] {
 
 const AAR_TYPE = 'android.com:pkg';
 
-/** 编码单条记录（不做分块；payload<256 用短格式） */
-export function encodeRecordBytes(tnf : number, typeBytes : number[], idBytes : number[], payloadBytes : number[]) : number[] {
+/** 编码单条记录（不做分块；payload<256 用短格式）。first/last 置 MB(0x80)/ME(0x40) 标志位，缺失会导致 Android NdefMessage 解析异常 */
+export function encodeRecordBytes(tnf : number, typeBytes : number[], idBytes : number[], payloadBytes : number[], first : boolean, last : boolean) : number[] {
 	let header = tnf & 0x07;
+	if (first) header |= 0x80;
+	if (last) header |= 0x40;
 	if (idBytes.length > 0) header |= 0x08;
 	const shortRecord = payloadBytes.length < 0x100;
 	if (shortRecord) header |= 0x10;
@@ -334,31 +339,47 @@ export function encodeRecordBytes(tnf : number, typeBytes : number[], idBytes : 
 }
 
 /** 由写入参数构建一条记录的原始字节 */
-export function specToRecordBytes(spec : NdefRecordSpec) : number[] {
+export function specToRecordBytes(spec : NdefRecordSpec, first : boolean, last : boolean) : number[] {
 	const specId = spec.id;
 	const idBytes = (specId != null && (specId as string).length > 0) ? hexToBytes(specId as string) : ([] as number[]);
 	const type = spec.type;
 	if (type == 'uri') {
-		return encodeRecordBytes(1, [0x55], idBytes, encodeUriPayload(spec.uri ?? ''));
+		return encodeRecordBytes(1, [0x55], idBytes, encodeUriPayload(spec.uri ?? ''), first, last);
 	}
 	if (type == 'text') {
-		return encodeRecordBytes(1, [0x54], idBytes, encodeTextPayload(spec.text ?? '', spec.language ?? 'en'));
+		return encodeRecordBytes(1, [0x54], idBytes, encodeTextPayload(spec.text ?? '', spec.language ?? 'en'), first, last);
 	}
 	if (type == 'aar') {
-		return encodeRecordBytes(4, utf8Encode(AAR_TYPE), idBytes, utf8Encode(spec.packageName ?? ''));
+		return encodeRecordBytes(4, utf8Encode(AAR_TYPE), idBytes, utf8Encode(spec.packageName ?? ''), first, last);
 	}
 	return ([] as number[]);
 }
 
-/** 构建 NDEF 消息字节（不含 TLV 框架） */
+/** 构建 NDEF 消息字节（不含 TLV 框架）：MB 置在真正的首条、ME 置在真正的末条（单条时同置） */
 export function buildMessageBytes(specs : NdefRecordSpec[]) : number[] {
-	const out : number[] = [];
+	const parts : number[][] = [];
 	for (let i = 0; i < specs.length; i++) {
 		const spec = specs[i];
 		if (spec == null) continue;
-		const r = specToRecordBytes(spec);
+		const r = specToRecordBytes(spec, false, false);
+		if (r.length == 0) continue;
+		parts.push(r);
+	}
+	const out : number[] = [];
+	const n = parts.length;
+	for (let a = 0; a < n; a++) {
+		const rObj = parts[a];
+		if (rObj == null) continue;
+		const r = rObj as number[];
 		for (let k = 0; k < r.length; k++) {
-			out.push(at(r, k));
+			if (k == 0) {
+				let h = at(r, 0) & 0xFF;
+				if (a == 0) h |= 0x80;
+				if (a == n - 1) h |= 0x40;
+				out.push(h);
+			} else {
+				out.push(at(r, k));
+			}
 		}
 	}
 	return out;

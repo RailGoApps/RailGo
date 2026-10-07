@@ -2,15 +2,15 @@
  * railgo-nfc Android 实现（对外 API 入口）
  *
  * 文件结构（依赖严格单向，index → 其他文件）：
- * - index.uts           对外 API（本文件）
- * - tag-core.uts        标签解析 + 发现队列（共享核心）
- * - NfcTagReceiver.uts  前台扫描标签广播接收器（manifest 声明的组件类）
- * ⚠️ 其他文件绝不能 import './index.uts'：与入口循环会导致该文件被云打包编译器
- *    静默丢弃 → classes.dex 缺类 → ClassNotFoundException 崩溃（实测验证）。
+ * - index.uts            对外 API（本文件）
+ * - tag-core.uts         标签解析（共享 UTS 函数）
+ * - NfcTagReceiver.kt    标签广播接收器 + 原生 Tag 队列（.kt 混编，官方支持方式）
+ * ⚠️ manifest 声明的组件类必须写在 .kt：uni-app 云打包把插件所有 .uts 合并成单个
+ *    index.kt，.uts 二级文件里的 class 会被静默丢弃（实测 dex 只有 IndexKt）→ CNF 崩溃。
  *
  * 扫描机制（参照 Sfiora 成品插件架构）：enableForegroundDispatch +
- * PendingIntent.getBroadcast 指向本插件的 NfcTagReceiver；标签 Intent 以广播形式
- * 在现有 App 进程内送达，不起新 Activity、不需要在原生层反调 JS。
+ * PendingIntent.getBroadcast 指向 NfcTagReceiver.kt；标签以显式广播送达现有 App 进程，
+ * 接收器只把 Tag 入静态队列，解析/写入全部在 JS 轮询发起的调用栈内完成。
  * 标签调起 App：由 manifest.json 的 railgo:// scheme（挂在 PandoraEntry）+ 标签内
  * AAR/URI 记录完成，与本插件的前台扫描链路无关。
  *
@@ -22,7 +22,7 @@
  * - Ndef.getMaxSupportedSize()/maxSupportedSize 两种写法均不可用，容量按 NTAG 型号推算；
  * - 目标组件用 Intent().setClassName(pkg, cls)（规避 ComponentName/Class.forName）；
  * - 传给原生 Int 参数用 .toInt()（readPages/writePage/flags 已验证可行）；
- * - 原生组件子类（Activity 等）必须独立 .uts 文件 + constructor(){super()}，不得写在 index.uts；
+ * - 原生组件类只能写在 .kt 混编文件（.uts 里任何位置的 class 声明都不会进 dex，见上）；
  * - Charsets/joinToString 来自 Kotlin 默认导入（kotlin.text），不要显式 import。
  */
 import Activity from 'android.app.Activity'
@@ -34,22 +34,20 @@ import Tag from 'android.nfc.Tag'
 import Ndef from 'android.nfc.tech.Ndef'
 import NdefFormatable from 'android.nfc.tech.NdefFormatable'
 import NfcA from 'android.nfc.tech.NfcA'
-import MifareUltralight from 'android.nfc.tech.MifareUltralight'
 import NdefMessage from 'android.nfc.NdefMessage'
 import {
 	ERR_NOT_SUPPORT, ERR_NFC_DISABLED, ERR_NO_TAG, ERR_NOT_FORMATTED,
 	ERR_READONLY, ERR_NOT_ENOUGH_SPACE, ERR_WRITE_FAILED,
 	ERR_INVALID_PARAM,
 	NfcStatusInfo, NfcTagInfo, NdefRecordSpec, StartScanOptions, WriteOptions,
-	NtagModel, at, sliceBytes, buildMessageBytes,
+	at, sliceBytes, buildMessageBytes, modelFromGetVersion,
 	buildT2tUserArea, buildCcPage, T2T_USER_START_PAGE
 } from '../interface.uts'
 import {
-	kb2n, n2kb, readVersionModel, tagToInfo,
-	hasPendingStartup, consumeStartupInfo, peekWriteTag, lastInfo, setLastInfo
+	kb2n, n2kb, tagToBasicInfo, lastInfo, setLastInfo
 } from './tag-core.uts'
-// 引用标签广播接收器文件的导出：既取组件类名，也强制该文件进入编译图（dex 才会包含该类）
-import { tagReceiverName } from './NfcTagReceiver.uts'
+// 原生混编：manifest 声明的接收器类（含静态 Tag 队列）在 NfcTagReceiver.kt
+import { NfcTagReceiver } from 'com.railgo.nfc'
 
 /* ==================== 模块状态 ==================== */
 
@@ -59,7 +57,7 @@ import { tagReceiverName } from './NfcTagReceiver.uts'
 // 发现事件走队列 + 轮询消费；仅 writeNdef 的 success/fail 在同一 JS 调用栈内同步触发，安全。
 let gScanning = false
 
-const TAG_RECEIVER = tagReceiverName()
+const TAG_RECEIVER = 'com.railgo.nfc.NfcTagReceiver'
 
 function emitError(code : number, message : string) {
 	// 只打日志；错误对外通过 writeNdef 的 fail 回调（同调用栈）或返回值传递
@@ -122,7 +120,8 @@ export function startScan(options : StartScanOptions | null) : boolean {
 		emitError(ERR_NFC_DISABLED, 'NFC 未开启，请到系统设置开启')
 		return false
 	}
-	if (gScanning) return true
+	// 注意：不短路 gScanning——enableForegroundDispatch 在 Activity pause 后自动失效，
+	// pause/resume 往返（如跳系统 NFC 设置）后必须重新调用才能恢复分发；重复 enable 幂等。
 	const activity = UTSAndroid.getUniActivity()
 	if (activity == null) {
 		emitError(ERR_INVALID_PARAM, '无法获取前台 Activity')
@@ -156,15 +155,24 @@ export function isScanning() : boolean {
 	return gScanning
 }
 
-/** 队列里是否已有接收到的标签（boolean 跨桥可靠，作为轮询判据；
+/** 队列里是否已有接收器收到的标签（boolean 跨桥可靠，作为轮询判据；
  *  takeStartupTag 空队列时返回 null 经桥可能被误判为非空） */
 export function hasStartupTag() : boolean {
-	return hasPendingStartup()
+	return NfcTagReceiver.hasPending()
 }
 
-/** 消费 NfcTagReceiver 收到的标签（写标签依赖 tag-core 保存的 Tag 引用） */
+/** 消费接收器收到的标签：只读元数据（不建立 tech 会话），Tag 保持新鲜供 writeNdef 使用 */
 export function takeStartupTag() : NfcTagInfo | null {
-	return consumeStartupInfo()
+	const raw = NfcTagReceiver.takePendingTag()
+	if (raw == null) return null
+	try {
+		const info = tagToBasicInfo(raw as Tag)
+		setLastInfo(info)
+		return info
+	} catch (e : any) {
+		console.error('[railgo-nfc] tag meta failed: ' + e)
+		return null
+	}
 }
 
 export function getLastTag() : NfcTagInfo | null {
@@ -180,44 +188,48 @@ export function getPackageName() : string {
 
 /* ==================== T2T 逐页写入（空白标签兜底路径） ==================== */
 
-/** 逐页写入用户区（含 CC 页），返回是否成功；尾页 RFUI 补 0x00 */
-function t2tRawWrite(tagRef : Tag, msgBytes : number[], model : NtagModel) : boolean {
-	const user = buildT2tUserArea(msgBytes, model.userBytes)
-	if (user.length == 0) return false
-	const ml = MifareUltralight.get(tagRef)
+/**
+ * 单 NfcA 会话完成：GET_VERSION 探测型号 → 读 CC → 写 CC（空白）→ 逐页写用户区。
+ * 全程只用 NfcA transceive（不切 MifareUltralight tech、不 close），符合"一 Tag 一会话"约束。
+ * 尾页 RFUI 由 buildT2tUserArea 补 0x00。
+ */
+function t2tRawWrite(tagRef : Tag, msgBytes : number[]) : boolean {
+	const nfcA = NfcA.get(tagRef)
+	if (nfcA == null) return false
 	try {
-		if (ml != null) {
-			const drv = ml as MifareUltralight
-			drv.connect()
-			// 检查并写入 CC 页（页 2）
-			const head = kb2n(drv.readPages(0))
-			if (at(head, 8) != 0xE1) {
-				drv.writePage(2, n2kb(buildCcPage(model.userBytes)))
+		nfcA.connect()
+		// GET_VERSION 探测型号（失败按 NTAG213 默认）
+		let userBytes = 144
+		let lastPage = 39
+		try {
+			const ver = kb2n(nfcA.transceive(n2kb([0x60])))
+			if (ver.length >= 7) {
+				const m = modelFromGetVersion(ver)
+				userBytes = m.userBytes
+				lastPage = m.lastPage
 			}
-			let page = T2T_USER_START_PAGE
-			for (let i = 0; i < user.length; i += 4) {
-				drv.writePage(page.toInt(), n2kb(sliceBytes(user, i, 4)))
-				page += 1
-			}
-			drv.close()
-			return true
+		} catch (e : any) { }
+		if (msgBytes.length + 2 > userBytes) {
+			emitError(ERR_NOT_ENOUGH_SPACE, '数据 ' + msgBytes.length + 'B 超出标签容量 ' + userBytes + 'B')
+			return false
 		}
-		const nfcA = NfcA.get(tagRef)
-		if (nfcA == null) return false
-		const drvA = nfcA as NfcA
-		drvA.connect()
-		const head = kb2n(drvA.transceive(n2kb([0x03, 0])))
+		const user = buildT2tUserArea(msgBytes, userBytes)
+		if (user.length == 0) return false
+		// 读页 0~3 检查 CC（页 2 首字节 0xE1）
+		const head = kb2n(nfcA.transceive(n2kb([0x03, 0])))
 		if (at(head, 8) != 0xE1) {
-			const cc = buildCcPage(model.userBytes)
-			drvA.transceive(n2kb([0xA2, 2, at(cc, 0), at(cc, 1), at(cc, 2), at(cc, 3)]))
+			const cc = buildCcPage(userBytes)
+			nfcA.transceive(n2kb([0xA2, 2, at(cc, 0), at(cc, 1), at(cc, 2), at(cc, 3)]))
 		}
 		let page = T2T_USER_START_PAGE
-		for (let i = 0; i < user.length; i += 4) {
-			const d = sliceBytes(user, i, 4)
-			drvA.transceive(n2kb([0xA2, page, at(d, 0), at(d, 1), at(d, 2), at(d, 3)]))
+		const endPage = lastPage - T2T_USER_START_PAGE + 1
+		let written = 0
+		while (written < endPage) {
+			const d = sliceBytes(user, written * 4, 4)
+			nfcA.transceive(n2kb([0xA2, page, at(d, 0), at(d, 1), at(d, 2), at(d, 3)]))
 			page += 1
+			written += 1
 		}
-		drvA.close()
 		return true
 	} catch (e : any) {
 		emitError(ERR_WRITE_FAILED, 'T2T 逐页写入失败: ' + e)
@@ -248,7 +260,7 @@ export function writeNdef(records : NdefRecordSpec[], options : WriteOptions | n
 		fail(ERR_INVALID_PARAM, '记录参数不合法')
 		return
 	}
-	const tagObj = peekWriteTag()
+	const tagObj = NfcTagReceiver.peekLastTag()
 	if (tagObj == null) {
 		fail(ERR_NO_TAG, '尚未发现标签，请 startScan 后贴标并轮询 takeStartupTag()')
 		return
@@ -259,62 +271,53 @@ export function writeNdef(records : NdefRecordSpec[], options : WriteOptions | n
 		fail(ERR_INVALID_PARAM, '记录参数不合法')
 		return
 	}
+	// 诊断：分发 Parcel 缓存的 techList 与待写字节数（判断走哪条写入路径的关键证据）
+	console.log('[railgo-nfc] write begin bytes=' + msgBytes.length + ' techs=' + tagRef.getTechList().joinToString(","))
 	let formatBlank = true
 	if (opts != null && opts.formatBlank != null) {
 		formatBlank = opts.formatBlank as boolean
 	}
 
-	// 1) 已格式化：Ndef.writeNdefMessage
+	// 1) 已格式化：Ndef 单会话直写（不探测型号、不 close；容量由写入异常兜底）
 	const ndef = Ndef.get(tagRef)
+	if (ndef == null) console.log('[railgo-nfc] branch: Ndef.get => null')
 	if (ndef != null) {
 		const drv = ndef as Ndef
-		const capSize = readVersionModel(tagRef).userBytes - 4
 		try {
 			drv.connect()
 			if (!drv.isWritable()) {
-				drv.close()
 				fail(ERR_READONLY, '标签已设为只读/已锁定')
 				return
 			}
-			if (capSize < msgBytes.length) {
-				drv.close()
-				fail(ERR_NOT_ENOUGH_SPACE, '数据 ' + msgBytes.length + 'B 超出标签容量 ' + capSize + 'B')
-				return
-			}
 			drv.writeNdefMessage(new NdefMessage(n2kb(msgBytes)))
-			drv.close()
-			done(tagToInfo(tagRef))
+			done(tagToBasicInfo(tagRef))
 			return
 		} catch (e : any) {
-			try { drv.close() } catch (e2 : any) { }
-			// 落入 T2T 逐页写
+			// 本 Tag 已作废：报失败，组件回到 scan 态，用系统重新分发的新 Tag 自动重试
+			fail(ERR_WRITE_FAILED, 'Ndef 会话写入失败: ' + e)
+			return
 		}
 	}
 
 	if (formatBlank) {
-		// 2) 空白标签：NdefFormatable.format
+		// 2) 空白标签：NdefFormatable 单会话格式化
 		const fmt = NdefFormatable.get(tagRef)
+		if (fmt == null) console.log('[railgo-nfc] branch: NdefFormatable.get => null, 走 T2T')
 		if (fmt != null) {
 			const fd = fmt as NdefFormatable
 			try {
 				fd.connect()
 				fd.format(new NdefMessage(n2kb(msgBytes)))
-				fd.close()
-				done(tagToInfo(tagRef))
+				done(tagToBasicInfo(tagRef))
 				return
 			} catch (e : any) {
-				try { fd.close() } catch (e2 : any) { }
-				// 落入 T2T 逐页写
+				fail(ERR_WRITE_FAILED, 'NdefFormatable 格式化失败: ' + e)
+				return
 			}
 		}
-		// 3) T2T 逐页写兜底（NTAG213/215/216）
-		const model = readVersionModel(tagRef)
-		if (msgBytes.length + 2 > model.userBytes) {
-			fail(ERR_NOT_ENOUGH_SPACE, '数据超出标签用户区容量')
-			return
-		}
-		if (t2tRawWrite(tagRef, msgBytes, model)) {
-			done(tagToInfo(tagRef))
+		// 3) T2T 逐页写兜底（NTAG213/215/216；单 NfcA 会话）
+		if (t2tRawWrite(tagRef, msgBytes)) {
+			done(tagToBasicInfo(tagRef))
 			return
 		}
 		fail(ERR_WRITE_FAILED, '写入失败：标签不支持 Ndef/NdefFormatable 或逐页写入被拒绝（可能已加密/锁定）')

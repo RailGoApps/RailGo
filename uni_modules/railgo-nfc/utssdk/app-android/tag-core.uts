@@ -1,12 +1,21 @@
 /**
- * railgo-nfc Android 内部核心：标签解析 + 发现队列
+ * railgo-nfc Android 内部核心：标签解析（纯 UTS 函数，供 index.uts 调用）
  *
- * 必须独立于 index.uts：二级文件若 `import ... from './index.uts'` 与入口形成循环引用，
- * 云打包编译器会静默丢弃该文件 → classes.dex 缺类 → ClassNotFoundException 崩溃（实测验证）。
- * 依赖方向只能是 index.uts → tag-core.uts ← NfcTagReceiver.uts。
+ * ⚠️ uni-app 云打包会把插件所有 .uts 合并成单个 index.kt：.uts 二级文件只保留顶层函数，
+ * class 声明会被静默丢弃。因此 manifest 声明的原生组件（NfcTagReceiver）必须用
+ * NfcTagReceiver.kt 原生文件实现，标签队列也存放在该 kt 的伴生对象里。
+ * 依赖方向只能是 index.uts → tag-core.uts / NfcTagReceiver.kt。
+ *
+ * ⚠️ Android Tag 连接会话铁律（实测 IOException 校正）：
+ * - 同一 Tag 同时只允许一个 tech 处于 connect 状态（"Only one TagTechnology can be
+ *   connected at a time"）；
+ * - 任何 close()（或连接后出错）都会使该 Tag 对象作废，后续 connect 必抛 IOException；
+ * - 因此：takeStartupTag 用 tagToBasicInfo 只读元数据（getId/getTechList，不建会话），
+ *   保持 Tag 新鲜给 writeNdef；每条写入路径都是单 tech 单会话、全程不 close；
+ *   写失败不重试该 Tag——系统在标签在场期间会反复重新分发（队列持续进新 Tag），
+ *   组件轮询自然用新 Tag 重试。
+ * 完整读取解析（tagToInfo，多 tech 会话）仅供独立读标签场景在新 Tag 上调用。
  */
-import Intent from 'android.content.Intent'
-import NfcAdapter from 'android.nfc.NfcAdapter'
 import Tag from 'android.nfc.Tag'
 import Ndef from 'android.nfc.tech.Ndef'
 import NdefFormatable from 'android.nfc.tech.NdefFormatable'
@@ -18,27 +27,9 @@ import {
 	parseMessageBytes, extractT2tNdef, modelFromGetVersion, T2T_USER_START_PAGE
 } from '../interface.uts'
 
-/* ==================== 共享状态（写标签依赖这里保存的 Tag 引用） ==================== */
+/* ==================== 共享状态 ==================== */
 
-let gCurrentTag : Tag | null = null
 let gCurrentInfo : NfcTagInfo | null = null
-let gStartupInfos : NfcTagInfo[] = []
-
-export function hasPendingStartup() : boolean {
-	return gStartupInfos.length > 0
-}
-
-export function consumeStartupInfo() : NfcTagInfo | null {
-	if (gStartupInfos.length == 0) return null
-	const t = gStartupInfos[0]
-	gStartupInfos.shift()
-	return t
-}
-
-/** 取最近发现的原始 Tag（不清空，供 writeNdef 多次使用） */
-export function peekWriteTag() : Tag | null {
-	return gCurrentTag
-}
 
 export function lastInfo() : NfcTagInfo | null {
 	return gCurrentInfo
@@ -82,6 +73,28 @@ export function n2kb(a : number[]) : ByteArray {
 }
 
 /* ==================== 标签解析 ==================== */
+
+/** 轻量元数据解析：只读 getId/getTechList，不建立任何 tech 会话（Tag 保持可写状态） */
+export function tagToBasicInfo(tagRef : Tag) : NfcTagInfo {
+	const uid = bytesToHex(kb2n(tagRef.getId()))
+	const techs : string[] = []
+	const tls = tagRef.getTechList().joinToString(",")
+	for (const full of tls.split(',')) {
+		if (full.length == 0) continue
+		const idx = full.lastIndexOf('.')
+		techs.push(idx >= 0 ? full.substring(idx + 1) : full)
+	}
+	return {
+		uid: uid,
+		techList: techs,
+		tagType: 'Type2',
+		userBytes: 0,
+		maxNdefSize: 0,
+		formatted: false,
+		writable: false,
+		records: null
+	} as NfcTagInfo
+}
 
 export function readVersionModel(tagRef : Tag) : NtagModel {
 	const nfcA = NfcA.get(tagRef)
@@ -201,49 +214,4 @@ export function tagToInfo(tagRef : Tag) : NfcTagInfo {
 		writable: writable,
 		records: records
 	} as NfcTagInfo
-}
-
-/* ==================== Intent 处理 ==================== */
-
-function parcelExtra(intent : Intent) : any | null {
-	// 双参 getParcelableExtra(name, Class) 重载在 UTS 编译环境参数校验异常，统一用单参（33+ 仅 deprecation 警告，运行可用）
-	return intent.getParcelableExtra(NfcAdapter.EXTRA_TAG)
-}
-
-function handleNfcIntent(intent : Intent) {
-	const act = intent.getAction()
-	if (act == null) return
-
-	let info : NfcTagInfo | null = null
-	let rawTag : Tag | null = null
-
-	const tagObj = parcelExtra(intent)
-	if (tagObj != null) {
-		rawTag = tagObj as Tag
-	}
-
-	// 不解析 EXTRA_NDEF_MESSAGES（原生 Parcelable[] 下标在 UTS 编译环境类型不可靠）：
-	// 前台分发广播必携带 EXTRA_TAG（API19+），统一走 Tag 解析即可。
-
-	if (rawTag != null) {
-		try {
-			info = tagToInfo(rawTag as Tag)
-		} catch (e : any) {
-			// 此处处于广播接收器栈，不能回调 JS，只打日志
-			console.error('[railgo-nfc] read tag failed: ' + e)
-		}
-	}
-
-	if (info == null) return
-	const found = info as NfcTagInfo
-	gCurrentTag = rawTag
-	gCurrentInfo = found
-	// 重要：发现事件一律只入队，绝不在接收器/原生栈内同步回调 JS 函数
-	// （JS 侧通过轮询 hasPendingStartup/consumeStartupInfo 消费）。
-	gStartupInfos.push(found)
-}
-
-/** 供 NfcTagReceiver.onReceive 调用（前台扫描广播，App 已在前台，无需拉起界面） */
-export function handleForegroundIntent(intent : Intent) : void {
-	handleNfcIntent(intent)
 }

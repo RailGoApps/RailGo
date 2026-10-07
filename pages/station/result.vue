@@ -1,8 +1,8 @@
 <template>
-	<view class="ux-bg-grey5" style="min-height:100vh;">
-		<back-header></back-header>
-		<railgo-nfc></railgo-nfc>
-		<view class="ux-padding">
+	<view class="ux-bg-grey5" :style="isLandscape ? 'height:100vh;overflow:hidden;' : 'min-height:100vh;'">
+		<back-header v-if="!isLandscape"></back-header>
+		<railgo-nfc v-if="!isLandscape"></railgo-nfc>
+		<view class="ux-padding" v-if="!isLandscape">
 			<!-- 头部卡片骨架屏 -->
 			<view v-if="headerSkeleton" class="ux-bg-white ux-border-radius sk-header">
 				<view class="sk-row sk-header-top" style="justify-content: space-between;">
@@ -167,22 +167,28 @@
 					出发
 				</button>
 				<button 
-					class="ux-flex1 ux-ml-small" 
+					class="ux-flex1 ux-mr-small ux-ml-small" 
 					size="mini"
 					:type="bigScreenKind === 'arrival' ? 'primary' : 'default'"
 					@click="switchBigScreenKind('arrival')">
 					到达
 				</button>
+				<button class="ux-flex1 ux-ml-small" size="mini" type="default"
+					hover-class="bs-rotate-btn-hover" @click="enterLandscape">
+					<view class="ux-flex ux-align-items-center ux-justify-content-center">
+						<text class="icon">&#xe1c1;</text>&nbsp;横屏
+					</view>
+				</button>
 			</view>
 			
-			<view class="ux-pt dark-table-wrapper" v-if="topTabList[selectIndex] && topTabList[selectIndex].name === '大屏'" style="margin-top: 20rpx;">
+			<view class="ux-pt dark-table-wrapper" v-if="!isLandscape && topTabList[selectIndex] && topTabList[selectIndex].name === '大屏'" style="margin-top: 20rpx;">
 				<!-- 大屏骨架屏 -->
 				<view v-if="bigScreenSkeleton || bigScreenLoading" class="sk-list">
 					<view class="sk-row" style="margin-bottom: 16rpx;">
-						<skeleton v-for="c in 6" :key="c" flex w="0" h="26rpx" radius="6rpx" mr="10rpx" mt="6rpx" tone="on-dark" />
+						<skeleton v-for="c in 7" :key="c" flex w="0" h="26rpx" radius="6rpx" mr="10rpx" mt="6rpx" tone="on-dark" />
 					</view>
 					<view v-for="i in 10" :key="i" class="sk-dark-row">
-						<skeleton v-for="c in 6" :key="c" flex w="0" h="24rpx" radius="6rpx" mr="10rpx" tone="on-dark" />
+						<skeleton v-for="c in 7" :key="c" flex w="0" h="24rpx" radius="6rpx" mr="10rpx" tone="on-dark" />
 					</view>
 				</view>
 				<uni-table v-else :loading="bigScreenLoading" emptyText="暂无数据" class="dark-table">
@@ -192,6 +198,7 @@
 						<uni-th align="center">始发站</uni-th>
 						<uni-th align="center">终到站</uni-th>
 						<uni-th align="center">时间</uni-th>
+						<uni-th align="center">站台</uni-th>
 						<uni-th align="center">{{ bigScreenKind === 'arrival' ? '出站口' : '检票口' }}</uni-th>
 					</uni-tr>
 					<uni-tr v-for="(item, index) in displayedBigScreenData" :key="item.key"> 
@@ -204,11 +211,10 @@
 						<uni-td align="center">{{ item.trainStartStation }}</uni-td>
 						<uni-td align="center">{{ item.trainEndStation }}</uni-td>
 						<uni-td align="center">{{ formatDepartureTime(item.time) }}</uni-td>
+						<uni-td align="center">{{ item.platform || '-' }}</uni-td>
 						<uni-td align="center">
-							<view v-if="item.bigScreenPort && item.bigScreenPort.length > 0">
-								{{ item.bigScreenPort.join(', ') }}
-							</view>
-							<view v-else>-</view>
+							<view>{{ bigScreenKind === 'arrival' ? (item.exitPort || '-') : (item.ticketPort || '-') }}</view>
+							<view v-if="item.waitingRoom" style="opacity: 0.6; font-size: 22rpx;">{{ item.waitingRoom }}</view>
 						</uni-td>
 					</uni-tr>
 				</uni-table>
@@ -309,6 +315,52 @@
 				<view v-else class="ux-padding ux-text-center">
 					<text>暂无交通信息</text>
 				</view>
+			</view>
+		</view>
+
+		<!-- 横屏大屏（点击横屏图标后全屏显示） -->
+		<view v-if="isLandscape" class="bs-land">
+			<view class="bs-land-head">
+				<text class="bs-land-title">{{ data.name }}站</text>
+				<view class="bs-land-kind">
+					<view class="bs-land-kind-item" :class="{ 'bs-land-kind-on': bigScreenKind === 'departure' }"
+						@click="switchBigScreenKind('departure')"><text>出发</text></view>
+					<view class="bs-land-kind-item" :class="{ 'bs-land-kind-on': bigScreenKind === 'arrival' }"
+						@click="switchBigScreenKind('arrival')"><text>到达</text></view>
+				</view>
+				<view class="bs-land-exit" hover-class="bs-land-exit-hover" @click="exitLandscape">
+					<text class="icon bs-land-exit-glyph">&#xe5d1;</text>
+				</view>
+			</view>
+			<view class="bs-land-row bs-land-thead">
+				<text class="bs-land-c-num">车次</text>
+				<text class="bs-land-c-status">状态</text>
+				<text class="bs-land-c-from">始发站</text>
+				<text class="bs-land-c-to">终到站</text>
+				<text class="bs-land-c-time">时间</text>
+				<text class="bs-land-c-platform">站台</text>
+				<text class="bs-land-c-room">候车室</text>
+				<text class="bs-land-c-port">{{ bigScreenKind === 'arrival' ? '出站口' : '检票口' }}</text>
+			</view>
+			<scroll-view class="bs-land-body" scroll-y @scrolltolower="loadMoreBigScreenData">
+				<view v-for="item in displayedBigScreenData" :key="item.key" class="bs-land-row">
+					<text class="bs-land-c-num">{{ item.trainNum }}</text>
+					<text class="bs-land-c-status" :style="{ color: getStatusColor(item.bigScreenStatusCode) }">
+						{{ formatBigScreenStatus(item.bigScreenStatus, item.bigScreenStatusCode, item.timeDelay) }}
+					</text>
+					<text class="bs-land-c-from">{{ item.trainStartStation }}</text>
+					<text class="bs-land-c-to">{{ item.trainEndStation }}</text>
+					<text class="bs-land-c-time">{{ formatDepartureTime(item.time) }}</text>
+					<text class="bs-land-c-platform">{{ item.platform || '-' }}</text>
+					<text class="bs-land-c-room">{{ item.waitingRoom || '-' }}</text>
+					<text class="bs-land-c-port">{{ bigScreenKind === 'arrival' ? (item.exitPort || '-') : (item.ticketPort || '-') }}</text>
+				</view>
+				<view v-if="displayedBigScreenData.length === 0" class="bs-land-empty">
+					<text>{{ bigScreenLoading ? '加载中…' : '本站暂无大屏数据' }}</text>
+				</view>
+			</scroll-view>
+			<view class="bs-land-foot">
+				<text>信息仅供参考 请以车站现场公告为准 · 已显示 {{ displayedBigScreenData.length }}/{{ bigScreenData.length }} 条</text>
 			</view>
 		</view>
 	<uni-popup ref="menu_sort" border-radius="10rpx 10rpx 0 0">
@@ -435,7 +487,9 @@
 					"货": "#eeba67",
 					"高": "#c0392b",
 					"行": "#459811",
-					"运": "#85929e"
+					"运": "#85929e",
+					"商": "#B8860B",   // 商务座：黑金底白字
+					"便": "#0f766e"
 				},
 				// 默认只包含“车次”和“路线”，如果为客运站则在 fillInData 中添加“大屏”和“交通”
 				topTabList: [{
@@ -454,6 +508,8 @@
 				bigScreenData: [],           // V2 API 返回的全部数据
 				bigScreenLoading: false,
 				bigScreenKind: 'departure',  // 大屏类型：departure（出发）或 arrival（到达）
+				// --- 横屏大屏 ---
+				isLandscape: false,
 				
 				// --- 滚动加载控制 ---
 				displayedBigScreenData: [], // 实际渲染到大屏表格的数据
@@ -501,10 +557,23 @@
 			this.stopAutoRefresh();
 		},
 		/**
+		 * 横屏大屏下先退回竖屏
+		 */
+		onBackPress() {
+			if (this.isLandscape) {
+				this.exitLandscape();
+				return true;
+			}
+			return false;
+		},
+		/**
 		 * 页面卸载时停止自动刷新
 		 */
 		onUnload() {
 			this.stopAutoRefresh();
+			if (this.isLandscape) {
+				this.exitLandscape();
+			}
 		},
 		methods: {
 			back: function() {
@@ -532,7 +601,9 @@
 							return;
 						}
 						this.data = result.data || {};
-						this.trains = result.trains || [];
+						// 请求顺序：基础数据 → 服务支持 → 车次列表 → 大屏
+						await this.getStationEquipment();
+						this.trains = await this.getStationTrainList();
 						success = true;
 					} catch (error) {
 						uni.showToast({
@@ -619,6 +690,79 @@
 
 				
 			},
+			/**
+			 * 车站服务设施（商务座 / 行李便民）→ 追加「商」「便」标识
+			 */
+			getStationEquipment: async function() {
+				if (!this.keyword) return;
+				try {
+					const v2Base = uni.getStorageSync('service_source_train_v2') || 'https://rg-api.zenglingkun.cn';
+					const resp = await uniGet(v2Base + `/api/v2/getStationEquipment?stationTelecode=${encodeURIComponent(this.keyword)}`);
+					const result = resp.data;
+					if (!result || result.success !== true || !result.data) return;
+					if (!Array.isArray(this.data.type)) this.data.type = [];
+					if (result.data.business === true && !this.data.type.includes('商')) this.data.type.push('商');
+					if (result.data.luggage === true && !this.data.type.includes('便')) this.data.type.push('便');
+				} catch (error) {
+					console.error("车站服务信息加载失败", error);
+				}
+			},
+			/**
+			 * 车次列表（V2）：字段归一化成列表渲染/排序筛选所需的结构
+			 */
+			getStationTrainList: async function() {
+				if (!this.keyword) return [];
+				try {
+					const v2Base = uni.getStorageSync('service_source_train_v2') || 'https://rg-api.zenglingkun.cn';
+					const resp = await uniGet(v2Base + `/api/v2/getStationTrain?stationTelecode=${encodeURIComponent(this.keyword)}`);
+					const result = resp.data;
+					if (!result || result.success !== true || !Array.isArray(result.data)) return [];
+					return result.data.map(item => {
+						const number = item.trainNum || '';
+						const isFrom = item.trainStartStationTelecode === this.keyword;
+						const isTo = item.trainEndStationTelecode === this.keyword;
+						return {
+							number: number,
+							code: item.trainCode || '',
+							// 模板按 kind 前缀 + numberFull 去掉 kind 复原车次，这里直接原样显示 trainNum
+							numberKind: '',
+							numberFull: [number],
+							arrive: item.arrive || '',
+							depart: item.depart || '',
+							// 始发/终到不办理中转停留，停留时间显示 -
+							stopTime: (isFrom || isTo) ? '' : this.calcStopTime(item.arrive, item.depart),
+							fromStation: {
+								station: item.trainStartStation || '',
+								stationTelecode: item.trainStartStationTelecode || ''
+							},
+							toStation: {
+								station: item.trainEndStation || '',
+								stationTelecode: item.trainEndStationTelecode || ''
+							}
+						};
+					});
+				} catch (error) {
+					console.error("车站车次列表加载失败", error);
+					return [];
+				}
+			},
+			/**
+			 * 由到达/出发时刻算停留分钟数（跨零点按 +24h 计）
+			 */
+			calcStopTime: function(arrive, depart) {
+				const toMin = t => {
+					if (!t || String(t).indexOf(':') < 0) return -1;
+					const p = String(t).split(':');
+					const h = parseInt(p[0], 10);
+					const m = parseInt(p[1], 10);
+					if (isNaN(h) || isNaN(m)) return -1;
+					return h * 60 + m;
+				};
+				const a = toMin(arrive);
+				const d = toMin(depart);
+				if (a < 0 || d < 0) return '';
+				return String((d - a + 1440) % 1440);
+			},
 			tabChange: function(e) {
 				this.selectIndex = e.index;
 				// NEW: 切换到大屏时，如果尚未加载或数据为空，则触发加载
@@ -662,7 +806,7 @@
 				try {
 					// 使用 V2 API
 					const bigScreenBase = uni.getStorageSync('service_source_bigScreen') || 'https://rg-api.zenglingkun.cn';
-					const url = bigScreenBase + `/api/v2/getStationBigScreen?stationTelecode=${encodeURIComponent(this.keyword)}&kind=${encodeURIComponent(this.bigScreenKind)}`;
+					const url = bigScreenBase + `/api/v2/getStationBigScreen?stationTelecode=${encodeURIComponent(this.keyword)}&kind=${encodeURIComponent(this.bigScreenKind)}&ver=3`;
 					
 					const resp = await uniGet(url);
 					
@@ -707,13 +851,16 @@
 				if (dataToLoad.length === 0) return; // 没有新数据可加载
 
 				dataToLoad.forEach(item => {
-					// V2 API 数据结构
+					// V2 API 数据结构（ver=3）
 					const displayItem = {
 						trainNum: item.trainNum,             // 车次号
 						trainStartStation: item.trainStartStation, // 始发站
 						trainEndStation: item.trainEndStation,     // 终到站
 						time: item.time,                     // 图定时间
-						bigScreenPort: item.bigScreenPort || [],   // 检票口数组
+						platform: item.platform || '',       // 站台
+						waitingRoom: (item.ticketWaitingRoom || []).join('、'), // 候车室
+						ticketPort: (item.ticketPort || []).join('、'),         // 检票口
+						exitPort: (item.exitPort || []).join('、'),             // 出站口
 						bigScreenStatus: item.bigScreenStatus,     // 状态文本
 						bigScreenStatusCode: item.bigScreenStatusCode, // 状态代码
 						timeDelay: item.timeDelay || 0,      // 延误/早点分钟
@@ -764,6 +911,22 @@
 				this.bigScreenSkeleton = true;
 				await this.getBigScreenData();
 				this.bigScreenSkeleton = false;
+			},
+			
+			// --- 横屏大屏 ---
+			enterLandscape: function() {
+				// #ifdef APP-PLUS
+				plus.screen.lockOrientation('landscape-primary');
+				plus.navigator.setFullscreen(true);
+				// #endif
+				this.isLandscape = true;
+			},
+			exitLandscape: function() {
+				// #ifdef APP-PLUS
+				plus.navigator.setFullscreen(false);
+				plus.screen.lockOrientation('portrait-primary');
+				// #endif
+				this.isLandscape = false;
 			},
 			
 			// -------------------------------
@@ -1044,7 +1207,172 @@
 	.dark-table .uni-table-th {
 		background-color: #1f3041 !important;
 	}
-	
+
+	.bs-rotate-btn-hover {
+		background-color: #eef1f5;
+	}
+
+	/* 横屏大屏：px 尺寸，避免横屏下 rpx 随宽放大导致纵向放不下 */
+	.bs-land {
+		position: fixed;
+		left: 0;
+		top: 0;
+		width: 100vw;
+		height: 100vh;
+		background-color: #16232f;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+		z-index: 99999;
+	}
+
+	.bs-land-head {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		padding: 8px 14px;
+		background-color: #1b2a38;
+	}
+
+	.bs-land-title {
+		color: #ffffff;
+		font-size: 18px;
+		font-weight: bold;
+		flex: 1;
+	}
+
+	.bs-land-kind {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		margin-right: 10px;
+	}
+
+	.bs-land-kind-item {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 5px 18px;
+		margin-left: 8px;
+		border-radius: 16px;
+		background-color: #2c3e50;
+	}
+
+	.bs-land-kind-item text {
+		color: #bdc3c7;
+		font-size: 14px;
+		line-height: 1;
+	}
+
+	.bs-land-kind-on {
+		background-color: #114598;
+	}
+
+	.bs-land-kind-on text {
+		color: #ffffff;
+	}
+
+	.bs-land-exit {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		border-radius: 16px;
+		background-color: #2c3e50;
+	}
+
+	.bs-land-exit-hover {
+		background-color: #3b506b;
+	}
+
+	.bs-land-exit-glyph {
+		color: #ffffff;
+		font-size: 19px;
+		line-height: 1;
+	}
+
+	.bs-land-row {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		padding: 8px 14px;
+		border-bottom: 1px solid #22303e;
+	}
+
+	.bs-land-row text {
+		color: #ffffff;
+		font-size: 15px;
+		line-height: 1.25;
+		text-align: center;
+	}
+
+	.bs-land-thead {
+		background-color: #1f3041;
+		padding: 7px 14px;
+	}
+
+	.bs-land-thead text {
+		color: #9fb0c0;
+		font-size: 13px;
+	}
+
+	.bs-land-c-num {
+		flex: 1;
+	}
+
+	.bs-land-c-status {
+		flex: 1.2;
+	}
+
+	.bs-land-c-from,
+	.bs-land-c-to {
+		flex: 1.2;
+	}
+
+	.bs-land-c-time {
+		flex: 1;
+	}
+
+	.bs-land-c-platform {
+		flex: 0.7;
+	}
+
+	.bs-land-c-room {
+		flex: 1.3;
+	}
+
+	.bs-land-c-port {
+		flex: 1.7;
+	}
+
+	.bs-land-body {
+		flex: 1;
+		min-height: 0;
+	}
+
+	.bs-land-empty {
+		padding: 26px 0;
+		text-align: center;
+	}
+
+	.bs-land-empty text {
+		color: #ffffff;
+		opacity: 0.6;
+		font-size: 15px;
+	}
+
+	.bs-land-foot {
+		padding: 6px 14px;
+		text-align: center;
+		background-color: #1b2a38;
+	}
+
+	.bs-land-foot text {
+		color: #9fb0c0;
+		font-size: 12px;
+	}
+
 	.traffic-tabs {
 		display: flex;
 		background-color: #fff;

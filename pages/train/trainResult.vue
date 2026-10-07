@@ -110,7 +110,65 @@
 					<uni-section title="正晚点" type="line" style="background-color: transparent;"
 						title-font-size="28rpx"></uni-section>
 
+					<!-- 大卡：卡片内直接展开明细，停台信息按站数自动/一键加载 -->
+					<block v-if="delayCardStyle === 'big'">
+						<view v-if="showLoadAllButton" class="ux-pb-small">
+							<button @click="loadAllPlatforms" type="primary" size="mini"
+								style="margin: 0; padding: 0 15px; font-size: 14px; line-height: 30px;">
+								一键全部加载停台信息 (共{{(carData.timetable || []).length}}站)
+							</button>
+						</view>
 
+						<view v-for="(item,index) in combinedDelayData" :key="index"
+							class="ux-bg-white ux-border-radius ux-mt-small">
+							<view class="ux-flex">
+								<view style="border-bottom-left-radius: 10rpx; border-top-left-radius:10rpx; width: 12rpx;"
+									:style="getDelayStatusBackground(item.delayStatusCode)">
+								</view>
+								<view class="ux-flex ux-space-between ux-pt ux-pl ux-pr ux-align-items-center" style="width: 100%;">
+									<text class="ux-bold" style="font-size: 32rpx;">{{item.stationName || ''}}</text>
+									<text :style="getDelayStatusColor(item.delayStatusCode, item.delayTime)" class="ux-bold" style="font-size: 28rpx;">
+										{{formatDelayStatus(item.delayStatusCode, item.delayTime)}}
+									</text>
+								</view>
+							</view>
+							<view class="ux-pl ux-pr ux-pb">
+								<view class="ux-flex ux-space-between ux-mt-small">
+									<text class="ux-text-small ux-opacity-7">预计时间</text>
+									<text class="ux-text-small">{{item.arrivalTime || '-'}}/{{item.departureTime || '-'}}</text>
+								</view>
+								<view class="ux-flex ux-space-between ux-mt">
+									<text class="ux-text-small ux-opacity-7">实际时间</text>
+									<text class="ux-text-small">{{calculateActualTime(item.arrivalTime, item.delayStatusCode, item.delayTime)}}/{{calculateActualTime(item.departureTime, item.delayStatusCode, item.delayTime)}}</text>
+								</view>
+								<view class="ux-flex ux-space-between ux-mt">
+									<text class="ux-text-small ux-opacity-7">停站时间</text>
+									<text class="ux-text-small">{{formatStopMinutes(item)}}</text>
+								</view>
+								<view class="ux-flex ux-space-between ux-mt">
+									<text class="ux-text-small ux-opacity-7">停台/检票口</text>
+									<text class="ux-text-small">
+										<text v-if="item.platform">{{formatDelayPlatform(item)}}</text>
+										<button v-else-if="showLoadAllButton"
+											@click="loadPlatformByStationName(item.stationName)"
+											size="mini" type="primary"
+											style="margin: 0; padding: 0 5px; font-size: 10px; line-height: 20px; display: inline;">
+											查询
+										</button>
+										<text v-else>-</text>
+									</text>
+								</view>
+							</view>
+						</view>
+
+						<view v-if="delay.length === 0" class="ux-bg-white ux-border-radius ux-padding ux-text-center">
+							<text v-if="isOnlyOfflineMode" class="ux-color-gray">仅离线模式下无法使用该功能</text>
+							<text v-else>暂无正晚点信息或加载失败</text>
+						</view>
+					</block>
+
+					<!-- 小卡：仅站点名与状态，点击后在底部弹层看明细 -->
+					<block v-else>
 					<view v-for="(item,index) in combinedDelayData" :key="index"
 						class="ux-bg-white ux-border-radius ux-mt-small"
 						@click="openDelaySheet(item, index)"
@@ -143,6 +201,7 @@
 							</view>
 						</view>
 					</view>
+					</block>
 				</view>
 			</view>
 
@@ -359,7 +418,7 @@
 				</view>
 				<view class="sheet-time-col sheet-time-col--mid">
 					<text class="sheet-time-label">停留</text>
-					<text class="sheet-time-main">{{ getStopMinutesText(sheetData) }}</text>
+					<text class="sheet-time-main">{{ isFirstOrLastStop(sheetData) ? '-' : getStopMinutesText(sheetData) }}</text>
 					<text class="sheet-time-sub">STAY</text>
 				</view>
 				<view class="sheet-time-col" :style="getDelayTintBackground(sheetData.delayStatusCode)">
@@ -482,6 +541,12 @@
 				"isTodayDate": true,
 				// 日期判断：是否在今天的±3天范围内（用于正晚点/停台显示）
 				"isWithinDelayDays": true,
+				// 正晚点卡片风格：big(大卡，卡片内直接展开明细) / small(小卡，点击弹出详情)
+				"delayCardStyle": uni.getStorageSync("delayCardStyle") || 'small',
+				// 大卡风格的停台加载相关状态
+				"platformLoadThreshold": 10,
+				"allPlatformWicketLoaded": false,
+				"showLoadAllButton": false,
 				// 天地图地图 key
 				"tdtMapKey": "416cfaff76398b8567f8b7e48a933651",
 				// 地图路径数据
@@ -607,6 +672,12 @@
 			// #ifdef APP-PLUS
 			plus.navigator.setStatusBarBackground('#114598');
 			// #endif
+			// 从个性化页返回时同步正晚点卡片风格
+			const cardStyle = uni.getStorageSync("delayCardStyle") || 'small';
+			if (cardStyle !== this.delayCardStyle) {
+				this.delayCardStyle = cardStyle;
+				this.initBigCardPlatforms();
+			}
 		},
 		onUnload() {
 			this.stopTrainTracking();
@@ -727,6 +798,91 @@
 					}
 					return result;
 				}
+			},
+
+			/**
+			 * 大卡风格：站少自动全量加载停台，站多显示一键加载按钮
+			 */
+			initBigCardPlatforms: function() {
+				if (this.delayCardStyle !== 'big') return;
+				if (this.isOnlyOfflineMode || !this.isWithinDelayDays) return;
+				if (!this.carData.timetable || this.carData.timetable.length === 0) return;
+				if (this.carData.timetable.length < this.platformLoadThreshold) {
+					this.loadAllPlatforms();
+				} else {
+					this.showLoadAllButton = true;
+				}
+			},
+
+			/**
+			 * 批量加载所有车站的停台信息（大卡风格的一键加载）
+			 */
+			async loadAllPlatforms() {
+				if (this.allPlatformWicketLoaded) return;
+
+				showLoader('一键加载中...');
+
+				let successCount = 0;
+				const totalCount = this.carData.timetable.length;
+
+				try {
+					for (let i = 0; i < totalCount; i++) {
+						const item = this.carData.timetable[i];
+						// 未查询或此前失败的才请求，避免重复请求
+						if (!item.platform || item.platform === '查询失败' || item.platform === '网络错误') {
+							const result = await this.loadPlatform(item, i, true);
+							if (result.success) successCount++;
+						} else {
+							successCount++;
+						}
+					}
+
+					this.allPlatformWicketLoaded = true;
+					this.showLoadAllButton = false;
+
+					uni.showToast({
+						title: `加载完成！成功${successCount} / ${totalCount}站`,
+						duration: 2000,
+						position: 'bottom',
+					});
+				} catch (e) {
+					uni.showToast({
+						title: '批量加载出错'
+					});
+				} finally {
+					hideLoader();
+				}
+			},
+
+			/**
+			 * 大卡中按站名触发单站停台查询
+			 */
+			loadPlatformByStationName: function(stationName) {
+				const targetIndex = (this.carData.timetable || []).findIndex(item => item.station === stationName);
+				if (targetIndex === -1) {
+					uni.showToast({
+						title: '无法匹配车站信息'
+					});
+					return;
+				}
+				this.loadPlatform(this.carData.timetable[targetIndex], targetIndex, false);
+			},
+
+			/**
+			 * 大卡的停站时间文本：优先接口返回值，否则由预计到达/出发推算
+			 */
+			formatStopMinutes: function(item) {
+				const text = this.getStopMinutesText(item);
+				return text === '-' ? '-' : text.replace('MIN', '分');
+			},
+
+			/**
+			 * 大卡的停台/检票口文本：站台 + 检票口列表
+			 */
+			formatDelayPlatform: function(item) {
+				const gates = (item.entrance || []).join('、');
+				if (!item.platform) return gates || '-';
+				return gates ? item.platform + '/' + gates : item.platform;
 			},
 
 			/**
@@ -1262,7 +1418,8 @@
 					// -------------------------------------------------------------------------
 					
 					// -------------------------------------------------------------------------
-					// **停台加载逻辑**：不自动预取，进入弹层卡片时按需获取（±3天窗口由正晚点区块 v-if 控制）
+					// **停台加载逻辑**：小卡进入弹层卡片时按需获取；大卡按站数自动全量或显示一键加载按钮
+					this.initBigCardPlatforms();
 					// -------------------------------------------------------------------------
 
 
@@ -1406,6 +1563,20 @@
 				if (!scheduled || scheduled === '-') return false;
 				const actual = this.calculateActualTime(scheduled, delayStatus, delayTime);
 				return actual !== '-' && actual !== scheduled;
+			},
+
+			/**
+			 * 是否本次列车的始发站/终到站（弹层里停留不显示时长）
+			 */
+			isFirstOrLastStop: function(sd) {
+				if (!sd) return false;
+				const tt = (this.carData && this.carData.timetable) || [];
+				if (tt.length === 0) return false;
+				let idx = sd._index;
+				if (typeof idx !== 'number' || idx < 0) {
+					idx = tt.findIndex(x => x.station === sd.stationName);
+				}
+				return idx === 0 || idx === tt.length - 1;
 			},
 
 			/**

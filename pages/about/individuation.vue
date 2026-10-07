@@ -123,6 +123,54 @@
 		</view>
 		
 		<view class="ux-pl ux-pr">
+			<uni-section type="line" style="background-color: transparent;" title-font-size="35rpx" title="正晚点卡片"></uni-section>
+			<view class="icon-flex-container">
+				<view class="icon-item" v-for="s in delayCardStyles" :key="s.key">
+					<view class="style-preview" :class="{ 'style-preview--active': nowDelayCardStyle === s.key }" @click="selectDelayCardStyle(s.key)">
+						<!-- 大卡缩略图：卡片内展开多行明细 -->
+						<view v-if="s.key === 'big'" class="preview-delay-list">
+							<view class="preview-delay-card">
+								<view class="preview-delay-bar"></view>
+								<view class="preview-delay-col">
+									<view class="preview-delay-row"></view>
+									<view class="preview-delay-line preview-delay-line--short"></view>
+									<view class="preview-delay-line"></view>
+								</view>
+							</view>
+							<view class="preview-delay-card">
+								<view class="preview-delay-bar preview-delay-bar--delay"></view>
+								<view class="preview-delay-col">
+									<view class="preview-delay-row"></view>
+									<view class="preview-delay-line preview-delay-line--short"></view>
+								</view>
+							</view>
+						</view>
+						<!-- 小卡缩略图：单行站点条，明细在底部弹层中 -->
+						<view v-else class="preview-delay-list">
+							<view class="preview-delay-chip">
+								<view class="preview-delay-bar"></view>
+								<view class="preview-delay-row"></view>
+							</view>
+							<view class="preview-delay-chip">
+								<view class="preview-delay-bar preview-delay-bar--delay"></view>
+								<view class="preview-delay-row"></view>
+							</view>
+							<view class="preview-delay-chip">
+								<view class="preview-delay-bar"></view>
+								<view class="preview-delay-row"></view>
+							</view>
+							<view class="preview-delay-sheet"></view>
+						</view>
+					</view>
+					<text class="icon-text">{{ s.name }}</text>
+					<button class="ux-btn" :disabled="nowDelayCardStyle === s.key" @click="selectDelayCardStyle(s.key)">
+						{{ nowDelayCardStyle === s.key ? '已使用' : '使用' }}
+					</button>
+				</view>
+			</view>
+		</view>
+
+		<view class="ux-pl ux-pr">
 			<uni-section type="line" style="background-color: transparent;" title-font-size="35rpx" title="加载动画"></uni-section>
 			<view class="icon-flex-container">
 				<view class="icon-item" v-for="s in loaderStyles" :key="s.key">
@@ -196,6 +244,12 @@ import RailgoLoader from "@/components/railgo-loader/railgo-loader.vue";
 					{ key: 'card', name: '经典大卡' },
 					{ key: 'bento', name: '渐变卡片' }
 				],
+				// 正晚点卡片风格：big(大卡，卡片内展开明细) / small(小卡，点击弹出详情)
+				nowDelayCardStyle: uni.getStorageSync("delayCardStyle") || 'small',
+				delayCardStyles: [
+					{ key: 'big', name: '大卡' },
+					{ key: 'small', name: '小卡' }
+				],
 				// 加载动画样式：zn(智动旋转) / wave(水波纹)
 				nowLoaderStyle: uni.getStorageSync("loaderStyle") || 'zn',
 				loaderStyles: [
@@ -252,6 +306,12 @@ import RailgoLoader from "@/components/railgo-loader/railgo-loader.vue";
 				uni.setStorageSync('indexStyle', key);
 				this.nowIndexStyle = key;
 				uni.showToast({ title: '已切换主页风格', icon: 'none' });
+			},
+			selectDelayCardStyle(key) {
+				if (this.nowDelayCardStyle === key) return;
+				uni.setStorageSync('delayCardStyle', key);
+				this.nowDelayCardStyle = key;
+				uni.showToast({ title: key === 'big' ? '已切换为大卡' : '已切换为小卡', icon: 'none', duration: 1500 });
 			},
 			selectLoaderStyle(key) {
 				if (this.nowLoaderStyle === key) return;
@@ -726,6 +786,84 @@ import RailgoLoader from "@/components/railgo-loader/railgo-loader.vue";
 		margin: 0 3rpx;
 		background: #f2f4f8;
 		border-radius: 6rpx;
+	}
+
+	/* 正晚点卡片缩略图 */
+	.preview-delay-list {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		padding: 12rpx;
+		display: flex;
+		flex-direction: column;
+		gap: 8rpx;
+		background: #f2f4f8;
+	}
+
+	.preview-delay-card {
+		flex: 1;
+		display: flex;
+		align-items: stretch;
+		background: #fff;
+		border-radius: 8rpx;
+		overflow: hidden;
+	}
+
+	.preview-delay-bar {
+		width: 8rpx;
+		background: #114598;
+	}
+
+	.preview-delay-bar--delay {
+		background: #c0392b;
+	}
+
+	.preview-delay-col {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		gap: 6rpx;
+		padding: 0 12rpx;
+	}
+
+	.preview-delay-row {
+		height: 12rpx;
+		border-radius: 4rpx;
+		background: #cdd8ea;
+	}
+
+	.preview-delay-line {
+		height: 8rpx;
+		border-radius: 4rpx;
+		background: #e8eef7;
+	}
+
+	.preview-delay-line--short {
+		width: 55%;
+	}
+
+	.preview-delay-chip {
+		height: 20rpx;
+		display: flex;
+		align-items: stretch;
+		background: #fff;
+		border-radius: 8rpx;
+		overflow: hidden;
+	}
+
+	.preview-delay-chip .preview-delay-row {
+		flex: 1;
+		margin: auto 12rpx;
+	}
+
+	.preview-delay-sheet {
+		flex: 1;
+		background: #fff;
+		border-top: 4rpx solid #114598;
+		border-radius: 10rpx 10rpx 0 0;
 	}
 
 	.ux-btn[disabled] {

@@ -42,7 +42,7 @@
 						name: 'RailTrack',
 						desc: '视觉效果最好的火车记录App',
 						logo: '/static/friend/railtrack.png',
-						url: 'https://railtrack.top/'
+						url: 'https://railtrack.top/app/'
 					}
 				]
 			};

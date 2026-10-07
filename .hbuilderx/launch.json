@@ -2,7 +2,9 @@
     "version" : "1.0",
     "configurations" : [
         {
-            "customPlaygroundType" : "local",
+            "customPlaygroundType" : "device",
+            "localRepoPath" : "D:/railgo-uniapp",
+            "packageName" : "com.azstudio.railgo",
             "playground" : "custom",
             "type" : "uni-app:app-android"
         }

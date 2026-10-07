@@ -55,6 +55,8 @@
 				closeTimer: null,
 				failTimer: null,
 				pollTimer: null,
+				nfcWatch: null,
+				pollTick: 0,
 				scanning: false,
 				pkgName: '',
 				statusBarHeight: 44
@@ -113,6 +115,8 @@
 				this.failTimer = null;
 				if (this.pollTimer) clearInterval(this.pollTimer);
 				this.pollTimer = null;
+				if (this.nfcWatch) clearInterval(this.nfcWatch);
+				this.nfcWatch = null;
 				this.stopScan();
 			},
 			stopScan() {
@@ -144,6 +148,8 @@
 				}
 				if (!st.enabled) {
 					this.phase = 'nfcOff';
+					this.watchNfcOn();
+					this.startAnim();
 					return;
 				}
 				try {
@@ -151,21 +157,51 @@
 				} catch (e) {
 					this.pkgName = '';
 				}
+				this.startNfcScan();
+				// #endif
+				this.startAnim();
+			},
+			// #ifdef APP-PLUS
+			startNfcScan() {
 				this.scanning = nfc.startScan(null);
 				if (!this.scanning) {
 					this.phase = 'nfcOff';
+					this.watchNfcOn();
 					return;
 				}
 				// 轮询消费插件队列：hasStartupTag 走 boolean 桥可靠；
 				// 不传任何跨调用回调（插件端已禁止存储 JS 回调，避免"回调已释放"崩溃）
+				this.pollTick = 0;
 				this.pollTimer = setInterval(() => {
-					if (!nfc.hasStartupTag()) return;
-					const t = nfc.takeStartupTag();
-					if (t != null && t.uid != null && String(t.uid).length > 0) this.onTagDiscovered(t);
+					if (nfc.hasStartupTag()) {
+						const t = nfc.takeStartupTag();
+						if (t != null && t.uid != null && String(t.uid).length > 0) this.onTagDiscovered(t);
+						return;
+					}
+					// 每 4 拍(1s)重新激活前台分发：App pause/resume 后系统会撤销 dispatch 注册
+					this.pollTick++;
+					if (this.pollTick % 4 === 0 && (this.phase === 'scan' || this.phase === 'fail')) {
+						try { nfc.startScan(null); } catch (e) { /* 忽略 */ }
+					}
 				}, 250);
-				// #endif
-				this.startAnim();
 			},
+			// 去系统设置开启 NFC 返回后自动恢复扫描（免去关闭重开模态框）
+			watchNfcOn() {
+				if (this.nfcWatch) clearInterval(this.nfcWatch);
+				this.nfcWatch = setInterval(() => {
+					let st = null;
+					try { st = nfc.checkStatus(); } catch (e) { return; }
+					if (st && st.enabled) {
+						clearInterval(this.nfcWatch);
+						this.nfcWatch = null;
+						this.phase = 'scan';
+						this.floor = 0;
+						try { this.pkgName = nfc.getPackageName() || ''; } catch (e) { this.pkgName = ''; }
+						this.startNfcScan();
+					}
+				}, 1000);
+			},
+			// #endif
 			startAnim() {
 				if (this.timer) clearInterval(this.timer);
 				this.timer = setInterval(() => {
@@ -191,11 +227,13 @@
 			},
 			onTagDiscovered(tagInfo) {
 				if (this.phase !== 'scan' && this.phase !== 'fail') return;
+				console.log('[railgo-nfc] tag found uid=' + tagInfo.uid + ' techs=' + (tagInfo.techList || []).join(','));
 				if (this.failTimer) { clearTimeout(this.failTimer); this.failTimer = null; }
 				this.floor = 0;
 				this.phase = 'writing';
 				// #ifdef APP-PLUS
 				const uri = this.buildTagUri();
+				console.log('[railgo-nfc] tag uri=' + uri);
 				// 移出 UTS 回调栈再调用：避免 "UTS→JS→UTS→JS" 同栈重入桥接导致崩溃/回调失效
 				setTimeout(() => {
 					if (!this.visible || this.phase !== 'writing') return;
@@ -227,14 +265,37 @@
 				const pages = getCurrentPages();
 				const cur = pages[pages.length - 1];
 				const route = (cur && cur.route) ? cur.route : '';
-				const opts = (cur && cur.options) ? cur.options : {};
+				// vue3/App 端页面参数在 $page.options；vue2 部分版本挂 cur.options——两处都取
+				let opts = {};
+				try {
+					if (cur && cur.$page && cur.$page.options) opts = cur.$page.options;
+					else if (cur && cur.options) opts = cur.options;
+				} catch (e) {
+					opts = {};
+				}
+				// 兜底：从 fullPath（含查询串）解析参数，防止两处都拿不到
+				if (Object.keys(opts).length === 0 && cur && cur.$page && cur.$page.fullPath && cur.$page.fullPath.indexOf('?') >= 0) {
+					const qs = cur.$page.fullPath.split('?')[1] || '';
+					qs.split('&').forEach(kv => {
+						const eq = kv.indexOf('=');
+						if (eq > 0) {
+							try {
+								opts[decodeURIComponent(kv.substring(0, eq))] = decodeURIComponent(kv.substring(eq + 1));
+							} catch (e2) {
+								opts[kv.substring(0, eq)] = kv.substring(eq + 1);
+							}
+						}
+					});
+				}
 				const parts = [];
 				Object.keys(opts).forEach(key => {
 					if (key.toLowerCase() === 'date') return;
-					parts.push(encodeURIComponent(key) + '=' + encodeURIComponent(opts[key]));
+					const v = opts[key];
+					if (v === undefined || v === null) return;
+					parts.push(encodeURIComponent(key) + '=' + encodeURIComponent(v));
 				});
-				const qs = parts.length > 0 ? ('?' + parts.join('&')) : '';
-				return 'railgo://' + route + qs;
+				const qs2 = parts.length > 0 ? ('?' + parts.join('&')) : '';
+				return 'railgo://' + route + qs2;
 			},
 			openNfcSettings() {
 				// #ifdef APP-PLUS
@@ -253,6 +314,7 @@
 			closeModal() {
 				if (this.closeTimer) { clearTimeout(this.closeTimer); this.closeTimer = null; }
 				if (this.pollTimer) { clearInterval(this.pollTimer); this.pollTimer = null; }
+				if (this.nfcWatch) { clearInterval(this.nfcWatch); this.nfcWatch = null; }
 				this.visible = false;
 				if (this.timer) { clearInterval(this.timer); this.timer = null; }
 				this.stopScan();

@@ -232,6 +232,7 @@
 			this.checkUpdatePopup();
 			// 从个性化设置读取主页风格
 			this.indexStyle = uni.getStorageSync('indexStyle') || 'bento';
+			
 		},
 		methods: {
 			checkUpdatePopup() {
