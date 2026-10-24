@@ -365,31 +365,133 @@
 			</view>
 
 			<view v-if="selectIndex==2">
-				<view style="position:relative; margin-top: 10rpx;" :style="{height: mapHeightPx}">
-					<siji-tianditu
-						ref="sijiMapRef"
-						:map-key="tdtMapKey"
-						:lonlat="[118.05, 24.621]"
-						:zoom="6"
-						:on-loaded="onMapReady"
-						style="width:100%;height:100%;"
-					></siji-tianditu>
-					<!-- 图例 -->
-					<view style="position:absolute;bottom:20rpx;right:20rpx;background:rgba(255,255,255,0.92);border-radius:8rpx;padding:12rpx 20rpx;z-index:10;display:flex;flex-direction:column;gap:6rpx;">
-						<view style="display:flex;align-items:center;gap:10rpx;">
-							<view style="width:16rpx;height:16rpx;border-radius:50%;background:#114598;border:2rpx solid #fff;"></view>
-							<text style="font-size:22rpx;color:#333;">站点</text>
+				<!-- 模式切换：地图 / 简图 -->
+				<view class="path-toolbar">
+					<view class="path-mode-tabs">
+						<view class="path-mode-tab" :class="{ 'path-mode-tab--active': pathViewMode === 'map' }"
+							@click="setPathViewMode('map')">
+							<text class="icon path-mode-icon">&#xe642;</text>
+							<text>地图模式</text>
 						</view>
-						<view style="display:flex;align-items:center;gap:10rpx;">
-							<view style="width:12rpx;height:12rpx;border-radius:50%;background:#d70f19;border:2rpx solid #fff;"></view>
-							<text style="font-size:22rpx;color:#333;">路径点</text>
+						<view class="path-mode-tab" :class="{ 'path-mode-tab--active': pathViewMode !== 'map' }"
+							@click="setPathViewMode('schematic')">
+							<text class="icon path-mode-icon">&#xe5c8;</text>
+							<text>简图模式</text>
 						</view>
-						<view style="display:flex;align-items:center;gap:10rpx;">
-							<view style="width:18rpx;height:18rpx;border-radius:50%;background:#10b981;border:2rpx solid #fff;"></view>
-							<text style="font-size:22rpx;color:#333;">列车实时位置</text>
+					</view>
+					<view class="path-toolbar-actions">
+						<text v-if="pathLoading" class="path-toolbar-hint">算路中…</text>
+						<view v-else class="path-recalc" hover-class="ux-tap" @click="fetchRoutePlan">
+							<text>重算</text>
 						</view>
 					</view>
 				</view>
+
+				<!-- 失败提示 -->
+				<view v-if="pathError" class="ux-bg-white ux-border-radius path-state path-state--error">
+					<text class="path-state-title">算路失败</text>
+					<text class="path-state-msg">{{pathError}}</text>
+					<text class="path-state-sub">服务地址：{{pathApiBase}}</text>
+					<view class="path-state-actions">
+						<button size="mini" class="path-primary-btn" @click="fetchRoutePlan">重试</button>
+					</view>
+				</view>
+
+				<block v-if="pathResult">
+					<!-- 地图模式 -->
+					<view v-if="pathViewMode === 'map'">
+						<view class="path-map-box" :style="{height: mapHeightPx}">
+							<siji-tianditu
+								ref="sijiMapRef"
+								:map-key="tdtMapKey"
+								:lonlat="[118.05, 24.621]"
+								:zoom="6"
+								:on-loaded="onMapReady"
+								style="width:100%;height:100%;"
+							></siji-tianditu>
+							<view class="path-map-legend">
+								<view class="path-map-legend-item">
+									<view class="path-legend-dot path-legend-dot--stop"></view>
+									<text>停靠站</text>
+								</view>
+								<view class="path-map-legend-item">
+									<view class="path-legend-dot path-legend-dot--change"></view>
+									<text>换线站</text>
+								</view>
+								<view class="path-map-legend-item">
+									<view class="path-legend-dot path-legend-dot--office"></view>
+									<text>线路所</text>
+								</view>
+								<view class="path-map-legend-item">
+									<view class="path-legend-dot path-legend-dot--train"></view>
+									<text>列车实时位置</text>
+								</view>
+							</view>
+						</view>
+						<view v-if="pathRouteLegend.length" class="ux-bg-white ux-border-radius path-route-legend">
+							<view v-for="(route, index) in pathRouteLegend" :key="index" class="path-route-legend-row">
+								<view class="path-legend-swatch" :style="{backgroundColor: route.color}"></view>
+								<text class="path-route-legend-name">{{route.routeName}}</text>
+								<text class="path-route-legend-mileage">{{route.mileage}} km</text>
+							</view>
+						</view>
+						<text class="path-time-note path-time-note--map">{{pathMapTimeNote}}</text>
+					</view>
+
+					<!-- 简图模式（蛇形线路图，参考 RailLog 经由图） -->
+					<view v-else class="ux-bg-white ux-border-radius path-schematic-card">
+						<uni-section class="path-schematic-section" title="经由简图" type="line"
+							title-font-size="28rpx" style="background-color: transparent;">
+							<template v-slot:right>
+								<view class="path-schematic-toggle" hover-class="ux-tap" @click="toggleSchematicExpand">
+									<text>{{schematicExpandIntermediate ? '仅看停靠站' : '展开中间站'}}</text>
+								</view>
+							</template>
+						</uni-section>
+						<view v-if="schematicRows.length === 0" class="path-state">
+							<text class="path-state-sub">暂无简图数据</text>
+						</view>
+						<view v-else class="path-schematic">
+							<view v-for="(row, rowIndex) in schematicRows" :key="rowIndex" class="path-row"
+								:class="{ 'path-row--reverse': row.isReversed }">
+								<view v-for="(item, colIndex) in row.items" :key="colIndex" class="path-cell"
+									:class="{ 'path-cell--empty': !item }">
+									<block v-if="item">
+										<view v-if="item.chip" class="path-route-chip"
+											:style="{ color: item.chip.color, borderColor: item.chip.color, maxWidth: item.chip.maxWidth + '%' }">
+											{{item.chip.routeName}}
+										</view>
+										<view v-if="item.fromEdgeColor" class="path-line path-line--from-edge"
+											:style="{backgroundColor: item.fromEdgeColor}"></view>
+										<view v-if="item.toNextColor" class="path-line path-line--next"
+											:style="{backgroundColor: item.toNextColor}"></view>
+										<view v-if="item.toEdgeColor" class="path-line path-line--edge"
+											:style="{backgroundColor: item.toEdgeColor}"></view>
+										<view class="path-dot"
+											:style="{'background-image': 'linear-gradient(90deg,' + item.leftColor + ' 50%,' + item.rightColor + ' 50%)'}"></view>
+										<view class="path-station">
+											<text class="path-station-name" :class="{ 'path-station-name--stop': item.isStop }">{{item.name}}</text>
+											<text class="path-station-mileage">{{formatSchematicMileage(item.mileage)}}</text>
+											<text v-if="item.time" class="path-station-time"
+												:class="{ 'path-station-time--estimated': item.time.estimated }">{{item.time.label}}</text>
+										</view>
+									</block>
+								</view>
+								<view v-if="row.connector" class="path-connector"
+									:class="{ 'path-connector--left': row.isReversed }"
+									:style="{backgroundColor: row.connector.color, color: row.connector.color}"></view>
+							</view>
+						</view>
+						<view v-if="pathRouteLegend.length" class="path-schematic-legend">
+							<view v-for="(route, index) in pathRouteLegend" :key="index" class="path-schematic-legend-item">
+								<view class="path-legend-swatch" :style="{backgroundColor: route.color}"></view>
+								<text class="path-schematic-legend-name">{{route.routeName}}</text>
+								<text class="path-schematic-legend-mileage">{{route.mileage}} km</text>
+							</view>
+						</view>
+						<text class="path-time-note">{{pathTimeNote}}</text>
+					</view>
+				</block>
 			</view>
 
 			<br>
@@ -485,7 +587,6 @@
 		uniPost
 	} from "@/scripts/req";
 	import SijiTianditu from '@/uni_modules/siji-tianditu/components/siji-tianditu/siji-tianditu.vue';
-	import { gcj02ToWgs84 } from "@/scripts/coord_transform";
 	import { getTrainPosition, getMinutesSinceDate } from "@/scripts/trainPosition";
 	import { showLoader, hideLoader } from "@/scripts/loader.js";
 	import RailgoLoader from "@/components/railgo-loader/railgo-loader.vue";
@@ -558,6 +659,25 @@
 				"mapPointData": [],		// 存储绘制的站点+端点，用于实时刷新列车位置
 				"trainPositionTimer": null, // 实时位置更新定时器
 				"currentTrainPos": null,	// 当前列车实时位置 { lng, lat, status, currentStation }
+				// ===== 路径 tab：本地算路 =====
+				"pathViewMode": uni.getStorageSync('trainPathView') || 'schematic',
+				"pathLoading": false,
+				"pathError": "",
+				"pathResult": null,
+				"pathApiBase": "",
+				"pathRequestToken": 0,
+				"pathRouteColors": {},
+				"pathRouteLegend": [],
+				"pathStopNames": [],
+				"pathChangeNames": [],
+				"trackingTimetable": [],
+				"pathStationTimes": [],
+				"pathTimesFromDelay": false,
+				"schematicRows": [],
+				"schematicColumns": 4,
+				"schematicSections": [],
+				"schematicExpandIntermediate": false,
+				"_onWindowResize": null
 			}
 		},
 		computed: {
@@ -616,6 +736,22 @@
 				});
 			},
 			/**
+			 * 途径站时间说明：停靠站用时刻表/正晚点，中间站与线路所为均速推算
+			 */
+			pathTimeBaseNote() {
+				return this.pathTimesFromDelay
+					? '停靠站时间已按正晚点修正，途经点按区间均速估算'
+					: '停靠站取时刻表时间，途经点按区间均速估算';
+			},
+			pathTimeNote() {
+				return this.pathTimeBaseNote + (this.schematicExpandIntermediate
+					? '；当前显示全部途经点'
+					: '；展开中间站可查看全部途经点');
+			},
+			pathMapTimeNote() {
+				return this.pathTimeBaseNote + '；地图仅标注停靠站、换线站和线路所，线路所放大后显示名称和时间';
+			},
+			/**
 			 * 弹层实时站台/检票口：弹层内单站查询后反映最新时刻表结果
 			 */
 			sheetStation() {
@@ -660,6 +796,14 @@
 			this.$nextTick(() => {
 				this.calcMapHeight();
 			});
+			this.updateSchematicColumns();
+			if (typeof uni.onWindowResize === 'function') {
+				this._onWindowResize = () => {
+					this.updateSchematicColumns();
+					if (this.pathResult) this.buildSchematic(this.pathResult);
+				};
+				uni.onWindowResize(this._onWindowResize);
+			}
 
 			const c = uni.getStorageSync("search");
 			uni.setStorage({
@@ -681,6 +825,10 @@
 		},
 		onUnload() {
 			this.stopTrainTracking();
+			if (this._onWindowResize && typeof uni.offWindowResize === 'function') {
+				uni.offWindowResize(this._onWindowResize);
+				this._onWindowResize = null;
+			}
 		},
 		methods: {
 			/**
@@ -1261,9 +1409,6 @@
 						this.cardColor = this.colorMap[this.carData.numberKind] || '#114598';
 						loadSuccess = true; 
 
-						// 异步获取运行线路点
-						this.fetchMapLine();
-
 					} else {
 						// --- 本地模式逻辑：获取车次详情 ---
 						const result = await doQuery("SELECT * FROM trains WHERE number='" + this.keyword +
@@ -1415,6 +1560,8 @@
 								if (delayResp.data && Array.isArray(delayResp.data.data)) {
 									this.delay = delayResp.data.data;
 									delayLoadSuccess = true;
+									// 算路结果可能先到，正晚点到齐后重算站点时间
+									this.refreshPathTimes();
 								} else {
 									this.delay = [];
 								}
@@ -1482,7 +1629,19 @@
 				});
 			},
 			tabChange: function(e) {
+				const previous = this.selectIndex;
 				this.selectIndex = e.index;
+				if (e.index === 2) {
+					// 首次进入路径 tab 才请求，之后切回来复用已有结果
+					if (!this.pathResult && !this.pathLoading) {
+						this.fetchRoutePlan();
+					}
+					// 地图是 v-if 重建的，重新挂载后等 onLoaded 再绘制
+					if (this.pathViewMode === 'map') this.mapReady = false;
+				} else {
+					this.stopTrainTracking();
+					if (previous === 2) this.mapReady = false;
+				}
 			},
 			
 			/**
@@ -1607,55 +1766,614 @@
 				return diff + 'MIN';
 			},
 			/**
-			 * 获取列车运行线路点
+			 * 请求算路服务：按时刻表有效累计里程动态分组
 			 */
-			async fetchMapLine() {
-				try {
-					const mapLineBase = uni.getStorageSync('service_source_mapLine') || 'https://rg-api.zenglingkun.cn';
-					const resp = await uniGet(mapLineBase + '/api/v2/mapLine', {
-						params: { train: this.train }
-					});
-					if (resp && resp.data && resp.data.data) {
-						// GCJ-02 → WGS-84 坐标转换
-						const raw = resp.data.data;
-						// 转换站点坐标
-						const stations = (raw.stations || []).map(s => {
-							const entries = Object.entries(s);
-							const name = entries[0][0];
-							const coords = entries[0][1];
-							const wgs = gcj02ToWgs84(parseFloat(coords[0]), parseFloat(coords[1]));
-							return { [name]: [wgs.lng, wgs.lat] };
-						});
-						// 转换线路坐标
-						const lines = {};
-						if (raw.train) {
-							Object.keys(raw.train).forEach(key => {
-								const seg = raw.train[key];
-								lines[key] = {
-									index: seg.index,
-									line: seg.line.map(pt => {
-										const wgs = gcj02ToWgs84(parseFloat(pt[0]), parseFloat(pt[1]));
-										return [wgs.lng, wgs.lat];
-									})
-								};
-							});
-						}
-						this.mapStations = stations;
-						this.mapLines = lines;
-						this.mapDataReady = true;
-						this.drawRouteOnMap();
-					}
-				} catch (e) {
-					console.warn('获取运行线路点失败', e);
+			async fetchRoutePlan() {
+				const timetable = (this.carData.timetable || [])
+					.filter(item => item && String(item.station || '').trim());
+				if (timetable.length < 2) {
+					this.pathLoading = false;
+					this.pathResult = null;
+					this.pathError = '时刻表站数不足，无法计算路径';
+					return;
 				}
+				const token = ++this.pathRequestToken;
+				const base = 'https://next.railgo.zenglingkun.cn';
+				this.pathApiBase = base;
+				this.pathLoading = true;
+				this.pathError = '';
+				showLoader('正在计算经由');
+				const stops = timetable.map(item => {
+					const stop = { station: String(item.station).trim() };
+					const mileage = this.parseTimetableMileage(item.distance);
+					// 只把有效累计里程交给服务端；缺的站由前后锚点跨过去
+					if (mileage !== null) stop.distance = mileage;
+					return stop;
+				});
+				try {
+					const response = await new Promise((resolve, reject) => {
+						uni.request({
+							url: base + '/api/v2/resolveTimetable',
+							method: 'POST',
+							timeout: 30000,
+							header: { 'Content-Type': 'application/json' },
+							data: {
+								trainNumber: this.train,
+								stops,
+								datum: 'wgs84',
+								order: 'lnglat',
+								maxPoints: 100,
+								includePolyline: true
+							},
+							success: resolve,
+							fail: reject
+						});
+					});
+					if (token !== this.pathRequestToken) return;
+					const body = response && response.data ? response.data : {};
+					if (!body.success || !body.data) {
+						throw new Error(body.msg || '算路服务返回失败');
+					}
+					this.applyPathResult(body.data, timetable);
+				} catch (error) {
+					if (token !== this.pathRequestToken) return;
+					const detail = error && (error.errMsg || error.message)
+						? (error.errMsg || error.message)
+						: '未知错误';
+					this.pathError = '无法完成算路：' + detail;
+					this.pathResult = null;
+					this.mapDataReady = false;
+					this.schematicRows = [];
+					this.stopTrainTracking();
+				} finally {
+					if (token === this.pathRequestToken) this.pathLoading = false;
+					hideLoader();
+				}
+			},
+			parseTimetableMileage(value) {
+				if (value === null || value === undefined || value === '' || value === '-') return null;
+				const mileage = Number(value);
+				return Number.isFinite(mileage) && mileage >= 0 ? mileage : null;
+			},
+			applyPathResult(data, timetable) {
+				this.pathResult = data;
+				this.pathRouteColors = this.buildRouteColors(data);
+				this.pathRouteLegend = this.buildRouteLegend(data);
+				this.pathStationTimes = this.buildStationTimes(data, timetable);
+				this.buildSchematic(data);
+				this.buildMapData(data);
+				this.trackingTimetable = this.buildTrackingTimetable(timetable, data);
+				this.$nextTick(() => {
+					if (this.pathViewMode === 'map') this.drawRouteOnMap();
+				});
+			},
+			/**
+			 * 用相邻停靠站的区间均速和线路里程，估算途经站/线路所的到达时间。
+			 * 停靠站优先用时刻表时间；有正晚点时按到发偏差修正。
+			 */
+			buildStationTimes(data, timetable) {
+				const stations = (data && data.stations) || [];
+				const mileages = (data && data.stationMileages) || [];
+				const stops = (timetable || []).filter(item => item && String(item.station || '').trim());
+				const count = stations.length;
+				const result = new Array(count).fill(null);
+				this.pathTimesFromDelay = false;
+				if (count === 0 || stops.length === 0) return result;
+
+				const stopIndexes = (data && data.stopStationIndexes) || [];
+				const resolvedIndexes = stops.map((_, index) => {
+					const direct = stopIndexes[index];
+					if (typeof direct === 'number') return direct;
+					const stop = ((data && data.stops) || [])[index];
+					return stop && typeof stop.stationIndex === 'number' ? stop.stationIndex : null;
+				});
+
+				const delayMap = this.buildDelayMap();
+				const normalized = this.normalizeTimetableTimes(stops);
+				let delayApplied = false;
+				// 正晚点接口通常只返回部分站；未返回或标记缺失的后续站沿用最近一次偏差，
+				// 直到出现新的明确状态（含正点）再重新对齐
+				const delayStatuses = {
+					DELAY: true,
+					EARLY: true,
+					ON_TIME: true,
+					DELAY_PREDICTION: true,
+					EARLY_PREDICTION: true
+				};
+				let inheritedDelay = 0;
+				normalized.forEach(item => {
+					let delay = inheritedDelay;
+					const entry = delayMap[item.station];
+					if (entry && delayStatuses[entry.delayStatusCode]) {
+						delay = this.getDelayMinutes(delayMap, item.station);
+						inheritedDelay = delay;
+					}
+					if (item.arriveAbs != null) item.arriveAbs += delay;
+					if (item.departAbs != null) item.departAbs += delay;
+					if (delay !== 0) delayApplied = true;
+				});
+				this.pathTimesFromDelay = delayApplied;
+
+				// 前站晚点后，后续站按计划时刻可能倒序；把后续时间整体后移，保证区间均速可算
+				normalized.forEach((item, index) => {
+					const previous = index > 0 ? normalized[index - 1] : null;
+					const previousEnd = previous
+						? (previous.departAbs != null ? previous.departAbs : previous.arriveAbs)
+						: null;
+					if (item.arriveAbs != null && previousEnd != null && item.arriveAbs < previousEnd) {
+						const shift = previousEnd - item.arriveAbs;
+						item.arriveAbs += shift;
+						if (item.departAbs != null) item.departAbs += shift;
+					} else if (item.arriveAbs == null && item.departAbs != null
+						&& previousEnd != null && item.departAbs < previousEnd) {
+						item.departAbs = previousEnd + Math.max(item.plannedDwell, 0);
+					}
+					if (item.arriveAbs != null && item.departAbs != null && item.departAbs < item.arriveAbs) {
+						item.departAbs = item.arriveAbs + Math.max(item.plannedDwell, 1);
+					}
+				});
+
+				normalized.forEach((item, index) => {
+					const routeIndex = resolvedIndexes[index];
+					if (!Number.isInteger(routeIndex) || routeIndex < 0 || routeIndex >= count) return;
+					const isFirst = index === 0;
+					const minutes = isFirst
+						? (item.departAbs != null ? item.departAbs : item.arriveAbs)
+						: (item.arriveAbs != null ? item.arriveAbs : item.departAbs);
+					if (minutes == null || !Number.isFinite(minutes)) return;
+					const mode = isFirst ? 'depart' : (item.arriveAbs != null ? 'arrive' : 'depart');
+					result[routeIndex] = this.formatStationTime(minutes, false, mode);
+				});
+
+				for (let index = 0; index < normalized.length - 1; index++) {
+					const from = normalized[index];
+					const to = normalized[index + 1];
+					const fromIndex = resolvedIndexes[index];
+					const toIndex = resolvedIndexes[index + 1];
+					if (!Number.isInteger(fromIndex) || !Number.isInteger(toIndex) || toIndex <= fromIndex) continue;
+					const start = from.departAbs != null ? from.departAbs : from.arriveAbs;
+					let end = to.arriveAbs != null ? to.arriveAbs : to.departAbs;
+					const startMileage = Number(mileages[fromIndex]);
+					const endMileage = Number(mileages[toIndex]);
+					if (start == null || end == null
+						|| !Number.isFinite(startMileage) || !Number.isFinite(endMileage)
+						|| endMileage <= startMileage) continue;
+					if (!(end > start)) {
+						// 正晚点只覆盖部分站时，仍用计划运行时间兜底
+						const plannedStart = from.plannedDepart != null ? from.plannedDepart : from.plannedArrive;
+						const plannedEnd = to.plannedArrive != null ? to.plannedArrive : to.plannedDepart;
+						if (plannedStart == null || plannedEnd == null || plannedEnd <= plannedStart) continue;
+						end = start + (plannedEnd - plannedStart);
+					}
+					for (let routeIndex = fromIndex + 1; routeIndex < toIndex; routeIndex++) {
+						const mileage = Number(mileages[routeIndex]);
+						if (!Number.isFinite(mileage)) continue;
+						const fraction = Math.min(Math.max(
+							(mileage - startMileage) / (endMileage - startMileage), 0), 1);
+						result[routeIndex] = this.formatStationTime(
+							start + fraction * (end - start), true, 'pass');
+					}
+				}
+				return result;
+			},
+			buildDelayMap() {
+				const map = {};
+				(this.delay || []).forEach(item => {
+					if (!item) return;
+					const name = item.stationName || item.station;
+					if (name) map[name] = item;
+				});
+				return map;
+			},
+			getDelayMinutes(delayMap, station) {
+				const item = delayMap && delayMap[station];
+				if (!item || typeof item.delayTime !== 'number' || !Number.isFinite(item.delayTime)) return 0;
+				if (item.delayStatusCode === 'DELAY' || item.delayStatusCode === 'DELAY_PREDICTION') {
+					return Math.abs(item.delayTime);
+				}
+				if (item.delayStatusCode === 'EARLY' || item.delayStatusCode === 'EARLY_PREDICTION') {
+					return -Math.abs(item.delayTime);
+				}
+				return 0;
+			},
+			/**
+			 * 时刻表时间转成从始发日 00:00 起的绝对分钟，跨日按运行顺序递增
+			 */
+			normalizeTimetableTimes(timetable) {
+				let dayOffset = 0;
+				let previousEnd = null;
+				return timetable.map((item, index) => {
+					const arriveRaw = this.parseClockMinutes(item.arrive);
+					const departRaw = this.parseClockMinutes(item.depart);
+					if (index > 0 && arriveRaw != null && previousEnd != null) {
+						while (arriveRaw + dayOffset * 1440 < previousEnd) dayOffset += 1;
+					}
+					const arriveAbs = arriveRaw == null ? null : arriveRaw + dayOffset * 1440;
+					let departAbs = null;
+					if (departRaw != null) {
+						departAbs = departRaw + dayOffset * 1440;
+						if (arriveAbs != null && departAbs < arriveAbs) departAbs += 1440;
+					}
+					const plannedArrive = arriveAbs;
+					const plannedDepart = departAbs;
+					const plannedDwell = plannedArrive != null && plannedDepart != null
+						? Math.max(plannedDepart - plannedArrive, 0)
+						: 0;
+					previousEnd = departAbs != null ? departAbs : (arriveAbs != null ? arriveAbs : previousEnd);
+					return {
+						station: item.station,
+						arriveAbs,
+						departAbs,
+						plannedArrive,
+						plannedDepart,
+						plannedDwell
+					};
+				});
+			},
+			parseClockMinutes(value) {
+				if (value === null || value === undefined || value === '' || value === '-') return null;
+				const match = String(value).trim().match(/^(\d{1,2}):(\d{2})/);
+				if (!match) return null;
+				const hours = parseInt(match[1], 10);
+				const minutes = parseInt(match[2], 10);
+				return Number.isFinite(hours) && Number.isFinite(minutes) ? hours * 60 + minutes : null;
+			},
+			formatStationTime(minutes, estimated, mode) {
+				if (minutes == null || !Number.isFinite(minutes)) return null;
+				const rounded = Math.max(Math.round(minutes), 0);
+				const dayOffset = Math.floor(rounded / 1440);
+				const minutesInDay = rounded % 1440;
+				const timeText = String(Math.floor(minutesInDay / 60)).padStart(2, '0')
+					+ ':' + String(minutesInDay % 60).padStart(2, '0');
+				const dayPrefix = dayOffset > 0
+					? (dayOffset === 1 ? '次日 ' : '+' + dayOffset + ' ')
+					: '';
+				const estimatePrefix = estimated ? '约 ' : '';
+				const suffix = mode === 'depart' ? ' 发' : (mode === 'arrive' ? ' 到' : '');
+				return {
+					minutes: rounded,
+					dayOffset,
+					timeText,
+					estimated,
+					label: dayPrefix + estimatePrefix + timeText + suffix,
+					mapLabel: dayPrefix + estimatePrefix + timeText
+				};
+			},
+			refreshPathTimes() {
+				if (!this.pathResult) return;
+				const timetable = (this.carData.timetable || [])
+					.filter(item => item && String(item.station || '').trim());
+				this.pathStationTimes = this.buildStationTimes(this.pathResult, timetable);
+				this.buildSchematic(this.pathResult);
+				this.buildMapData(this.pathResult);
+				if (this.selectIndex === 2 && this.pathViewMode === 'map' && this.mapReady) {
+					this.$nextTick(() => this.drawRouteOnMap());
+				}
+			},
+			buildRouteColors(data) {
+				const palette = ['#005AC1', '#C43E00', '#006B5E', '#8E24AA', '#7A5900', '#B0005A'];
+				const colors = {};
+				let index = 0;
+				const names = [
+					...(data.legRouteNames || []),
+					...(data.segments || []).map(item => item.routeName)
+				];
+				names.forEach(name => {
+					const key = name || '未知线路';
+					if (!colors[key]) {
+						colors[key] = palette[index % palette.length];
+						index++;
+					}
+				});
+				return colors;
+			},
+			buildRouteLegend(data) {
+				const totals = {};
+				(data.segments || []).forEach(segment => {
+					const key = segment.routeName || '未知线路';
+					const entry = totals[key] || { routeName: key, mileage: 0, count: 0 };
+					entry.mileage += Number(segment.mileageKm) || 0;
+					entry.count += 1;
+					totals[key] = entry;
+				});
+				return Object.keys(totals).map(key => ({
+					routeName: totals[key].routeName,
+					mileage: Math.round(totals[key].mileage * 10) / 10,
+					count: totals[key].count,
+					color: this.pathRouteColors[key] || '#114598'
+				}));
+			},
+			buildTrackingTimetable(timetable, data) {
+				const resolved = {};
+				(data.stopStationIndexes || []).forEach((stationIndex, index) => {
+					if (typeof stationIndex === 'number' && data.stations && data.stations[stationIndex]) {
+						resolved[index] = data.stations[stationIndex];
+					}
+				});
+				return timetable.map((item, index) => ({
+					...item,
+					station: resolved[index] || item.station
+				}));
+			},
+			buildSchematic(data) {
+				const stations = data.stations || [];
+				if (stations.length === 0) {
+					this.schematicRows = [];
+					this.schematicSections = [];
+					return;
+				}
+				const legNames = data.legRouteNames || [];
+				const mileages = data.stationMileages || [];
+				const stopIndexSet = new Set();
+				(data.stopStationIndexes || []).forEach(index => {
+					if (typeof index === 'number') stopIndexSet.add(index);
+				});
+				// 收起中间站时保留停靠站和换线站，保证每一笔都能用单一线路颜色画出来
+				const routeChanges = new Set([0, stations.length - 1]);
+				legNames.forEach((name, index) => {
+					// 换线发生在线路 i 上（站 i → i+1），站 i 必须留下才能把两种颜色分开
+					if (index > 0 && name !== legNames[index - 1]) routeChanges.add(index);
+				});
+				const visible = [];
+				stations.forEach((name, index) => {
+					if (this.schematicExpandIntermediate || stopIndexSet.has(index) || routeChanges.has(index)) {
+						visible.push(index);
+					}
+				});
+				if (visible.length === 0) return;
+				if (visible[0] !== 0) visible.unshift(0);
+				if (visible[visible.length - 1] !== stations.length - 1) {
+					visible.push(stations.length - 1);
+				}
+
+				const defaultColor = this.pathRouteColors[legNames[0]] || '#114598';
+				const legs = [];
+				for (let index = 0; index < visible.length - 1; index++) {
+					const from = visible[index];
+					const to = visible[index + 1];
+					const routeName = legNames[from] || '未知线路';
+					const fromMileage = typeof mileages[from] === 'number' ? mileages[from] : 0;
+					const toMileage = typeof mileages[to] === 'number' ? mileages[to] : fromMileage;
+					legs.push({
+						from,
+						to,
+						routeName,
+						color: this.pathRouteColors[routeName] || defaultColor,
+						mileage: Math.max(toMileage - fromMileage, 0)
+					});
+				}
+
+				const sections = [];
+				legs.forEach((leg, legIndex) => {
+					const last = sections[sections.length - 1];
+					if (last && last.routeName === leg.routeName) {
+						last.to = leg.to;
+						last.mileage += leg.mileage;
+					} else {
+						sections.push({
+							routeName: leg.routeName,
+							color: leg.color,
+							from: leg.from,
+							to: leg.to,
+							mileage: leg.mileage,
+							startOrder: legIndex
+						});
+					}
+				});
+				this.schematicSections = sections;
+
+				const stopByIndex = {};
+				(data.stops || []).forEach(stop => {
+					if (typeof stop.stationIndex === 'number') stopByIndex[stop.stationIndex] = stop;
+				});
+				const items = visible.map((stationIndex, visibleOrder) => {
+					const incoming = visibleOrder > 0 ? legs[visibleOrder - 1].color : defaultColor;
+					const outgoing = visibleOrder < legs.length ? legs[visibleOrder].color : incoming;
+					return {
+						index: stationIndex,
+						order: visibleOrder,
+						name: stations[stationIndex],
+						mileage: typeof mileages[stationIndex] === 'number' ? mileages[stationIndex] : null,
+						time: this.pathStationTimes[stationIndex] || null,
+						isStop: stopIndexSet.has(stationIndex),
+						stop: stopByIndex[stationIndex] || null,
+						incomingColor: incoming,
+						outgoingColor: outgoing,
+						leftColor: incoming,
+						rightColor: outgoing,
+						chip: null,
+						toNextColor: null,
+						toEdgeColor: null,
+						fromEdgeColor: null
+					};
+				});
+
+				const columns = Math.max(2, this.schematicColumns || 4);
+				const rows = [];
+				for (let index = 0; index < items.length; index += columns) {
+					rows.push({ items: items.slice(index, index + columns) });
+				}
+				rows.forEach((row, rowIndex) => {
+					const reversed = rowIndex % 2 === 1;
+					row.isReversed = reversed;
+					row.connector = null;
+					row.connectorSide = reversed ? 'left' : 'right';
+					while (row.items.length < columns) row.items.push(null);
+					const realItems = row.items.filter(Boolean);
+					realItems.forEach((item, position) => {
+						const leg = legs[item.order];
+						if (position < realItems.length - 1) {
+							item.toNextColor = leg ? leg.color : null;
+						} else if (rowIndex < rows.length - 1) {
+							item.toEdgeColor = leg ? leg.color : null;
+							row.connector = leg ? { color: leg.color } : null;
+						}
+						if (position === 0 && rowIndex > 0) {
+							const incomingLeg = legs[item.order - 1];
+							item.fromEdgeColor = incomingLeg ? incomingLeg.color : null;
+						}
+						item.leftColor = reversed ? item.outgoingColor : item.incomingColor;
+						item.rightColor = reversed ? item.incomingColor : item.outgoingColor;
+					});
+				});
+
+				sections.forEach(section => {
+					const item = items[section.startOrder];
+					if (item) item.chip = {
+						routeName: section.routeName,
+						color: section.color
+					};
+				});
+				this.layoutSchematicChips(rows, columns);
+				this.schematicRows = rows;
+			},
+			buildMapData(data) {
+				const stations = data.stations || [];
+				const points = data.points || [];
+				const stationPoints = data.stationPoints || [];
+				const stationCoords = {};
+				const mapStations = [];
+				stations.forEach((name, index) => {
+					const point = stationPoints[index];
+					if (!Array.isArray(point) || point.length < 2) return;
+					const lng = Number(point[1]);
+					const lat = Number(point[0]);
+					if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
+					stationCoords[name] = [lng, lat];
+					const item = {};
+					item[name] = [lng, lat];
+					mapStations.push(item);
+				});
+				const lines = {};
+				let lineIndex = 0;
+				(data.segments || []).forEach(segment => {
+					(segment.legs || []).forEach(leg => {
+						const range = leg.pointRange;
+						if (!range || range.length < 2) return;
+						const slice = points.slice(range[0], range[1]);
+						if (slice.length < 2) return;
+						lines[leg.fromStation + '-' + leg.toStation] = {
+							index: lineIndex++,
+							line: slice,
+							color: this.pathRouteColors[leg.routeName] || '#114598',
+							routeName: leg.routeName
+						};
+					});
+				});
+				this.mapStations = mapStations;
+				this.mapLines = lines;
+
+				// 地图只标关键节点：停靠站、换线站、线路所；普通途经站留给简图展示
+				const markers = [];
+				const stopNames = [];
+				const seen = new Set();
+				const stopIndexSet = new Set();
+				(data.stopStationIndexes || []).forEach(index => {
+					if (typeof index === 'number') stopIndexSet.add(index);
+				});
+				const changeIndexSet = new Set();
+				(data.legRouteNames || []).forEach((name, index) => {
+					// 换线点在站 i（线路 i 与 i-1 的分界），不把起讫点误标成换线站
+					if (index > 0 && name !== data.legRouteNames[index - 1]) {
+						changeIndexSet.add(index);
+					}
+				});
+				const addMarker = (name, kind, stationIndex) => {
+					if (!name || seen.has(name) || !stationCoords[name]) return;
+					seen.add(name);
+					const coord = stationCoords[name];
+					const time = this.pathStationTimes[stationIndex] || null;
+					const marker = {
+						name,
+						lng: coord[0],
+						lat: coord[1],
+						fill: kind === 'stop' ? '#114598' : (kind === 'change' ? '#d70f19' : '#7f8794'),
+						radius: kind === 'stop' ? 9 : (kind === 'change' ? 6 : 5),
+						stroke: '#fff',
+						strokeWidth: 2
+					};
+					if (kind === 'stop') stopNames.push(name);
+					if (kind === 'office') marker.small = true;
+					if (time) marker.time = time.mapLabel;
+					markers.push(marker);
+				};
+				stations.forEach((name, index) => {
+					if (stopIndexSet.has(index)) {
+						addMarker(name, 'stop', index);
+					} else if (changeIndexSet.has(index)) {
+						addMarker(name, 'change', index);
+					} else if (/所$/.test(name)) {
+						addMarker(name, 'office', index);
+					}
+				});
+				this.pathStopNames = stopNames;
+				this.mapPointData = markers;
+				this.mapDataReady = true;
+			},
+			updateSchematicColumns() {
+				let width = 375;
+				try {
+					width = uni.getSystemInfoSync().windowWidth || width;
+				} catch (e) {
+					// 取不到窗口宽度时按手机宽度排 4 列
+				}
+				const available = Math.max(width - 28, 240);
+				this.schematicColumns = Math.max(2, Math.min(7, Math.floor(available / 82)));
+			},
+			layoutSchematicChips(rows, columns) {
+				// 标签始终居中于圆点；maxWidth 以格宽百分比表示，避免不同端 rpx 缩放差异导致偏移
+				rows.forEach(row => {
+					const indexes = [];
+					row.items.forEach((item, domIndex) => {
+						if (!item || !item.chip) return;
+						indexes.push(row.isReversed ? columns - 1 - domIndex : domIndex);
+					});
+					if (!indexes.length) return;
+					indexes.sort((a, b) => a - b);
+					row.items.forEach((item, domIndex) => {
+						if (!item || !item.chip) return;
+						const visualIndex = row.isReversed ? columns - 1 - domIndex : domIndex;
+						const at = indexes.indexOf(visualIndex);
+						const leftChip = at > 0 ? indexes[at - 1] : null;
+						const rightChip = at < indexes.length - 1 ? indexes[at + 1] : null;
+						// 与相邻标签按中心距平分空间；无标签一侧可探入卡片内边距，仍保持居中
+						const edgeAllow = 0.16;
+						const leftLimit = leftChip === null ? 2 * (visualIndex + 0.5) + edgeAllow : visualIndex - leftChip;
+						const rightLimit = rightChip === null ? 2 * (columns - 0.5 - visualIndex) + edgeAllow : rightChip - visualIndex;
+						item.chip.maxWidth = Math.max(20, Math.floor(Math.min(leftLimit, rightLimit) * 100 - 4));
+					});
+				});
+			},
+			toggleSchematicExpand() {
+				this.schematicExpandIntermediate = !this.schematicExpandIntermediate;
+				if (this.pathResult) this.buildSchematic(this.pathResult);
+			},
+			setPathViewMode(mode) {
+				if (mode === this.pathViewMode) return;
+				this.pathViewMode = mode;
+				uni.setStorageSync('trainPathView', mode);
+				if (mode === 'map') {
+					this.mapReady = false;
+					this.$nextTick(() => {
+						if (this.mapDataReady) this.drawRouteOnMap();
+					});
+				} else {
+					this.stopTrainTracking();
+				}
+			},
+			formatSchematicMileage(value) {
+				if (typeof value !== 'number' || !Number.isFinite(value)) return '';
+				const rounded = Math.round(value * 10) / 10;
+				return (Number.isInteger(rounded) ? rounded.toFixed(0) : rounded.toFixed(1)) + ' km';
 			},
 			/**
 			 * 在地图上绘制线路和站点
 			 */
 			drawRouteOnMap() {
 				if (!this.mapReady || !this.mapDataReady || !this.$refs.sijiMapRef) return;
+				if (this.selectIndex !== 2 || this.pathViewMode !== 'map') return;
 
-				// 1. 绘制各区间线路
+				// 1. 绘制各区间线路（按经由线路配色）
 				const segments = Object.values(this.mapLines).sort((a, b) => a.index - b.index);
 				const allCoords = [];
 				const routeSegments = [];
@@ -1664,52 +2382,15 @@
 						seg.line.forEach(pt => allCoords.push(pt));
 						routeSegments.push({
 							points: seg.line,
-							style: { color: '#114598', width: 4 }
+							style: { color: seg.color || '#114598', width: 4 }
 						});
 					}
 				});
 
-				// 2. 收集所有站点名称（去重）
-				const stationMap = {};
-				this.mapStations.forEach(s => {
-					const entries = Object.entries(s);
-					const name = entries[0][0];
-					const coords = entries[0][1];
-					stationMap[name] = { lng: coords[0], lat: coords[1], name };
-				});
+				// 2. 停靠站与换线站标记由 buildMapData 生成
+				const allPoints = this.mapPointData || [];
 
-				// 3. 收集路径段端点（排除已存在的站点）
-				const endpointMap = {};
-				Object.keys(this.mapLines).forEach(key => {
-					const parts = key.split('-');
-					if (parts.length >= 2) {
-						const seg = this.mapLines[key];
-						if (seg.line && seg.line.length > 0) {
-							const start = seg.line[0];
-							const end = seg.line[seg.line.length - 1];
-							[parts[0], parts[1]].forEach((name, idx) => {
-								const pt = idx === 0 ? start : end;
-								if (pt && !stationMap[name]) {
-									endpointMap[name] = { lng: pt[0], lat: pt[1], name };
-								}
-							});
-						}
-					}
-				});
-
-				// 4. 合并站点和路径端点
-				const allPoints = [];
-				Object.values(stationMap).forEach(p => {
-					allPoints.push({ ...p, fill: '#114598', radius: 10, stroke: '#fff' });
-				});
-				Object.values(endpointMap).forEach(p => {
-					allPoints.push({ ...p, fill: '#d70f19', radius: 8, stroke: '#fff' });
-				});
-
-				// 保存点位数据用于实时位置更新
-				this.mapPointData = allPoints;
-
-				// 5. 绘制：先清空，再画路线，再画站点
+				// 3. 绘制：先清空，再画路线，再画站点
 				this.$refs.sijiMapRef.clearAll();
 				if (routeSegments.length > 0) {
 					this.$refs.sijiMapRef.drawRoute(routeSegments);
@@ -1721,11 +2402,13 @@
 				// 启动实时位置追踪
 				this.$nextTick(() => this.startTrainTracking());
 
-				// 6. 缩放至路线范围
-				if (allCoords.length > 0) {
-					// 取路线中心点，设合适的缩放级别展示全貌
-					const lngs = allCoords.map(c => c[0]);
-					const lats = allCoords.map(c => c[1]);
+				// 4. 缩放至路线范围（没有折线时用站点坐标兜底）
+				const fitCoords = allCoords.length > 0
+					? allCoords
+					: allPoints.map(point => [point.lng, point.lat]);
+				if (fitCoords.length > 0) {
+					const lngs = fitCoords.map(c => c[0]);
+					const lats = fitCoords.map(c => c[1]);
 					const centerLng = (Math.min(...lngs) + Math.max(...lngs)) / 2;
 					const centerLat = (Math.min(...lats) + Math.max(...lats)) / 2;
 					// 根据路线跨度估算缩放级别
@@ -1770,15 +2453,23 @@
 			 * 更新列车实时位置标记
 			 */
 			updateTrainPosition() {
+				if (this.selectIndex !== 2 || this.pathViewMode !== 'map') return;
 				if (!this.mapDataReady || !this.mapReady || !this.$refs.sijiMapRef) return;
 				// 非今天日期或当日不开行不计算实时位置
 				if (!this.isTodayDate) return;
 				if (this.carData.rundays && !this.carData.rundays.includes(this.date)) return;
 				// 有正晚点数据时，用实际时间构建修正时刻表
-				const timetable = (this.delay && this.delay.length > 0)
+				let timetable = (this.delay && this.delay.length > 0)
 					? (this.buildActualTimetable() || this.carData.timetable)
-					: this.carData.timetable;
+					: (this.trackingTimetable.length ? this.trackingTimetable : this.carData.timetable);
 				if (!timetable || timetable.length < 2) return;
+				// 地图上的站名是线路图解析后的规范名，插值前统一替换
+				if (this.trackingTimetable.length === timetable.length) {
+					timetable = timetable.map((item, index) => ({
+						...item,
+						station: this.trackingTimetable[index].station
+					}));
+				}
 
 				// 第 0 日以查询日（发车日）为基准，避免跨日车次在发车前被误判为运行中
 				const currentMinutes = getMinutesSinceDate(this.date);
@@ -2075,5 +2766,474 @@
 
 	.sheet-card-value--empty {
 		color: #b6bac1;
+	}
+
+	/* ===== 路径 tab：模式切换 / 摘要 / 地图 / 简图 ===== */
+	.path-toolbar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-top: 20rpx;
+	}
+
+	.path-mode-tabs {
+		display: flex;
+		border: 2rpx solid #114598;
+		border-radius: 10rpx;
+		overflow: hidden;
+	}
+
+	.path-mode-tab {
+		display: flex;
+		align-items: center;
+		padding: 12rpx 26rpx;
+		font-size: 26rpx;
+		color: #114598;
+		line-height: 1.2;
+	}
+
+	.path-mode-tab + .path-mode-tab {
+		border-left: 2rpx solid #114598;
+	}
+
+	.path-mode-tab--active {
+		background-color: #114598;
+		color: #ffffff;
+	}
+
+	.path-mode-icon {
+		font-size: 24rpx;
+		margin-right: 8rpx;
+	}
+
+	.path-toolbar-actions {
+		display: flex;
+		align-items: center;
+	}
+
+	.path-toolbar-hint {
+		font-size: 24rpx;
+		color: #8a8f99;
+	}
+
+	.path-recalc {
+		padding: 12rpx 26rpx;
+		font-size: 24rpx;
+		color: #114598;
+		border: 2rpx solid rgba(17, 69, 152, 0.45);
+		border-radius: 10rpx;
+		line-height: 1.2;
+	}
+
+	.path-state {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		margin-top: 20rpx;
+		padding: 44rpx 32rpx;
+		text-align: center;
+	}
+
+	.path-state-title {
+		font-size: 30rpx;
+		font-weight: 700;
+		color: #1c1e21;
+	}
+
+	.path-state-msg {
+		margin-top: 10rpx;
+		font-size: 24rpx;
+		color: #c0392b;
+		word-break: break-all;
+	}
+
+	.path-state-sub {
+		margin-top: 8rpx;
+		font-size: 22rpx;
+		color: #8a8f99;
+		word-break: break-all;
+	}
+
+	.path-state--error {
+		border-left: 8rpx solid #c0392b;
+	}
+
+	.path-state-actions {
+		margin-top: 20rpx;
+	}
+
+	.path-primary-btn {
+		margin: 0;
+		padding: 0 36rpx;
+		font-size: 24rpx;
+		line-height: 56rpx;
+		border-radius: 8rpx;
+		background-color: #114598;
+		color: #ffffff;
+	}
+
+
+	.path-map-box {
+		position: relative;
+		margin-top: 20rpx;
+		border-radius: 12rpx;
+		overflow: hidden;
+		background-color: #f0f0f0;
+	}
+
+	.path-map-legend {
+		position: absolute;
+		right: 20rpx;
+		bottom: 20rpx;
+		z-index: 10;
+		display: flex;
+		flex-direction: column;
+		padding: 14rpx 20rpx;
+		background-color: rgba(255, 255, 255, 0.94);
+		border-radius: 8rpx;
+		font-size: 22rpx;
+		color: #333333;
+	}
+
+	.path-map-legend-item {
+		display: flex;
+		align-items: center;
+		margin: 5rpx 0;
+	}
+
+	.path-legend-dot {
+		margin-right: 10rpx;
+		border: 2rpx solid #ffffff;
+		border-radius: 50%;
+		box-sizing: border-box;
+	}
+
+	.path-legend-dot--stop {
+		width: 18rpx;
+		height: 18rpx;
+		background-color: #114598;
+	}
+
+	.path-legend-dot--change {
+		width: 14rpx;
+		height: 14rpx;
+		background-color: #d70f19;
+	}
+
+	.path-legend-dot--office {
+		width: 10rpx;
+		height: 10rpx;
+		background-color: #7f8794;
+	}
+
+	.path-legend-dot--train {
+		width: 20rpx;
+		height: 20rpx;
+		background-color: #10b981;
+	}
+
+	.path-route-legend {
+		margin-top: 20rpx;
+		padding: 20rpx 28rpx;
+	}
+
+	.path-time-note {
+		display: block;
+		margin-top: 14rpx;
+		padding: 0 4rpx;
+		font-size: 20rpx;
+		color: #8a8f99;
+		line-height: 1.4;
+	}
+
+	.path-time-note--map {
+		padding: 0 8rpx;
+	}
+
+	.path-route-legend-row {
+		display: flex;
+		align-items: center;
+		padding: 10rpx 0;
+	}
+
+	.path-legend-swatch {
+		width: 18rpx;
+		height: 18rpx;
+		margin-right: 14rpx;
+		border-radius: 4rpx;
+		flex-shrink: 0;
+	}
+
+	.path-route-legend-name {
+		flex: 1;
+		font-size: 26rpx;
+		color: #303133;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
+
+	.path-route-legend-mileage {
+		margin-left: 16rpx;
+		font-size: 24rpx;
+		color: #606266;
+		flex-shrink: 0;
+	}
+
+	.path-schematic-card {
+		margin-top: 20rpx;
+		padding: 24rpx 20rpx 18rpx;
+	}
+
+	.path-schematic-section {
+		margin: -24rpx -20rpx 0;
+	}
+
+	.path-schematic-toggle {
+		padding: 8rpx 18rpx;
+		font-size: 22rpx;
+		color: #114598;
+		border: 2rpx solid rgba(17, 69, 152, 0.4);
+		border-radius: 8rpx;
+		line-height: 1.2;
+	}
+
+	.path-schematic {
+		position: relative;
+		margin-top: 8rpx;
+	}
+
+	.path-row {
+		position: relative;
+		display: flex;
+		align-items: flex-start;
+		height: 178rpx;
+	}
+
+	.path-row--reverse {
+		flex-direction: row-reverse;
+	}
+
+	.path-cell {
+		position: relative;
+		display: flex;
+		flex: 1 1 0;
+		flex-direction: column;
+		align-items: center;
+		min-width: 0;
+		height: 100%;
+		padding-top: 44rpx;
+		box-sizing: border-box;
+	}
+
+	.path-cell--empty {
+		visibility: hidden;
+	}
+
+	.path-line {
+		position: absolute;
+		top: 56rpx;
+		height: 6rpx;
+		border-radius: 6rpx;
+		z-index: 1;
+	}
+
+	.path-line--next {
+		left: 50%;
+		width: 100%;
+	}
+
+	.path-row--reverse .path-line--next {
+		left: auto;
+		right: 50%;
+	}
+
+	/* 伸进圆弧 6rpx，盖住圆端帽收口处的上下缺口 */
+	.path-line--edge {
+		left: 50%;
+		width: calc(50% - 14rpx);
+	}
+
+	.path-row--reverse .path-line--edge {
+		left: auto;
+		right: 50%;
+	}
+
+	.path-line--from-edge {
+		right: 50%;
+		width: calc(50% - 14rpx);
+	}
+
+	.path-row--reverse .path-line--from-edge {
+		right: auto;
+		left: 50%;
+	}
+
+	.path-connector {
+		position: absolute;
+		top: 72rpx;
+		right: 0;
+		width: 6rpx;
+		height: 152rpx;
+		z-index: 1;
+	}
+
+	.path-connector--left {
+		right: auto;
+		left: 0;
+	}
+
+	/* 折返处用两段圆角包边接横竖线，避免直角拼接；高度比圆弧多 4rpx，盖住竖线接缝 */
+	.path-connector::before,
+	.path-connector::after {
+		content: '';
+		position: absolute;
+		right: 0;
+		width: 20rpx;
+		height: 24rpx;
+		border: 0 solid currentColor;
+		border-radius: 0;
+		box-sizing: border-box;
+		pointer-events: none;
+	}
+
+	.path-connector::before {
+		top: -16rpx;
+		border-top-width: 6rpx;
+		border-right-width: 6rpx;
+		border-top-right-radius: 20rpx;
+	}
+
+	.path-connector::after {
+		bottom: -16rpx;
+		border-bottom-width: 6rpx;
+		border-right-width: 6rpx;
+		border-bottom-right-radius: 20rpx;
+	}
+
+	.path-connector--left::before,
+	.path-connector--left::after {
+		right: auto;
+		left: 0;
+	}
+
+	.path-connector--left::before {
+		border-right-width: 0;
+		border-left-width: 6rpx;
+		border-top-right-radius: 0;
+		border-top-left-radius: 20rpx;
+	}
+
+	.path-connector--left::after {
+		border-right-width: 0;
+		border-left-width: 6rpx;
+		border-bottom-right-radius: 0;
+		border-bottom-left-radius: 20rpx;
+	}
+
+	.path-dot {
+		position: relative;
+		z-index: 2;
+		width: 22rpx;
+		height: 22rpx;
+		border: 4rpx solid #ffffff;
+		border-radius: 50%;
+		box-sizing: content-box;
+		box-shadow: 0 0 0 1rpx rgba(0, 0, 0, 0.06);
+	}
+
+	.path-route-chip {
+		position: absolute;
+		top: 0;
+		left: 50%;
+		z-index: 3;
+		padding: 4rpx 12rpx;
+		border: 2rpx solid #114598;
+		border-radius: 6rpx;
+		background-color: #ffffff;
+		font-size: 20rpx;
+		font-weight: 600;
+		line-height: 1.25;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		box-sizing: border-box;
+		transform: translateX(-50%);
+	}
+
+	.path-station {
+		position: relative;
+		z-index: 2;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		width: 100%;
+		margin-top: 10rpx;
+		padding: 0 4rpx;
+		box-sizing: border-box;
+	}
+
+	.path-station-name {
+		max-width: 100%;
+		font-size: 24rpx;
+		color: #303133;
+		line-height: 1.3;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.path-station-name--stop {
+		font-weight: 700;
+		color: #1c1e21;
+	}
+
+	.path-station-mileage {
+		min-height: 24rpx;
+		margin-top: 2rpx;
+		font-size: 20rpx;
+		color: #8a8f99;
+		line-height: 1.2;
+		white-space: nowrap;
+	}
+
+	.path-station-time {
+		min-height: 24rpx;
+		margin-top: 2rpx;
+		font-size: 20rpx;
+		font-weight: 600;
+		color: #114598;
+		line-height: 1.2;
+		white-space: nowrap;
+	}
+
+	.path-station-time--estimated {
+		font-weight: 400;
+		color: #8a8f99;
+	}
+
+	.path-schematic-legend {
+		display: flex;
+		flex-wrap: wrap;
+		margin-top: 18rpx;
+		padding-top: 14rpx;
+		border-top: 1rpx solid #eef1f5;
+	}
+
+	.path-schematic-legend-item {
+		display: flex;
+		align-items: center;
+		margin: 6rpx 28rpx 6rpx 0;
+	}
+
+	.path-schematic-legend-name {
+		font-size: 22rpx;
+		color: #303133;
+	}
+
+	.path-schematic-legend-mileage {
+		margin-left: 8rpx;
+		font-size: 20rpx;
+		color: #8a8f99;
 	}
 </style>

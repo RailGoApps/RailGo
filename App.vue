@@ -414,15 +414,17 @@
 	@font-face {
 		font-family: "DIN1451";
 		src: url("/static/fonts/din1451.ttf");
+		font-display: swap;
 	}
 
 	@font-face {
 		font-family: "HMSans";
 		src: url("/static/fonts/hmsans.ttf");
+		font-display: swap;
 	}
 
 	page {
-		font-family: "HMSans";
+		font-family: "HMSans", "HarmonyOS Sans SC", "PingFang SC", "MiSans", "Microsoft YaHei", sans-serif;
 	}
 
 	.consolas {

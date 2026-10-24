@@ -195,6 +195,7 @@
 				_lineOverlays: [],
 				_markerOverlays: [],
 				_labelOverlays: [],
+				_markersData: [],
 			};
 		},
 		methods: {
@@ -261,6 +262,13 @@
 						}, 100);
 					};
 					this._mapInstance.addEventListener('moveend', this._event.moveend.bind(this));
+					// 途经站只画点，放大到 7 级后再显示站名/时间，避免全线标签重叠
+					this._event.zoomend = () => {
+						if (this._markersData && this._markersData.length) {
+							this._drawMarkers({ markers: this._markersData });
+						}
+					};
+					this._mapInstance.addEventListener('zoomend', this._event.zoomend.bind(this));
 				} catch (err) {
 					console.error('事件绑定失败:', err);
 				}
@@ -320,19 +328,33 @@
 					(this._markerOverlays || []).forEach(ov => this._mapInstance.removeOverLay(ov));
 					this._markerOverlays = [];
 					const markers = data.markers || [];
+					this._markersData = markers;
+					const showSmallLabels = (this._mapInstance.getZoom ? this._mapInstance.getZoom() : 0) >= 7;
 					markers.forEach(m => {
 						const lnglat = new T.LngLat(Number(m.lng), Number(m.lat));
 						const icon = this._makeCircleIcon(m);
 						const marker = new T.Marker(lnglat, { icon });
-						if (m.name) {
+						if (m.name && (!m.small || showSmallLabels)) {
 							marker.addEventListener('click', () => {
 								this.$ownerInstance.callMethod('onMarkerClick', { name: m.name });
 							});
+							// 站名下方可带一行时间；途经站用更小字号，减少全线标签拥挤
+							const nameSize = m.small ? 10 : 12;
+							const timeSize = m.small ? 9 : 10;
+							const timeHtml = m.time
+								? `<span style="display:block;margin-top:1px;font-size:${timeSize}px;font-weight:400;color:#5f6672;white-space:nowrap;">${m.time}</span>`
+								: '';
+							const labelText = `<span style="display:inline-block;text-align:center;background:rgba(255,255,255,0.9);padding:1px 5px 2px;border-radius:3px;white-space:nowrap;"><b style="font-size:${nameSize}px;color:#333;">${m.name}</b>${timeHtml}</span>`;
+							const labelWidth = Math.max(
+								String(m.name).length * (m.small ? 6 : 7),
+								m.time ? String(m.time).length * (m.small ? 5 : 6) : 0
+							);
+							const labelHeight = m.time ? (m.small ? 26 : 30) : 16;
 							// 添加文字标签（居中显示在点上方）
 							const label = new T.Label({
-								text: `<b style="font-size:12px;color:#333;background:rgba(255,255,255,0.9);padding:1px 5px;border-radius:3px;white-space:nowrap;">${m.name}</b>`,
+								text: labelText,
 								position: lnglat,
-								offset: new T.Point(-(m.name.length * 7), -(m.radius || 10) - 16)
+								offset: new T.Point(-labelWidth, -(m.radius || 10) - labelHeight)
 							});
 							this._mapInstance.addOverLay(label);
 							this._markerOverlays.push(label);
