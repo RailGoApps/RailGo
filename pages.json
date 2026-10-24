@@ -40,6 +40,13 @@
 			}
 		},
 		{
+			"path": "pages/station/bigscreen",
+			"style": {
+				"navigationBarTitleText": "",
+				"pageOrientation": "landscape"
+			}
+		},
+		{
 			"path": "pages/station/commonSelect",
 			"style": {
 				"navigationBarTitleText": ""

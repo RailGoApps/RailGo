@@ -717,7 +717,8 @@
 					if (!silent) {
 						uni.showToast({
 							title: '缺少查询参数',
-							icon: 'none'
+							icon: 'none',
+							position: 'bottom'
 						});
 					}
 					return { success: false };
@@ -768,7 +769,9 @@
 						// Failure 
 						if (!silent) {
 							uni.showToast({
-								title: response.data.msg || '查询失败'
+								title: response.data.msg || '查询失败',
+								icon: 'none',
+								position: 'bottom'
 							});
 						}
 						this.$set(this.carData.timetable, index, {
@@ -782,7 +785,9 @@
 					console.error("查询停台数据出错:", error);
 					if (!silent) {
 						uni.showToast({
-							title: '网络请求失败'
+							title: '网络请求失败',
+							icon: 'none',
+							position: 'bottom'
 						});
 					}
 					const currentItem = this.carData.timetable[index];
@@ -847,7 +852,9 @@
 					});
 				} catch (e) {
 					uni.showToast({
-						title: '批量加载出错'
+						title: '批量加载出错',
+						icon: 'none',
+						position: 'bottom'
 					});
 				} finally {
 					hideLoader();
@@ -1155,7 +1162,9 @@
 							this.carData = { /* ... reset data ... */ };
 							this.cardColor = '#114598';
 							uni.showToast({
-								title: '车次不存在或当日不开行'
+								title: '车次不存在或当日不开行',
+								icon: none,
+								position: "bottom"
 							})
 							const c = uni.getStorageSync("search");
 							uni.setStorage({
@@ -1352,7 +1361,9 @@
 							this.carData = { /* ... reset data ... */ };
 							this.cardColor = '#114598';
 							uni.showToast({
-								title: '车次不存在'
+								title: '车次不存在',
+								icon: 'none',
+								position: 'bottom'
 							})
 							const c = uni.getStorageSync("search");
 							uni.setStorage({

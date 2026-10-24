@@ -1,8 +1,8 @@
 <template>
-	<view class="ux-bg-grey5" :style="isLandscape ? 'height:100vh;overflow:hidden;' : 'min-height:100vh;'">
-		<back-header v-if="!isLandscape"></back-header>
-		<railgo-nfc v-if="!isLandscape"></railgo-nfc>
-		<view class="ux-padding" v-if="!isLandscape">
+	<view class="ux-bg-grey5" style="min-height:100vh;">
+		<back-header></back-header>
+		<railgo-nfc></railgo-nfc>
+		<view class="ux-padding">
 			<!-- 头部卡片骨架屏 -->
 			<view v-if="headerSkeleton" class="ux-bg-white ux-border-radius sk-header">
 				<view class="sk-row sk-header-top" style="justify-content: space-between;">
@@ -174,14 +174,14 @@
 					到达
 				</button>
 				<button class="ux-flex1 ux-ml-small" size="mini" type="default"
-					hover-class="bs-rotate-btn-hover" @click="enterLandscape">
+					hover-class="bs-rotate-btn-hover" @click="openBigScreen">
 					<view class="ux-flex ux-align-items-center ux-justify-content-center">
 						<text class="icon">&#xe1c1;</text>&nbsp;横屏
 					</view>
 				</button>
 			</view>
 			
-			<view class="ux-pt dark-table-wrapper" v-if="!isLandscape && topTabList[selectIndex] && topTabList[selectIndex].name === '大屏'" style="margin-top: 20rpx;">
+			<view class="ux-pt dark-table-wrapper" v-if="topTabList[selectIndex] && topTabList[selectIndex].name === '大屏'" style="margin-top: 20rpx;">
 				<!-- 大屏骨架屏 -->
 				<view v-if="bigScreenSkeleton || bigScreenLoading" class="sk-list">
 					<view class="sk-row" style="margin-bottom: 16rpx;">
@@ -317,52 +317,6 @@
 				</view>
 			</view>
 		</view>
-
-		<!-- 横屏大屏（点击横屏图标后全屏显示） -->
-		<view v-if="isLandscape" class="bs-land">
-			<view class="bs-land-head">
-				<text class="bs-land-title">{{ data.name }}站</text>
-				<view class="bs-land-kind">
-					<view class="bs-land-kind-item" :class="{ 'bs-land-kind-on': bigScreenKind === 'departure' }"
-						@click="switchBigScreenKind('departure')"><text>出发</text></view>
-					<view class="bs-land-kind-item" :class="{ 'bs-land-kind-on': bigScreenKind === 'arrival' }"
-						@click="switchBigScreenKind('arrival')"><text>到达</text></view>
-				</view>
-				<view class="bs-land-exit" hover-class="bs-land-exit-hover" @click="exitLandscape">
-					<text class="icon bs-land-exit-glyph">&#xe5d1;</text>
-				</view>
-			</view>
-			<view class="bs-land-row bs-land-thead">
-				<text class="bs-land-c-num">车次</text>
-				<text class="bs-land-c-status">状态</text>
-				<text class="bs-land-c-from">始发站</text>
-				<text class="bs-land-c-to">终到站</text>
-				<text class="bs-land-c-time">时间</text>
-				<text class="bs-land-c-platform">站台</text>
-				<text class="bs-land-c-room">候车室</text>
-				<text class="bs-land-c-port">{{ bigScreenKind === 'arrival' ? '出站口' : '检票口' }}</text>
-			</view>
-			<scroll-view class="bs-land-body" scroll-y @scrolltolower="loadMoreBigScreenData">
-				<view v-for="item in displayedBigScreenData" :key="item.key" class="bs-land-row">
-					<text class="bs-land-c-num">{{ item.trainNum }}</text>
-					<text class="bs-land-c-status" :style="{ color: getStatusColor(item.bigScreenStatusCode) }">
-						{{ formatBigScreenStatus(item.bigScreenStatus, item.bigScreenStatusCode, item.timeDelay) }}
-					</text>
-					<text class="bs-land-c-from">{{ item.trainStartStation }}</text>
-					<text class="bs-land-c-to">{{ item.trainEndStation }}</text>
-					<text class="bs-land-c-time">{{ formatDepartureTime(item.time) }}</text>
-					<text class="bs-land-c-platform">{{ item.platform || '-' }}</text>
-					<text class="bs-land-c-room">{{ item.waitingRoom || '-' }}</text>
-					<text class="bs-land-c-port">{{ bigScreenKind === 'arrival' ? (item.exitPort || '-') : (item.ticketPort || '-') }}</text>
-				</view>
-				<view v-if="displayedBigScreenData.length === 0" class="bs-land-empty">
-					<text>{{ bigScreenLoading ? '加载中…' : '本站暂无大屏数据' }}</text>
-				</view>
-			</scroll-view>
-			<view class="bs-land-foot">
-				<text>信息仅供参考 请以车站现场公告为准 · 已显示 {{ displayedBigScreenData.length }}/{{ bigScreenData.length }} 条</text>
-			</view>
-		</view>
 	<uni-popup ref="menu_sort" border-radius="10rpx 10rpx 0 0">
 		<view class="popup-content">
 			<view class="ux-bg-white ux-padding ux-border-radius" style="width:70vw;">
@@ -473,6 +427,11 @@
 		TRAIN_KIND_COLOR_MAP
 	} from '@/scripts/config.js';
 	import {uniGet, uniPost} from "../../scripts/req"; // 引入 uniPost 用于查询停台
+	import {
+		fetchStationBigScreen,
+		getBigScreenStatusColor,
+		formatBigScreenStatus as formatBigScreenStatusText
+	} from "@/scripts/bigscreen.js";
 
 	export default {
 		data() {
@@ -508,8 +467,6 @@
 				bigScreenData: [],           // V2 API 返回的全部数据
 				bigScreenLoading: false,
 				bigScreenKind: 'departure',  // 大屏类型：departure（出发）或 arrival（到达）
-				// --- 横屏大屏 ---
-				isLandscape: false,
 				
 				// --- 滚动加载控制 ---
 				displayedBigScreenData: [], // 实际渲染到大屏表格的数据
@@ -557,23 +514,10 @@
 			this.stopAutoRefresh();
 		},
 		/**
-		 * 横屏大屏下先退回竖屏
-		 */
-		onBackPress() {
-			if (this.isLandscape) {
-				this.exitLandscape();
-				return true;
-			}
-			return false;
-		},
-		/**
 		 * 页面卸载时停止自动刷新
 		 */
 		onUnload() {
 			this.stopAutoRefresh();
-			if (this.isLandscape) {
-				this.exitLandscape();
-			}
 		},
 		methods: {
 			back: function() {
@@ -804,36 +748,20 @@
 				this.bigScreenData = []; // 先清空全部数据
 				
 				try {
-					// 使用 V2 API
-					const bigScreenBase = uni.getStorageSync('service_source_bigScreen') || 'https://rg-api.zenglingkun.cn';
-					const url = bigScreenBase + `/api/v2/getStationBigScreen?stationTelecode=${encodeURIComponent(this.keyword)}&kind=${encodeURIComponent(this.bigScreenKind)}&ver=3`;
-					
-					const resp = await uniGet(url);
-					
-					// 检查响应数据结构
-					if (resp.data && resp.data.success === true && Array.isArray(resp.data.data)) {
-						// 到达大屏和出发大屏都显示全部数据
-						this.bigScreenData = resp.data.data;
-						
-						// 启动自动刷新定时器
-						this.startAutoRefresh();
-						
-						// 先设置为 false，才能调用 loadMoreBigScreenData
-						this.bigScreenLoading = false;
-						
-						// 初始加载第一页数据
-						this.loadMoreBigScreenData();
-					} else {
-						this.bigScreenData = [];
-						this.bigScreenLoading = false;
-					}
+					// 到达大屏和出发大屏都显示全部数据（排序/着色逻辑见 scripts/bigscreen.js）
+					this.bigScreenData = await fetchStationBigScreen(this.keyword, this.bigScreenKind);
+					// 启动自动刷新定时器
+					this.startAutoRefresh();
+					// 先设置为 false，才能调用 loadMoreBigScreenData
+					this.bigScreenLoading = false;
+					// 初始加载第一页数据
+					this.loadMoreBigScreenData();
 				} catch (error) {
 					this.bigScreenData = [];
 					this.bigScreenLoading = false;
 				}
 			},
 			
-			// --- NEW: 滚动加载更多大屏数据（适配 V2 数据结构） ---
 			/**
 			 * 滚动加载更多大屏数据（分段加载）
 			 */
@@ -913,20 +841,13 @@
 				this.bigScreenSkeleton = false;
 			},
 			
-			// --- 横屏大屏 ---
-			enterLandscape: function() {
-				// #ifdef APP-PLUS
-				plus.screen.lockOrientation('landscape-primary');
-				plus.navigator.setFullscreen(true);
-				// #endif
-				this.isLandscape = true;
-			},
-			exitLandscape: function() {
-				// #ifdef APP-PLUS
-				plus.navigator.setFullscreen(false);
-				plus.screen.lockOrientation('portrait-primary');
-				// #endif
-				this.isLandscape = false;
+			// --- 横屏大屏页 ---
+			openBigScreen: function() {
+				uni.navigateTo({
+					url: '/pages/station/bigscreen?telecode=' + encodeURIComponent(this.keyword) +
+						'&name=' + encodeURIComponent(this.data.name || '') +
+						'&kind=' + this.bigScreenKind
+				});
 			},
 			
 			// -------------------------------
@@ -940,57 +861,12 @@
 			
 			// --- 状态颜色逻辑（适配 V2 API） ---
 			getStatusColor(statusCode) {
-				if (!statusCode) return 'white'; // 默认白色
-				
-				switch (statusCode) {
-					case 'WAITING':      // 候车
-						return 'white';
-					case 'CANCELED':     // 取消
-						return '#e74c3c'; // 红色
-					case 'CHECK_BEGIN':  // 出发开检
-						return '#27ae60'; // 绿色
-					case 'CHECK_STOP':   // 出发停检
-						return '#e74c3c'; // 红色
-					case 'ON_TIME':      // 到达正点
-						return 'white'; // 白色（在深色背景上更清晰）
-					case 'DELAY':        // 到达晚点
-						return '#e74c3c'; // 红色
-					case 'EARLY':        // 到达早点
-						return '#27ae60'; // 绿色
-					default:
-						return 'white';
-				}
+				return getBigScreenStatusColor(statusCode);
 			},
 			
 			// --- 格式化大屏状态文本（结合延迟信息） ---
 			formatBigScreenStatus(status, statusCode, timeDelay) {
-				if (!status) return '-';
-				
-				const delay = Number(timeDelay);
-				const hasDelay = delay > 0;
-				
-				// 到达大屏
-				if (this.bigScreenKind === 'arrival') {
-					if (statusCode === 'ON_TIME') {
-						return '正点';
-					}
-					if (statusCode === 'DELAY' && hasDelay) {
-						return `晚点${delay}分`;
-					}
-					if (statusCode === 'EARLY' && hasDelay) {
-						return `早点${delay}分`;
-					}
-					return status;
-				}
-				
-				// 出发大屏
-				if (statusCode === 'DELAY' && hasDelay) {
-					return `晚点${delay}分`;
-				}
-				if (statusCode === 'EARLY' && hasDelay) {
-					return `早点${delay}分`;
-				}
-				return status;
+				return formatBigScreenStatusText(this.bigScreenKind, status, statusCode, timeDelay);
 			},
 			// -------------------------------
 			// --- 获取交通数据的方法 ---
@@ -1210,167 +1086,6 @@
 
 	.bs-rotate-btn-hover {
 		background-color: #eef1f5;
-	}
-
-	/* 横屏大屏：px 尺寸，避免横屏下 rpx 随宽放大导致纵向放不下 */
-	.bs-land {
-		position: fixed;
-		left: 0;
-		top: 0;
-		width: 100vw;
-		height: 100vh;
-		background-color: #16232f;
-		display: flex;
-		flex-direction: column;
-		overflow: hidden;
-		z-index: 99999;
-	}
-
-	.bs-land-head {
-		display: flex;
-		flex-direction: row;
-		align-items: center;
-		padding: 8px 14px;
-		background-color: #1b2a38;
-	}
-
-	.bs-land-title {
-		color: #ffffff;
-		font-size: 18px;
-		font-weight: bold;
-		flex: 1;
-	}
-
-	.bs-land-kind {
-		display: flex;
-		flex-direction: row;
-		align-items: center;
-		margin-right: 10px;
-	}
-
-	.bs-land-kind-item {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 5px 18px;
-		margin-left: 8px;
-		border-radius: 16px;
-		background-color: #2c3e50;
-	}
-
-	.bs-land-kind-item text {
-		color: #bdc3c7;
-		font-size: 14px;
-		line-height: 1;
-	}
-
-	.bs-land-kind-on {
-		background-color: #114598;
-	}
-
-	.bs-land-kind-on text {
-		color: #ffffff;
-	}
-
-	.bs-land-exit {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 32px;
-		height: 32px;
-		border-radius: 16px;
-		background-color: #2c3e50;
-	}
-
-	.bs-land-exit-hover {
-		background-color: #3b506b;
-	}
-
-	.bs-land-exit-glyph {
-		color: #ffffff;
-		font-size: 19px;
-		line-height: 1;
-	}
-
-	.bs-land-row {
-		display: flex;
-		flex-direction: row;
-		align-items: center;
-		padding: 8px 14px;
-		border-bottom: 1px solid #22303e;
-	}
-
-	.bs-land-row text {
-		color: #ffffff;
-		font-size: 15px;
-		line-height: 1.25;
-		text-align: center;
-	}
-
-	.bs-land-thead {
-		background-color: #1f3041;
-		padding: 7px 14px;
-	}
-
-	.bs-land-thead text {
-		color: #9fb0c0;
-		font-size: 13px;
-	}
-
-	.bs-land-c-num {
-		flex: 1;
-	}
-
-	.bs-land-c-status {
-		flex: 1.2;
-	}
-
-	.bs-land-c-from,
-	.bs-land-c-to {
-		flex: 1.2;
-	}
-
-	.bs-land-c-time {
-		flex: 1;
-	}
-
-	.bs-land-c-platform {
-		flex: 0.7;
-	}
-
-	.bs-land-c-room {
-		flex: 1.3;
-	}
-
-	.bs-land-c-port {
-		flex: 1.7;
-	}
-
-	.bs-land-body {
-		flex: 1;
-		min-height: 0;
-	}
-
-	.bs-land-empty {
-		padding: 26px 0;
-		text-align: center;
-	}
-
-	.bs-land-empty text {
-		color: #ffffff;
-		opacity: 0.6;
-		font-size: 15px;
-	}
-
-	.bs-land-foot {
-		padding: 6px 14px;
-		text-align: center;
-		background-color: #1b2a38;
-	}
-
-	.bs-land-foot text {
-		color: #9fb0c0;
-		font-size: 12px;
 	}
 
 	.traffic-tabs {

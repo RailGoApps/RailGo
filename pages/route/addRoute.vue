@@ -387,11 +387,16 @@ export default {
 				diagramType: this.diagramType
 			};
 			
-			// 保存到存储 - 使用JSON文件方式
-			// #ifdef H5
+			// 保存到存储 - 与行程列表页读取的存储保持一致
+			// #ifndef APP-PLUS
 			let routes = [];
 			const routesData = uni.getStorageSync('myRoutes') || '[]';
-			routes = JSON.parse(routesData);
+			try {
+				routes = JSON.parse(routesData);
+			} catch (e) {
+				console.error('解析行程数据失败:', e);
+				routes = [];
+			}
 			routes.push(routeData);
 			uni.setStorageSync('myRoutes', JSON.stringify(routes));
 			// #endif
