@@ -65,6 +65,12 @@
 			}
 		},
 		{
+			"path": "pages/train/tiaotuResult",
+			"style": {
+				"navigationBarTitleText": ""
+			}
+		},
+		{
 			"path": "pages/train/trainResult",
 			"style": {
 				"navigationBarTitleText": ""

@@ -9,6 +9,7 @@ export const TRAIN_KIND_COLOR_MAP = {
 	"7": "#a9dfbf", // 普慢
 	"8": "#a9dfbf", // 普慢
 	"K": "#eeba67", // 快速
+	"N": "#eeba67", // N
 	"T": "#459811", // 特快
 	"Z": "#114598", // 直特
 	"G": "#c0392b", // 高动

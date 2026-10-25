@@ -47,6 +47,14 @@
 				nowIcon: uni.getStorageSync("nowIcon") || 'crh',
 				updateLogs: [
 					{
+						version: "v2.0.9 (20009)",
+						date: "2026-10-24",
+						items: [
+							"Feature: 支持简图路径显示",
+							"Feature: 支持查询车站调图数据"
+						]
+					},
+					{
 						version: "v2.0.8 (20008)",
 						date: "2026-10-11",
 						items: [

@@ -60,6 +60,18 @@
 
 				</view>
 			</view>
+			<view v-if="selectIndex==2">
+				<view class="ux-pt-small ux-bg-grey5">
+					<text class="ux-h6">车站</text>
+					<navigator url="/pages/station/commonSelect?resultPlace=train_tiaotu_field">
+						<view
+							class="ux-bg-white ux-border-radius-small ux-padding-small ux-mt-small ux-mb-small ux-flex ux-align-items-center ux-space-between">
+							<text>{{tiaotuStationName}}</text>
+							<text class="icon">&#xe5c8;</text>
+						</view>
+					</navigator>
+				</view>
+			</view>
 			<view v-if="selectIndex==1">
 				<view class="ux-pt-small ux-bg-grey5">
 					<view class="ux-flex ux-space-around ux-align-items-center">
@@ -106,7 +118,7 @@
 					@change="vague" :checked="isVague"/>
 				<text class="va">查询同城车站</text>
 			</view>
-			<br v-if="selectIndex==0">
+			<br v-if="selectIndex==0 || selectIndex==2">
 			<button type="primary" style="background-color:#114598;color:#ffffff;" hover-class="ux-tap"
 				@click="jumpToResult()">查询</button>
 			<br>
@@ -114,7 +126,8 @@
 			<view class="ux-text-center ux-padding-small ux-mb ux-h6"
 				style="background-color:#e9eef5;border:1px solid #114598;border-radius:10rpx;color:#114598;">
 				<text class="ux-bold">信息仅供参考 请以铁路运营企业实际运用为准</text><br>
-				<text class="ux-bold">V2版本日期极其敏感，请注意选择正确开行日期</text>
+				<text class="ux-bold">V2版本日期极其敏感，请注意选择正确开行日期</text><br>
+				<text class="ux-bold">调图数据来源于公开信息 可能随时发生变动</text>
 			
 			</view>
 			<br>
@@ -218,10 +231,13 @@
 					name: '车次',
 				}, {
 					name: '站站',
+				}, {
+					name: '调图',
 				}],
 				"selectIndex": 0,
 				"stsSelectionA": "",
 				"stsSelectionB": "",
+				"tiaotuStationName": "",
 				"isVague": false,
 				"isNetworkMode": false,
 				"showKeyboard": false,
@@ -259,6 +275,17 @@
 				this.stsSelectionA = selectionA.name;
 				this.stsSelectionB = selectionB.name;
 			}
+			
+			let tiaotuSelection = uni.getStorageSync("train_tiaotu_field");
+			if (!tiaotuSelection) {
+				tiaotuSelection = {
+					name: "北京",
+					telecode: "BJP",
+					city: "北京"
+				};
+				uni.setStorageSync("train_tiaotu_field", tiaotuSelection);
+			}
+			this.tiaotuStationName = tiaotuSelection.name;
 			
 			this.trainHistory = uni.getStorageSync('trainHistory') || [];
 			
@@ -351,7 +378,7 @@
 					uni.navigateTo({
 						url: "/pages/train/trainResult?keyword=" + this.keyword + "&date=" + this.date
 					});
-				} else {
+				} else if (this.selectIndex == 1) {
 					let url = "/pages/train/stsResult?from=" + uni.getStorageSync("train_sts_fieldA").telecode +
 						"&to=" + uni.getStorageSync("train_sts_fieldB").telecode + "&date=" + this.date;
 					if (this.isVague) {
@@ -359,6 +386,19 @@
 					}
 					uni.navigateTo({
 						url: url
+					});
+				} else {
+					const station = uni.getStorageSync("train_tiaotu_field");
+					if (!station || !station.telecode || this.date == "") {
+						uni.showToast({
+							icon: "none",
+							title: "不允许输入空值"
+						});
+						return;
+					}
+					uni.navigateTo({
+						url: "/pages/train/tiaotuResult?stationCode=" + station.telecode +
+							"&stationName=" + encodeURIComponent(station.name) + "&date=" + this.date
 					});
 				}
 			},
