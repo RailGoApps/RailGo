@@ -1,9 +1,11 @@
 <template>
 	<view>
 		<view class="bh-status" :style="{ backgroundColor: barColor }">&nbsp;</view>
-		<view class="bh-btn" :style="{ top: backTop, backgroundColor: background }" hover-class="bh-btn-hover" @click="goBack">
-			<text class="icon" style="font-size: 45rpx;">&#xe5c4;</text>
-			<text v-if="title" class="bh-title">{{title}}</text>
+		<view class="bh-btn" :class="{ 'bh-btn-px': usePx }"
+			:style="{ top: backTop, backgroundColor: background }"
+			hover-class="bh-btn-hover" @click="goBack">
+			<text class="icon" :style="{ fontSize: usePx ? '22px' : '45rpx' }">&#xe5c4;</text>
+			<text v-if="title" class="bh-title" :class="{ 'bh-title-px': usePx }">{{title}}</text>
 		</view>
 		<view class="bh-placeholder" :style="{ height: placeholderHeight + 'px' }"></view>
 	</view>
@@ -18,7 +20,9 @@
 			// 返回按钮区域背景色（跟随页面背景）
 			background: { type: String, default: '#EEEEEE' },
 			// 可选标题文字，空则不显示
-			title: { type: String, default: '' }
+			title: { type: String, default: '' },
+			// 横屏页 rpx 按长边换算会被放大，此模式下头部尺寸固定用 px
+			usePx: { type: Boolean, default: false }
 		},
 		data() {
 			return {
@@ -32,7 +36,7 @@
 				const info = uni.getSystemInfoSync();
 				this.statusHeight = info.statusBarHeight || 44;
 				this.backTop = this.statusHeight + 'px';
-				this.placeholderHeight = this.statusHeight + 45;
+				this.placeholderHeight = this.statusHeight + (this.usePx ? 44 : 45);
 			} catch (e) {
 				// 保持默认值
 			}
@@ -67,10 +71,18 @@
 	.bh-btn-hover {
 		background-color: #eef0f4;
 	}
+	.bh-btn-px {
+		height: 44px;
+		padding-left: 12px;
+	}
 	.bh-title {
 		margin-left: 20rpx;
 		font-size: 34rpx;
 		font-weight: bold;
 		color: #373737;
+	}
+	.bh-title-px {
+		margin-left: 10px;
+		font-size: 16px;
 	}
 </style>

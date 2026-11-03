@@ -293,17 +293,23 @@
 							        <navigator :url="'/pages/emu/result?keyword='+train" style="flex: 1; margin-right: 10rpx;">
 							            <button class="ux-color-white ux-bg-primary" size="mini" style="width:100%;">
 							                <view class="ux-flex ux-align-items-center ux-justify-content-center">
-							                    <text class="icon" style="font-size: 24rpx;">&#xe570;</text>
-							                    <text style="margin-left: 8rpx;">查询担当</text>
+							                    <text style="margin-left: 8rpx;">运行担当</text>
 							                </view>
 							            </button>
 							        </navigator>
 							
-							        <navigator :url="'/pages/train/TrainPics?train='+train" style="flex: 1; margin-left: 10rpx;">
+							        <navigator :url="'/pages/train/TrainPics?train='+train" style="flex: 1; margin-left: 10rpx; margin-right: 10rpx;">
 							            <button class="ux-color-white ux-bg-primary" size="mini" style="width:100%;">
 							                <view class="ux-flex ux-align-items-center ux-justify-content-center">
-							                    <text class="icon" style="font-size: 24rpx;">&#xe570;</text>
 							                    <text style="margin-left: 8rpx;">座位图</text>
+							                </view>
+							            </button>
+							        </navigator>
+							        <navigator v-if="(carData.diagram || []).length > 0"
+							            :url="'/pages/train/routeDiagram?train='+train" style="flex: 1; margin-left: 10rpx;">
+							            <button class="ux-color-white ux-bg-primary" size="mini" style="width:100%;">
+							                <view class="ux-flex ux-align-items-center ux-justify-content-center">
+							                    <text style="margin-left: 8rpx;">交路图</text>
 							                </view>
 							            </button>
 							        </navigator>
@@ -319,6 +325,16 @@
 				</view>
 				
 
+				<view v-if="(carData.diagram || []).length > 0 && !diagramRowInline" class="ux-flex">
+					<navigator :url="'/pages/train/routeDiagram?train='+train" style="flex: 1;">
+						<button class="ux-color-white ux-bg-primary" size="mini" style="width:100%;">
+							<view class="ux-flex ux-align-items-center ux-justify-content-center">
+								<text class="icon" style="font-size: 24rpx;">&#xe570;</text>
+								<text style="margin-left: 8rpx;">交路图</text>
+							</view>
+						</button>
+					</navigator>
+				</view>
 				<uni-section title="交路" type="line" style="background-color: transparent;"
 					title-font-size="28rpx"></uni-section>
 				<navigator v-for="(item,index) in (carData.diagram || [])" :key="index"
@@ -681,6 +697,11 @@
 			}
 		},
 		computed: {
+			// 担当卡片内的按钮行是否会渲染，决定交路图入口是否需要独立成行
+			diagramRowInline() {
+				const hasCarInfo = ((this.carData.carOwner || '') + (this.carData.runner || '') + (this.carData.car || '')).length > 0;
+				return hasCarInfo && ['G', 'D', 'C'].includes(this.carData.numberKind);
+			},
 			/**
 			 * 结合正晚点数据 (this.delay) 和时刻表数据 (this.carData.timetable)
 			 */

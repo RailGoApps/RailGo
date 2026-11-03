@@ -196,6 +196,14 @@
 			}
 		},
 		{
+			"path" : "pages/train/routeDiagram",
+			"style" : 
+			{
+				"navigationBarTitleText" : "",
+				"pageOrientation" : "landscape"
+			}
+		},
+		{
 			"path" : "pages/404/newYear",
 			"style" : 
 			{
