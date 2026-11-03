@@ -290,7 +290,7 @@
 							    <br>
 							    <view class="ux-flex ux-align-items-center">
 							        
-							        <navigator :url="'/pages/emu/result?keyword='+train" style="flex: 1; margin-right: 10rpx;">
+							        <navigator :url="'/pages/emu/result?keyword='+encodeURIComponent(train)" style="flex: 1; margin-right: 10rpx;">
 							            <button class="ux-color-white ux-bg-primary" size="mini" style="width:100%;">
 							                <view class="ux-flex ux-align-items-center ux-justify-content-center">
 							                    <text style="margin-left: 8rpx;">运行担当</text>

@@ -47,6 +47,16 @@
 				nowIcon: uni.getStorageSync("nowIcon") || 'crh',
 				updateLogs: [
 					{
+						version: "v2.0.10 (20010)",
+						date: "2026-11-03",
+						items: [
+							"Feature: 支持生成列车交路图",
+							"Feature: 支持生成纪念车票",
+							"Changed: 更换了Android平台启动页",
+							"Fixed: 一些已知问题"
+						]
+					},
+					{
 						version: "v2.0.9 (20009)",
 						date: "2026-10-24",
 						items: [

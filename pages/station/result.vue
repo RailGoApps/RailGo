@@ -173,12 +173,14 @@
 					@click="switchBigScreenKind('arrival')">
 					到达
 				</button>
+				<!-- #ifndef APP-HARMONY -->
 				<button class="ux-flex1 ux-ml-small" size="mini" type="default"
 					hover-class="bs-rotate-btn-hover" @click="openBigScreen">
 					<view class="ux-flex ux-align-items-center ux-justify-content-center">
 						<text class="icon">&#xe1c1;</text>&nbsp;横屏
 					</view>
 				</button>
+				<!-- #endif -->
 			</view>
 			
 			<view class="ux-pt dark-table-wrapper" v-if="topTabList[selectIndex] && topTabList[selectIndex].name === '大屏'" style="margin-top: 20rpx;">

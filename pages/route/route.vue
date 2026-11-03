@@ -3,7 +3,7 @@
 		<back-header></back-header>
 
 		<view class="ux-pl ux-pr ux-pt" style="padding-top: 0px;">
-			<text class="ux-h2">旅途</text>
+			<text class="ux-h2">行程</text>
 		</view>
 		
 		<view class="ux-pl ux-pr" style="margin-top: 15rpx;">

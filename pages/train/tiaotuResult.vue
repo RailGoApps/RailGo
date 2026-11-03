@@ -111,7 +111,7 @@
 				</view>
 				<br>
 				<view class="ux-flex ux-row ux-justify-content-center">
-					<text class="ux-text-small ux-opacity-4">—— 数据来源: 12306 WiFi ——</text>
+					<text class="ux-text-small ux-opacity-4">—— 数据来源: 12306 ——</text>
 				</view>
 			</view>
 		</view>

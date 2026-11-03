@@ -271,12 +271,12 @@ export default {
 		onImageError(e) {
 			this.carImageUrl = "";
 		},
-		// 点击车次中继器：跳转至对应车次的搜索结果页（result）
 		goToResult(trainNum) {
-			if (!trainNum) return;
-			uni.navigateTo({
-				url: `/pages/emu/result?keyword=${encodeURIComponent(trainNum)}`
-			});
+		    if (!trainNum) return;
+		    const prefix = trainNum.split('/')[0].trim(); 
+		    uni.navigateTo({
+		        url: `/pages/emu/result?keyword=${encodeURIComponent(prefix)}`
+		    });
 		}
 	}
 }

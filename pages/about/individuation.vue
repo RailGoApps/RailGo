@@ -90,15 +90,8 @@
 			<view class="icon-flex-container">
 				<view class="icon-item" v-for="s in homeStyles" :key="s.key">
 					<view class="style-preview" :class="{ 'style-preview--active': nowIndexStyle === s.key }" @click="selectIndexStyle(s.key)">
-						<!-- 线路图缩略图 -->
-						<view v-if="s.key === 'rail'">
-							<view class="preview-rail-line"></view>
-							<view class="preview-rail-block preview-rail-block--l" style="top: 20rpx;"></view>
-							<view class="preview-rail-block preview-rail-block--r" style="top: 56rpx;"></view>
-							<view class="preview-rail-block preview-rail-block--l" style="top: 92rpx;"></view>
-						</view>
 						<!-- 大卡缩略图 -->
-						<view v-else-if="s.key === 'card'" class="preview-card">
+						<view v-if="s.key === 'card'" class="preview-card">
 							<view class="preview-card-cell"></view>
 							<view class="preview-card-cell"></view>
 							<view class="preview-card-cell"></view>
@@ -237,10 +230,9 @@ import RailgoLoader from "@/components/railgo-loader/railgo-loader.vue";
 				items: [],
 				search: uni.getStorageSync("search"),
 				nowIcon: uni.getStorageSync("nowIcon"),
-				// 主页风格选择：rail(线路图) / card(经典大卡) / bento(渐变卡片)
-				nowIndexStyle: uni.getStorageSync("indexStyle") || 'bento',
+				// 主页风格选择：card(经典大卡) / bento(渐变卡片)
+				nowIndexStyle: uni.getStorageSync("indexStyle") === 'card' ? 'card' : 'bento',
 				homeStyles: [
-					{ key: 'rail', name: '线路图' },
 					{ key: 'card', name: '经典大卡' },
 					{ key: 'bento', name: '渐变卡片' }
 				],
@@ -703,27 +695,6 @@ import RailgoLoader from "@/components/railgo-loader/railgo-loader.vue";
 		border-color: #114598;
 		box-shadow: 0 0 0 4rpx rgba(17, 69, 152, 0.15);
 	}
-
-	/* 线路图缩略图 */
-	.preview-rail-line {
-		position: absolute;
-		left: 50%;
-		top: 8rpx;
-		bottom: 8rpx;
-		width: 4rpx;
-		margin-left: -2rpx;
-		background: #b9cee8;
-		border-radius: 2rpx;
-	}
-	.preview-rail-block {
-		position: absolute;
-		width: 42rpx;
-		height: 20rpx;
-		background: #e8eef7;
-		border-radius: 6rpx;
-	}
-	.preview-rail-block--l { left: 12rpx; }
-	.preview-rail-block--r { right: 12rpx; }
 
 	/* 大卡缩略图 */
 	.preview-card {

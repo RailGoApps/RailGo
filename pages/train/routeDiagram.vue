@@ -54,25 +54,17 @@
 				tripCount: 0,
 				stationCount: 0,
 				exporting: false,
-				size: { width: 0, height: 0 }
+				size: { width: 0, height: 0 },
+				// plus 转屏是异步的，窗口尺寸要等转完再量
+				win: { statusBar: 0, windowWidth: 667, windowHeight: 375, pixelRatio: 1 }
 			}
 		},
 		computed: {
-			chrome() {
-				const info = uni.getSystemInfoSync();
-				return {
-					statusBar: info.statusBarHeight || 0,
-					head: HEADER_HEIGHT,
-					windowWidth: info.windowWidth || 667,
-					windowHeight: info.windowHeight || 375,
-					pixelRatio: Math.min(2, info.pixelRatio || 1)
-				};
-			},
 			// 横屏可视窗口：图尽量占满剩余高度，超出部分在 movable-view 里拖动查看
 			stage() {
-				const { statusBar, head, windowWidth, windowHeight } = this.chrome;
+				const { statusBar, windowWidth, windowHeight } = this.win;
 				const availableWidth = windowWidth - (BODY_PADDING + CARD_PADDING) * 2;
-				const availableHeight = windowHeight - statusBar - head - (BODY_PADDING + CARD_PADDING) * 2 - HINT_HEIGHT;
+				const availableHeight = windowHeight - statusBar - HEADER_HEIGHT - (BODY_PADDING + CARD_PADDING) * 2 - HINT_HEIGHT;
 				return {
 					width: Math.max(280, availableWidth),
 					height: Math.max(180, Math.min(this.size.height, availableHeight))
@@ -80,6 +72,11 @@
 			}
 		},
 		onLoad(options) {
+			// #ifdef APP-PLUS
+			plus.screen.lockOrientation('landscape-primary');
+			// #endif
+			this.readWindow();
+
 			const keyword = options.train ? String(options.train).split('/')[0].toUpperCase() : '';
 			if (!/^[A-Z0-9]{1,8}$/.test(keyword)) {
 				this.error = '车次参数有误';
@@ -88,7 +85,30 @@
 			this.train = keyword;
 			this.getData();
 		},
+		onShow() {
+			// #ifdef APP-PLUS
+			plus.screen.lockOrientation('landscape-primary');
+			// #endif
+			this.readWindow();
+		},
+		onResize() {
+			this.readWindow();
+		},
+		onUnload() {
+			// #ifdef APP-PLUS
+			plus.screen.lockOrientation('portrait-primary');
+			// #endif
+		},
 		methods: {
+			readWindow() {
+				const info = uni.getSystemInfoSync();
+				this.win = {
+					statusBar: info.statusBarHeight || 0,
+					windowWidth: info.windowWidth || 667,
+					windowHeight: info.windowHeight || 375,
+					pixelRatio: Math.min(2, info.pixelRatio || 1)
+				};
+			},
 			async getData() {
 				showLoader('正在汇总 ' + this.train + ' 的交路数据...');
 				try {
@@ -152,7 +172,7 @@
 			exportImage() {
 				if (this.exporting || this.size.width <= 0) return;
 				this.exporting = true;
-				const ratio = this.chrome.pixelRatio;
+				const ratio = this.win.pixelRatio;
 				uni.canvasToTempFilePath({
 					canvasId: 'routeDiagram',
 					x: 0,

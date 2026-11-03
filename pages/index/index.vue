@@ -73,8 +73,9 @@
 				:style="pi > 0 ? 'margin-top: 24rpx;' : ''">
 				<navigator v-for="(f, fi) in pair" :key="f.url"
 					class="ux-th ux-bg-white ux-border-radius-large ux-padding"
-					:class="fi % 2 === 0 ? 'ux-mr-small' : 'ux-ml-small'"
-					style="flex:auto;width:1rpx;" hover-class="ux-tap" :url="f.url">
+					:class="pair.length === 1 ? '' : (fi % 2 === 0 ? 'ux-mr-small' : 'ux-ml-small')"
+					:style="pair.length === 1 ? 'flex:1 1 100%;' : 'flex:auto;width:1rpx;'" hover-class="ux-tap"
+					:url="f.url">
 					<text class="icon section-icon" :class="f.colorClass">{{ f.icon }}</text>
 					<br>
 					<text class="ux-text">{{ f.name }}</text>
@@ -88,11 +89,11 @@
 			</view>
 		</view>
 
-		<!-- 风格：渐变卡片（全屏白底：核心大卡 + 工具小宫格） -->
-		<view v-else-if="indexStyle === 'bento'" class="bento-body">
-			<!-- 核心功能大卡：车次+车站一行，动车组单独一行 -->
-			<view class="bento-core-row">
-				<navigator v-for="f in coreFeatures.slice(0, 2)" :key="f.url" class="bento-card" :url="f.url" hover-class="ux-tap">
+		<!-- 风格：渐变卡片（默认，核心大卡 + 工具小宫格） -->
+		<view v-else class="bento-body">
+			<!-- 核心功能大卡：每行两张（车次+车站 / 动车组+图鉴） -->
+			<view v-for="(row, ri) in coreRows" :key="ri" class="bento-core-row">
+				<navigator v-for="f in row" :key="f.url" class="bento-card" :url="f.url" hover-class="ux-tap">
 					<text class="icon section-icon" :class="f.colorClass">{{ f.icon }}</text>
 					<br>
 					<text class="ux-text">{{ f.name }}</text>
@@ -104,17 +105,6 @@
 					</view>
 				</navigator>
 			</view>
-			<navigator class="bento-card bento-card--full" :url="coreFeatures[2].url" hover-class="ux-tap">
-				<text class="icon section-icon" :class="coreFeatures[2].colorClass">{{ coreFeatures[2].icon }}</text>
-				<br>
-				<text class="ux-text">{{ coreFeatures[2].name }}</text>
-				<br>
-				<text class="ux-text-small ux-opacity-8">{{ coreFeatures[2].desc }}。</text>
-				<br><br>
-				<view class="ux-text-right ux-mr-small">
-					<text class="icon">&#xe5c8;</text>
-				</view>
-			</navigator>
 
 			<view class="bento-tools">
 				<navigator v-for="t in toolFeatures" :key="t.url" class="bento-tool" :url="t.url" hover-class="ux-tap">
@@ -124,46 +114,14 @@
 			</view>
 		</view>
 
-		<!-- 风格：铁路线路图 -->
-		<view v-else class="rail-line ux-mt-small">
-			<!-- 贯穿全页的铁路线 -->
-			<view class="rail-track"></view>
-
-			<!-- 起点 -->
-			<view class="rail-terminal">
-				<view class="rail-terminal-dot"></view>
-			</view>
-
-			<!-- 功能车站：站名牌左右交错 -->
-			<navigator v-for="(f, i) in features" :key="f.url" :url="f.url" hover-class="ux-tap"
-				class="rail-row" :class="{ 'rail-row--right': i % 2 === 1 }">
-				<view class="rail-card ux-bg-white ux-border-radius-large">
-					<view class="rail-card-head">
-						<text class="icon rail-card-icon" :class="f.colorClass">{{ f.icon }}</text>
-						<text class="ux-text rail-card-title">{{ f.name }}</text>
-					</view>
-					<text class="ux-text-small ux-opacity-8 rail-card-desc">{{ f.desc }}</text>
-				</view>
-				<view class="rail-station">
-					<view class="rail-station-dot" :style="{ background: f.dot }"></view>
-				</view>
-				<view class="rail-spacer"></view>
-			</navigator>
-
-			<!-- 终点 -->
-			<view class="rail-terminal">
-				<view class="rail-terminal-dot"></view>
-			</view>
-		</view>
-		<br>
-		<!-- 图片广告 -->
-		<view :class="indexStyle === 'bento' ? 'bento-banner' : ''">
-			<swiper v-if="bannerImages.length > 0" class="ux-border-radius-large" :style="{height: swiperHeight}" indicator-dots circular autoplay>
+		<!-- 图片广告：云端没图或请求失败时整块不显示 -->
+		<view v-if="bannerImages.length > 0" :class="indexStyle === 'bento' ? 'bento-banner' : ''">
+			<br>
+			<swiper class="ux-border-radius-large" :style="{height: swiperHeight}" indicator-dots circular autoplay>
 				<swiper-item v-for="(item, index) in bannerImages" :key="index">
 					<image :src="item.img" mode="widthFix" class="ux-border-radius-large" style="width: 100%;" @load="onImageLoad" @click="openBannerLink(item.jump)"></image>
 				</swiper-item>
 			</swiper>
-			<image v-else class="ux-border-radius-large" src="/static/overlay/index_banner_1.png" style="width:100%;" mode="widthFix"></image>
 		</view>
 	</view>
 </template>
@@ -180,16 +138,17 @@
 				swiperHeight: '0px',
 				showUpdatePopup: false,
 				updateVersion: '',
-				// 主页风格：rail(线路图) / card(经典大卡) / bento(渐变卡片)
+				// 主页风格：card(经典大卡) / bento(渐变卡片，默认)
 				indexStyle: 'bento',
 				// 每个功能入口的数据（key 用于风格布局分组）
 				features: [
-					{ key: 'train', name: '车次', desc: '查询时刻、开行日等信息', icon: '\ue192', colorClass: 'ux-color-purple', dot: '#9C27B0', url: '/pages/train/query' },
-					{ key: 'station', name: '车站', desc: '查询通过车次、线路等信息', icon: '\ue88a', colorClass: 'ux-color-cyan1', dot: '#0097A7', url: '/pages/station/query' },
-					{ key: 'speed', name: '实时测速', desc: '实时使用GPS进行速度测试', icon: '\ue55e', colorClass: 'ux-color-brown', dot: '#5D4037', url: '/pages/speed/speed' },
-					{ key: 'route', name: '行程 (Beta)', desc: '帮您记录您的美好行程足迹', icon: '\ue1b7', colorClass: 'ux-color-cyan1', dot: '#0097A7', url: '/pages/route/route' },
-					{ key: 'emu', name: '动车组', desc: '查询动车组配属和运行交路', icon: '\ue570', colorClass: 'ux-color-orange1', dot: '#FF6E40', url: '/pages/emu/query' },
-					{ key: 'gallery', name: '列车图鉴', desc: '看见火车迷们拍摄的列车图片', icon: '\ue3b3', colorClass: 'ux-color-green6', dot: '#9CCC65', url: '/pages/gallery/query' }
+					{ key: 'train', name: '车次', desc: '查询时刻、开行日等信息', icon: '\ue192', colorClass: 'ux-color-purple', url: '/pages/train/query' },
+					{ key: 'station', name: '车站', desc: '查询通过车次、线路等信息', icon: '\ue88a', colorClass: 'ux-color-cyan1', url: '/pages/station/query' },
+					{ key: 'speed', name: '实时测速', desc: '实时使用GPS进行速度测试', icon: '\ue55e', colorClass: 'ux-color-brown', url: '/pages/speed/speed' },
+					{ key: 'route', name: '行程 (Beta)', desc: '帮您记录您的美好行程足迹', icon: '\ue1b7', colorClass: 'ux-color-cyan1', url: '/pages/route/route' },
+					{ key: 'emu', name: '动车组', desc: '查询动车组配属和运行交路', icon: '\ue570', colorClass: 'ux-color-orange1', url: '/pages/emu/query' },
+					{ key: 'gallery', name: '列车图鉴', desc: '看见火车迷们拍摄的列车图片', icon: '\ue3b3', colorClass: 'ux-color-green6', url: '/pages/gallery/query' },
+					{ key: 'memorialTicket', name: '纪念票', desc: '生成您的专属纪念车票', icon: '\ue8b8', colorClass: 'ux-color-pink', url: '/pages/ticket/memorial' }
 				]
 			};
 		},
@@ -202,13 +161,21 @@
 				}
 				return pairs;
 			},
-			// 渐变卡片风格：核心功能（车次/车站/动车组）
+			// 渐变卡片风格：核心功能（车次/车站/动车组/图鉴）
 			coreFeatures() {
-				return this.features.filter(f => ['train', 'station', 'emu'].includes(f.key));
+				return this.features.filter(f => ['train', 'station', 'emu', 'gallery'].includes(f.key));
 			},
-			// 渐变卡片风格：次要工具（行程/测速/图鉴）；关于入口在右上角
+			// 渐变卡片风格：核心大卡每行两张
+			coreRows() {
+				const rows = [];
+				for (let i = 0; i < this.coreFeatures.length; i += 2) {
+					rows.push(this.coreFeatures.slice(i, i + 2));
+				}
+				return rows;
+			},
+			// 渐变卡片风格：次要工具（行程/测速/纪念票）；关于入口在右上角
 			toolFeatures() {
-				return this.features.filter(f => ['route', 'speed', 'gallery'].includes(f.key));
+				return this.features.filter(f => ['route', 'speed', 'memorialTicket'].includes(f.key));
 			},
 			activeItem() {
 				return this.items[this.currentIndex] || '';
@@ -230,9 +197,8 @@
 		},
 		onShow() {
 			this.checkUpdatePopup();
-			// 从个性化设置读取主页风格
-			this.indexStyle = uni.getStorageSync('indexStyle') || 'bento';
-			
+			// 从个性化设置读取主页风格；旧版本存下的其它值（如已删除的线路图）回落到默认
+			this.indexStyle = uni.getStorageSync('indexStyle') === 'card' ? 'card' : 'bento';
 		},
 		methods: {
 			checkUpdatePopup() {
@@ -269,10 +235,10 @@
 					}
 					const picBase = uni.getStorageSync('service_source_notice') || 'https://gateway.zenglingkun.cn';
 					const picResponse = await uniGet(picBase + "/api/v2/pic_ad");
-					if (picResponse.data && Array.isArray(picResponse.data)) {
-						this.bannerImages = picResponse.data;
-						// 预加载所有图片，取最大高宽比设置 swiper 高度
-						this.preloadBannerSizes(picResponse.data);
+					if (Array.isArray(picResponse.data)) {
+						// 只留有图片地址的项，一条都没有时整块不显示
+						this.bannerImages = picResponse.data.filter(item => item && item.img);
+						this.preloadBannerSizes(this.bannerImages);
 					}
 				} catch (error) {
 					console.error('Fetch error:', error);
@@ -282,10 +248,6 @@
 				let maxRatio = 0;
 				let loaded = 0;
 				images.forEach(item => {
-					if (!item.img) {
-						loaded++;
-						return;
-					}
 					uni.getImageInfo({
 						src: item.img,
 						success: (res) => {
@@ -327,73 +289,6 @@
 <style lang="scss">
 	.ux-color-red { color: #B71C1C !important; }
 	.section-icon { font-size: 50rpx; }
-
-	/* 铁路线路图布局 */
-	.rail-line {
-		position: relative;
-		padding: 10rpx 0;
-	}
-	.rail-track {
-		position: absolute;
-		left: 50%;
-		top: 0;
-		bottom: 0;
-		width: 8rpx;
-		margin-left: -4rpx;
-		background: #b9cee8;
-		border-radius: 4rpx;
-	}
-	.rail-terminal {
-		position: relative;
-		z-index: 1;
-		display: flex;
-		justify-content: center;
-		padding: 8rpx 0;
-	}
-	.rail-terminal-dot {
-		width: 22rpx;
-		height: 22rpx;
-		border-radius: 50%;
-		background: #114598;
-		border: 4rpx solid #fff;
-		box-shadow: 0 2rpx 8rpx rgba(17, 69, 152, 0.35);
-	}
-	.rail-row {
-		position: relative;
-		z-index: 1;
-		display: flex;
-		align-items: center;
-		margin: 24rpx 0;
-	}
-	.rail-row--right {
-		flex-direction: row-reverse;
-	}
-	.rail-card {
-		flex: 0 0 41%;
-		padding: 22rpx 26rpx;
-		box-shadow: 0 4rpx 18rpx rgba(17, 69, 152, 0.08);
-	}
-	.rail-card-head {
-		display: flex;
-		align-items: center;
-		margin-bottom: 6rpx;
-	}
-	.rail-card-icon { font-size: 40rpx; margin-right: 12rpx; }
-	.rail-card-title { font-weight: 600; }
-	.rail-card-desc { display: block; line-height: 1.5; }
-	.rail-station {
-		flex: 0 0 18%;
-		display: flex;
-		justify-content: center;
-	}
-	.rail-station-dot {
-		width: 32rpx;
-		height: 32rpx;
-		border-radius: 50%;
-		border: 6rpx solid #fff;
-		box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.18);
-	}
-	.rail-spacer { flex: 1; }
 
 	/* 渐变卡片风格（全屏、背景同其他页 ux-bg-grey5） */
 	.page-bento { background: #EEEEEE; }
@@ -545,7 +440,7 @@
 	}
 	.bento-core-row .bento-card:first-child { margin-left: 0; }
 	.bento-core-row .bento-card:last-child { margin-right: 0; }
-	.bento-card--full { margin-top: 20rpx; }
+	.bento-core-row + .bento-core-row { margin-top: 20rpx; }
 	/* 更多工具：一行两张小卡，左 icon 右名称 */
 	.bento-tools { display: flex; flex-wrap: wrap; padding: 30rpx 0 10rpx; }
 	.bento-tool {

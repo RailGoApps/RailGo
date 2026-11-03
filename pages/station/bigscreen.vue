@@ -76,12 +76,18 @@
 			}
 		},
 		onLoad(options) {
+			// #ifdef APP-PLUS
+			plus.screen.lockOrientation('landscape-primary');
+			// #endif
 			this.telecode = options.telecode || '';
 			this.stationName = options.name ? decodeURIComponent(options.name) : '';
 			this.kind = options.kind === 'arrival' ? 'arrival' : 'departure';
 			this.getData();
 		},
 		onShow() {
+			// #ifdef APP-PLUS
+			plus.screen.lockOrientation('landscape-primary');
+			// #endif
 			if (this.list.length > 0 && !this.refreshTimer) {
 				this.startAutoRefresh();
 			}
@@ -91,6 +97,9 @@
 		},
 		onUnload() {
 			this.stopAutoRefresh();
+			// #ifdef APP-PLUS
+			plus.screen.lockOrientation('portrait-primary');
+			// #endif
 		},
 		methods: {
 			close: function() {

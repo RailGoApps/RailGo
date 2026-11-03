@@ -42,8 +42,7 @@
 		{
 			"path": "pages/station/bigscreen",
 			"style": {
-				"navigationBarTitleText": "",
-				"pageOrientation": "landscape"
+				"navigationBarTitleText": ""
 			}
 		},
 		{
@@ -199,8 +198,7 @@
 			"path" : "pages/train/routeDiagram",
 			"style" : 
 			{
-				"navigationBarTitleText" : "",
-				"pageOrientation" : "landscape"
+				"navigationBarTitleText" : ""
 			}
 		},
 		{
@@ -291,6 +289,12 @@
 		},
 		{
 			"path": "pages/about/friend",
+			"style": {
+				"navigationBarTitleText": ""
+			}
+		},
+		{
+			"path": "pages/ticket/memorial",
 			"style": {
 				"navigationBarTitleText": ""
 			}
