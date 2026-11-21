@@ -35,6 +35,7 @@
 		<view class="ux-pl ux-pr ux-pb">
 			<uni-section title="合作伙伴" type="line" title-font-size="35rpx" class="no-bg-section"></uni-section>
 			<view class="ux-flex ux-row ux-justify-content-center ux-padding-sm">
+				<image src="/static/yskj.png" mode="widthFix" style="width: 320rpx;"></image>
 				<image src="/static/hzzc.png" mode="widthFix" style="width: 320rpx;"></image>
 			</view>
 		</view>
@@ -73,7 +74,7 @@
 		</view>
 
 		<view class="ux-pl ux-pr ux-pb">
-			<uni-section title="服务器赞助者" type="line" title-font-size="35rpx" class="no-bg-section"></uni-section>
+			<uni-section title="节点支持" type="line" title-font-size="35rpx" class="no-bg-section"></uni-section>
 			<view class="avatar-group">
 				<image mode="scaleToFill" v-for="(nk, index) in serverSponsors" :key="index"
 					:src="`https://q1.qlogo.cn/g?b=qq&s=100&nk=${nk}`" class="avatar-sm"></image>

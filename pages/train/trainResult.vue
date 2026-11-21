@@ -211,7 +211,7 @@
 				<view class="ux-bg-white ux-border-radius"
 					v-if="(carData.carOwner || '')+(carData.runner || '')+(carData.car || '')!=''">
 
-					<view v-if="carData.car && ['G','D','C','S'].includes(carData.numberKind) && carImageUrl">
+					<view v-if="carData.car && ['G','D','C','S','T','K'].includes(carData.numberKind) && carImageUrl">
 						<view class="ux-flex ux-justify-content-center">
 							<image :src="carImageUrl" @error="onImageError" mode="widthFix"
 								style="width:100%; height: auto; border-top-left-radius: 10rpx; border-top-right-radius: 10rpx; border-bottom-left-radius: 0; border-bottom-right-radius: 0;"></image>
@@ -245,7 +245,7 @@
 								</view>
 							</view>
 							
-							<view class="ux-flex ux-align-items-center" v-if="carData.car, !['G','D','C','S'].includes(carData.numberKind)">
+							<view class="ux-flex ux-align-items-center" v-if="carData.car, !['G','D','C','S','T','K'].includes(carData.numberKind)">
 								<text class="ux-color-primary icon" style="font-size:60rpx;">&#xe570;</text>
 								<view class="ux-pl-small">
 									<text class="ux-text-small ux-opacity-5">车型</text><br>
@@ -254,9 +254,9 @@
 							</view>
 						</view>
 
-						<uv-divider v-if="(carData.carOwner || '')+(carData.runner || '')!='',['G','D','C','S'].includes(carData.numberKind)" />
+						<uv-divider v-if="(carData.carOwner || '')+(carData.runner || '')!='',['G','D','C','S','T','K'].includes(carData.numberKind)" />
 
-						<view v-if="carData.car, ['G','D','C','S'].includes(carData.numberKind)" class="ux-mt-normal">
+						<view v-if="carData.car, ['G','D','C','S','T','K'].includes(carData.numberKind)" class="ux-mt-normal">
 							
 							<view class="ux-flex ux-flex-wrap ux-space-between">
 								<view class="ux-flex ux-align-items-center ux-mb-small" style="width: 48%;">
@@ -286,14 +286,14 @@
 								</view>
 							</view>
 
-							<view v-if="['G','D','C'].includes(carData.numberKind)">
+							<view v-if="['G','D','C','T','K'].includes(carData.numberKind)">
 							    <br>
 							    <view class="ux-flex ux-align-items-center">
 							        
 							        <navigator :url="'/pages/emu/result?keyword='+encodeURIComponent(train)" style="flex: 1; margin-right: 10rpx;">
 							            <button class="ux-color-white ux-bg-primary" size="mini" style="width:100%;">
 							                <view class="ux-flex ux-align-items-center ux-justify-content-center">
-							                    <text style="margin-left: 8rpx;">运行担当</text>
+							                    <text style="margin-left: 8rpx;">担当</text>
 							                </view>
 							            </button>
 							        </navigator>
@@ -700,7 +700,7 @@
 			// 担当卡片内的按钮行是否会渲染，决定交路图入口是否需要独立成行
 			diagramRowInline() {
 				const hasCarInfo = ((this.carData.carOwner || '') + (this.carData.runner || '') + (this.carData.car || '')).length > 0;
-				return hasCarInfo && ['G', 'D', 'C'].includes(this.carData.numberKind);
+				return hasCarInfo && ['G', 'D', 'C', 'K', 'T'].includes(this.carData.numberKind);
 			},
 			/**
 			 * 结合正晚点数据 (this.delay) 和时刻表数据 (this.carData.timetable)

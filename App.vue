@@ -1,6 +1,6 @@
 <script>
 	const nauth = false;
-	const version = "2.0.10 Build 20010"
+	const version = "2.1.0 Build 20100"
 	const version_number = 34
 	import {uniGet, fetchServiceEndpoints, applyFirstServiceSources} from "./scripts/req";
 	// #ifndef H5

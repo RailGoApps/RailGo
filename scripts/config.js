@@ -8,11 +8,13 @@ export const TRAIN_KIND_COLOR_MAP = {
 	"6": "#a9dfbf", // 普慢
 	"7": "#a9dfbf", // 普慢
 	"8": "#a9dfbf", // 普慢
+	"V": "#a9dfbf",
 	"K": "#eeba67", // 快速
-	"N": "#eeba67", // N
+	"N": "#459811", // N
 	"T": "#459811", // 特快
 	"Z": "#114598", // 直特
 	"G": "#c0392b", // 高动
+	"X": "#c0392b", // 高动
 	"D": "#5499c7", // 动车+城际
 	"C": "#2e9f9c",
 	"S": "#8e44ad", // 市域
@@ -127,6 +129,10 @@ export function getTrainTypeDescription(trainNum) {
 		case 'T':
 			return '特快';
 		case 'K':
+			return '快速';
+		case 'N':
+			return '特快';
+		case 'V':
 			return '快速';
 		case 'S':
 			return '市域';

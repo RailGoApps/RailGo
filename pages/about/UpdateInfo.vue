@@ -47,6 +47,13 @@
 				nowIcon: uni.getStorageSync("nowIcon") || 'crh',
 				updateLogs: [
 					{
+						version: "v2.1.0 (20100)",
+						date: "2026-11-09",
+						items: [
+							"Feature: 适配新版车次编排规则"
+						]
+					},
+					{
 						version: "v2.0.10 (20010)",
 						date: "2026-11-03",
 						items: [

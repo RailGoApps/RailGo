@@ -5,7 +5,7 @@
 		<view class="ux-pl ux-pr ux-pt" style="padding-top: 0px;">
 			<text class="ux-h2">车次查询</text>
 		</view>
-		<view class="ux-pl ux-pr ux-pb">
+		<view class="ux-pl ux-pr ux-pb" :style="showKeyboard && selectIndex == 0 && isCustomKeyboardEnabled ? 'padding-bottom: 700rpx;' : ''">
 			<view class="ux-flex ux-justify-content-center">
 				<uv-tabs :list="topTabList" lineWidth="60" lineColor="#114598" :activeStyle="{
 						color: '#303133',
@@ -155,47 +155,45 @@
 		</view>
 		
 		<view class="train-keyboard" v-if="showKeyboard && selectIndex == 0 && isCustomKeyboardEnabled">
-			<view class="confirm-area">
-				<text class="confirm-btn" @click="toggleSystemKeyboard" style="margin-right: 20rpx; color: #f90;">切换系统键盘</text>
-				<text class="confirm-btn" @click="hideTrainKeyboard">确认</text>
+			<view class="keyboard-head">
+				<text class="switch-system" @click="toggleSystemKeyboard">切换系统键盘</text>
 			</view>
 
 			<view class="keyboard-body">
-				
-				<view class="key letter-key" style="grid-row: 1; grid-column: 1;" @touchstart="onLetterClick('G')"><text>G</text></view>
-				<view class="key letter-key" style="grid-row: 1; grid-column: 2;" @touchstart="onLetterClick('D')"><text>D</text></view>
-				
-				<view class="key number-key" style="grid-row: 1; grid-column: 3;" @touchstart="onNumberClick(1)"><text>1</text></view>
-				<view class="key number-key" style="grid-row: 1; grid-column: 4;" @touchstart="onNumberClick(2)"><text>2</text></view>
-				<view class="key number-key" style="grid-row: 1; grid-column: 5;" @touchstart="onNumberClick(3)"><text>3</text></view>
-				
-				<view class="key letter-key" style="grid-row: 2; grid-column: 1;" @touchstart="onLetterClick('C')"><text>C</text></view>
-				<view class="key letter-key" style="grid-row: 2; grid-column: 2;" @touchstart="onLetterClick('K')"><text>K</text></view>
-				
-				<view class="key number-key" style="grid-row: 2; grid-column: 3;" @touchstart="onNumberClick(4)"><text>4</text></view>
-				<view class="key number-key" style="grid-row: 2; grid-column: 5;" @touchstart="onNumberClick(6)"><text>6</text></view>
-				<view class="key number-key" style="grid-row: 2; grid-column: 4;" @touchstart="onNumberClick(5)"><text>5</text></view>
-				
-				<view class="key letter-key" style="grid-row: 3; grid-column: 1;" @touchstart="onLetterClick('L')"><text>L</text></view>
-				<view class="key letter-key" style="grid-row: 3; grid-column: 2;" @touchstart="onLetterClick('T')"><text>T</text></view>
-				
-				<view class="key number-key" style="grid-row: 3; grid-column: 3;" @touchstart="onNumberClick(7)"><text>7</text></view>
-				<view class="key number-key" style="grid-row: 3; grid-column: 4;" @touchstart="onNumberClick(8)"><text>8</text></view>
-				<view class="key number-key" style="grid-row: 3; grid-column: 5;" @touchstart="onNumberClick(9)"><text>9</text></view>
-				
-				
-				<view class="key letter-key" style="grid-row: 4; grid-column: 1;" @touchstart="onLetterClick('Z')"><text>Z</text></view>
-				<view class="key letter-key" style="grid-row: 4; grid-column: 2;" @touchstart="onLetterClick('Y')"><text>Y</text></view>
-				<view class="key letter-key" style="grid-row: 4; grid-column: 3;" @touchstart="onLetterClick('S')"><text>S</text></view>
-				<view class="key number-key" style="grid-row: 4; grid-column: 4;" @touchstart="onNumberClick(0)"><text>0</text></view>
-				<view class="key function-key delete-key" style="grid-row: 4; grid-column: 5;" 
+				<view class="key letter-key" @touchstart="onLetterClick('G')"><text>G</text></view>
+				<view class="key letter-key" @touchstart="onLetterClick('T')"><text>T</text></view>
+				<view class="key letter-key" @touchstart="onLetterClick('K')"><text>K</text></view>
+				<view class="key letter-key" @touchstart="onLetterClick('D')"><text>D</text></view>
+
+				<view class="key letter-key" @touchstart="onLetterClick('C')"><text>C</text></view>
+				<view class="key letter-key" @touchstart="onLetterClick('S')"><text>S</text></view>
+				<view class="key letter-key" @touchstart="onLetterClick('Z')"><text>Z</text></view>
+				<view class="key letter-key" @touchstart="onLetterClick('N')"><text>N</text></view>
+
+				<view class="key number-key" @touchstart="onNumberClick(1)"><text>1</text></view>
+				<view class="key number-key" @touchstart="onNumberClick(2)"><text>2</text></view>
+				<view class="key number-key" @touchstart="onNumberClick(3)"><text>3</text></view>
+				<view class="key letter-key" @touchstart="onLetterClick('V')"><text>V</text></view>
+
+				<view class="key number-key" @touchstart="onNumberClick(4)"><text>4</text></view>
+				<view class="key number-key" @touchstart="onNumberClick(5)"><text>5</text></view>
+				<view class="key number-key" @touchstart="onNumberClick(6)"><text>6</text></view>
+				<view class="key letter-key" @touchstart="onLetterClick('Y')"><text>Y</text></view>
+
+				<view class="key number-key" @touchstart="onNumberClick(7)"><text>7</text></view>
+				<view class="key number-key" @touchstart="onNumberClick(8)"><text>8</text></view>
+				<view class="key number-key" @touchstart="onNumberClick(9)"><text>9</text></view>
+				<view class="key letter-key" @touchstart="onLetterClick('L')"><text>L</text></view>
+
+				<view class="key number-key key-wide" @touchstart="onNumberClick(0)"><text>0</text></view>
+				<view class="key delete-key"
 					@click="onDelete"
 					@longpress="onLongPressDelete"
 					@touchstart="deleteTouchStart"
-					@touchend="deleteTouchEnd"
-				>
-					<text class="icon-x">⌫</text> 
+					@touchend="deleteTouchEnd">
+					<view class="backspace-icon"></view>
 				</view>
+				<view class="key confirm-key" @click="hideTrainKeyboard"><text>确认</text></view>
 			</view>
 		</view>
 	</view>
@@ -513,77 +511,94 @@
 
 <style scoped>
 .train-keyboard {
-  position: fixed; 
+  position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   width: 100%;
-  z-index: 9999; 
-  background-color: #f7f7f7; 
-  padding: 0; 
+  z-index: 9999;
+  background-color: #f2f3f5;
   box-sizing: border-box;
   border-top-left-radius: 30rpx;
   border-top-right-radius: 30rpx;
-  padding-bottom: constant(safe-area-inset-bottom);
-  padding-bottom: env(safe-area-inset-bottom);
+  padding: 8rpx 12rpx 12rpx;
+  padding-bottom: calc(12rpx + constant(safe-area-inset-bottom));
+  padding-bottom: calc(12rpx + env(safe-area-inset-bottom));
 }
-.confirm-area {
-    width: 100%;
-    display: flex;
-    justify-content: flex-end; 
-    padding: 20rpx 0 0 0; 
-    background-color: #fff; 
+.keyboard-head {
+  display: flex;
+  justify-content: flex-end;
+  padding: 4rpx 6rpx 8rpx 0;
 }
-.confirm-btn {
-    font-size: 30rpx;
-    color: #007aff; 
-    font-weight: bold;
-    padding: 10rpx 0;
-    margin-right: 45rpx; 
+.switch-system {
+  font-size: 24rpx;
+  color: #9aa0a6;
+  padding: 8rpx 12rpx;
+  margin: -8rpx -12rpx 0 0;
 }
 .keyboard-body {
   display: grid;
-  grid-template-columns: repeat(5, 1fr); 
-  grid-template-rows: repeat(4, 1fr);
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 92rpx;
+  gap: 10rpx;
   width: 100%;
-  background-color: #fff; 
-  gap: 0; 
 }
 .key {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100rpx; 
-  font-size: 48rpx; 
-  font-weight: bold;
-  box-sizing: border-box; 
-  background-color: #fff; 
-  border-right: 1rpx solid #e0e0e0;
-  border-bottom: 1rpx solid #e0e0e0;
+  box-sizing: border-box;
+  background-color: #fff;
+  border-radius: 14rpx;
+  font-size: 40rpx;
+  font-weight: 400;
+  line-height: 1;
+  transition: background-color 0.08s ease;
 }
 .key:active {
-  background-color: #f0f0f0; 
-  opacity: 0.9;
-}
-.key[style*='grid-column: 5'] {
-    border-right: none !important;
-}
-.key[style*='grid-row: 4'] {
-    border-bottom: none !important;
+  background-color: #ececec;
 }
 .letter-key {
-    color: #114598; 
+  color: #e58a2f;
 }
-.delete-key {
-    background-color: #d1d5db; 
-    color: #4b5563;
-    font-weight: normal; 
+.number-key {
+  color: #1c1c1c;
 }
-.delete-key:active {
-    background-color: #a0a0a0;
+.key-wide {
+  grid-column: span 2;
 }
-.icon-x {
-    font-size: 40rpx;
+.confirm-key {
+  color: #2f7cf6;
+  font-size: 32rpx;
+  font-weight: 500;
+}
+.confirm-key:active {
+  background-color: #e9f1ff;
+}
+.backspace-icon {
+  position: relative;
+  width: 42rpx;
+  height: 30rpx;
+  border: 2.5rpx solid #424242;
+  border-radius: 8rpx;
+  box-sizing: border-box;
+}
+.backspace-icon::before,
+.backspace-icon::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 17rpx;
+  height: 2.5rpx;
+  background-color: #424242;
+  border-radius: 2rpx;
+}
+.backspace-icon::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+.backspace-icon::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
 }
 /* 历史记录项目样式 */
 .history-list {

@@ -377,8 +377,8 @@
 						</checkbox>
 					</view>
 					<view class="ux-flex ux-space-between">
-						<checkbox color="#114598" value="12345678" class="ux-mr ux-mt-small"
-							:checked="filterTypeState.includes('12345678')">
+						<checkbox color="#114598" value="12345678VN" class="ux-mr ux-mt-small"
+							:checked="filterTypeState.includes('12345678VN')">
 							<text class="ux-text-small">普客</text>
 						</checkbox>
 						<checkbox color="#114598" value="S" class="ux-mr ux-mt-small"
@@ -462,7 +462,7 @@
 				trains: [],
 				showTrains: [],
 				colorMap: TRAIN_KIND_COLOR_MAP,
-				filterTypeState: ["G", "D", "C", "Z", "T", "K", "12345678", "S", "LY"],
+				filterTypeState: ["G", "D", "C", "Z", "T", "K", "12345678VN", "S", "LY"],
 				filterSourceState: ["P", "D", "A"],
 				sortState: "departure",
 				// --- 新增大屏数据和加载状态 ---
@@ -932,10 +932,16 @@
 				// 1. 先进行筛选
 				filteredTrains = filteredTrains.filter(i => {
 					// 筛选车种
-					const firstChar = i.number.charAt(0);
-					let typeMatch = false;
-					if (firstChar >= '1' && firstChar <= '8') {
-						typeMatch = this.filterTypeState.includes("12345678");
+const firstChar = i.number.charAt(0);
+let typeMatch = false;
+
+					const isNumberOrVN =
+						(firstChar >= '1' && firstChar <= '8') ||
+						firstChar === 'V' ||
+						firstChar === 'N';
+
+					if (isNumberOrVN) {
+						typeMatch = this.filterTypeState.includes("12345678VN");
 					} else if (firstChar === 'L' || firstChar === 'Y') {
 						typeMatch = this.filterTypeState.includes("LY");
 					} else {
