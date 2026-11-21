@@ -88,7 +88,7 @@
 						hover-class="ux-bg-grey5">
 						<uni-td style="border:none">
 							<image style="width:1px;height:1px;transform:translateY(-5px) scale(40)" mode="aspectFit"
-								src="@/static/station-mark-stop.png"></image>
+								:src="index > 0 && item.trainCode !== carData.timetable[index - 1].trainCode ? '/static/station-mark-interchange.png' : '/static/station-mark-stop.png'"></image>
 						</uni-td>
 						<uni-td style="border:none">
 							<navigator
@@ -1327,12 +1327,12 @@
 						const v2Result = v2Resp.data;
 
 						// V2 接口失败，直接跳转 404，不再继续
-						if (!v2Result.success || !v2Result.data || !v2Result.data.timetable || v2Result.data.timetable.length === 0) {
+						if (v2Resp.status === 400 || !v2Result.success || !v2Result.data || !v2Result.data.timetable || v2Result.data.timetable.length === 0) {
 							this.carData = { /* ... reset data ... */ };
 							this.cardColor = '#114598';
 							uni.showToast({
 								title: '车次不存在或当日不开行',
-								icon: none,
+								icon: 'none',
 								position: "bottom"
 							})
 							const c = uni.getStorageSync("search");
@@ -1622,6 +1622,9 @@
 					uni.setStorage({
 						key: 'search',
 						data: c - 1
+					});
+					uni.redirectTo({
+						url: '/pages/404/404'
 					});
 				} finally {
 					// [1] 主数据加载结束：无论成功、失败或提前返回（离线模式），都确保隐藏最初的“加载中”动画
