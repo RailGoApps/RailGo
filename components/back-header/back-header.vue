@@ -2,12 +2,12 @@
 	<view>
 		<view class="bh-status" :style="{ backgroundColor: barColor }">&nbsp;</view>
 		<view class="bh-btn" :class="{ 'bh-btn-px': usePx }"
-			:style="{ top: backTop, backgroundColor: background }"
+			:style="{ backgroundColor: background }"
 			hover-class="bh-btn-hover" @click="goBack">
 			<text class="icon" :style="{ fontSize: usePx ? '22px' : '45rpx' }">&#xe5c4;</text>
 			<text v-if="title" class="bh-title" :class="{ 'bh-title-px': usePx }">{{title}}</text>
 		</view>
-		<view class="bh-placeholder" :style="{ height: placeholderHeight + 'px' }"></view>
+		<view class="bh-placeholder" :class="{ 'bh-placeholder-px': usePx }"></view>
 	</view>
 </template>
 
@@ -24,23 +24,6 @@
 			// 横屏页 rpx 按长边换算会被放大，此模式下头部尺寸固定用 px
 			usePx: { type: Boolean, default: false }
 		},
-		data() {
-			return {
-				statusHeight: 44,
-				backTop: '44px',
-				placeholderHeight: 89 // 状态栏高度 + 按钮高度(90rpx≈45px)
-			}
-		},
-		created() {
-			try {
-				const info = uni.getSystemInfoSync();
-				this.statusHeight = info.statusBarHeight || 44;
-				this.backTop = this.statusHeight + 'px';
-				this.placeholderHeight = this.statusHeight + (this.usePx ? 44 : 45);
-			} catch (e) {
-				// 保持默认值
-			}
-		},
 		methods: {
 			goBack() {
 				uni.navigateBack();
@@ -55,10 +38,17 @@
 		top: 0;
 		left: 0;
 		right: 0;
-		height: var(--status-bar-height);
+		height: var(--status-bar-height, 0px);
 		z-index: 999;
 	}
+	.bh-placeholder {
+		height: calc(var(--status-bar-height, 0px) + 90rpx + 24px);
+	}
+	.bh-placeholder-px {
+		height: calc(var(--status-bar-height, 0px) + 68px);
+	}
 	.bh-btn {
+		top: calc(var(--status-bar-height, 0px) + 12px);
 		position: fixed;
 		left: 0;
 		right: 0;
