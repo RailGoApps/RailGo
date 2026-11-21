@@ -30,16 +30,14 @@
 			</view>
 			<view v-else>
 				<view v-for="item in displayed" :key="item.key" class="bs-row">
-					<text class="bs-c-num">{{ item.trainNum }}</text>
-					<text class="bs-c-status" :style="{ color: statusColor(item.bigScreenStatusCode) }">
-						{{ statusText(item) }}
-					</text>
-					<text class="bs-c-from">{{ item.trainStartStation }}</text>
-					<text class="bs-c-to">{{ item.trainEndStation }}</text>
+					<view class="bs-c-num"><overflow-marquee :text="item.trainNum" /></view>
+					<view class="bs-c-status" :style="{ color: statusColor(item.bigScreenStatusCode) }"><overflow-marquee :text="statusText(item)" /></view>
+					<view class="bs-c-from"><overflow-marquee :text="item.trainStartStation" /></view>
+					<view class="bs-c-to"><overflow-marquee :text="item.trainEndStation" /></view>
 					<text class="bs-c-time">{{ item.time || '--:--' }}</text>
-					<text class="bs-c-platform">{{ item.platform || '-' }}</text>
-					<text class="bs-c-room">{{ joinPorts(item.ticketWaitingRoom) }}</text>
-					<text class="bs-c-port">{{ joinPorts(kind === 'arrival' ? item.exitPort : item.ticketPort) }}</text>
+					<view class="bs-c-platform"><overflow-marquee :text="item.platform || '-'" /></view>
+					<view class="bs-c-room"><overflow-marquee :text="joinPorts(item.ticketWaitingRoom)" /></view>
+					<view class="bs-c-port"><overflow-marquee :text="joinPorts(kind === 'arrival' ? item.exitPort : item.ticketPort)" /></view>
 				</view>
 				<view v-if="displayed.length === 0" class="bs-empty">
 					<text>本站暂无大屏数据</text>
@@ -248,7 +246,12 @@
 		border-bottom: 1px solid #22303e;
 	}
 
-	.bs-row text {
+	.bs-row > view,
+	.bs-row > text { min-width: 0; box-sizing: border-box; padding: 0 4px; }
+
+	.bs-row { color: #ffffff; font-size: 15px; line-height: 1.25; }
+
+	.bs-row > text {
 		color: #ffffff;
 		font-size: 15px;
 		line-height: 1.25;

@@ -1,5 +1,5 @@
 <template>
-	<view class="ux-bg-grey5" style="min-height: 100vh;">
+	<view class="ux-bg-grey5 result-page" style="min-height: 100vh;">
 		<back-header></back-header>
 
 		<view class="ux-pl ux-pr ux-pt" style="padding-top: 0px;">
@@ -40,7 +40,8 @@
 			<custom-waterfalls-flow
 				ref="waterfallsFlowRef"
 				:value="modelList"
-				:column="2"
+				:key="galleryColumns"
+				:column="galleryColumns"
 				:columnSpace="1.5"
 				:seat="2"
 				@wapperClick="onModelClick"
@@ -81,10 +82,15 @@
 				loading: false,
 				searched: false,
 				loadError: false,
-				modelList: []
+				modelList: [],
+				galleryColumns: 2
 			};
 		},
+		onResize(event) {
+			this.updateColumns(event.size.windowWidth);
+		},
 		onLoad(options) {
+			this.updateColumns(uni.getSystemInfoSync().windowWidth);
 			if (options.keyword) {
 				this.keyword = options.keyword;
 			}
@@ -98,6 +104,9 @@
 			}
 		},
 		methods: {
+			updateColumns(width) {
+				this.galleryColumns = width >= 1000 ? 4 : width >= 600 ? 3 : 2;
+			},
 			back() {
 				uni.navigateBack();
 			},

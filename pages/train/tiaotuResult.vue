@@ -1,5 +1,5 @@
 <template>
-	<view class="ux-bg-grey5" style="min-height:100vh;">
+	<view class="result-page ux-bg-grey5" style="min-height:100vh;">
 		<back-header></back-header>
 
 		<view class="ux-padding" style="padding-top: 0px;">
@@ -42,7 +42,7 @@
 
 			<view class="ux-pt">
 				<!-- 车次列表骨架屏 -->
-				<view v-if="loading" class="sk-list">
+				<view v-if="loading" class="tiaotu-results-grid">
 					<view v-for="i in 5" :key="i" class="sk-train">
 						<skeleton w="12rpx" h="104rpx" radius="10rpx 0 0 10rpx" mr="20rpx" />
 						<view style="flex:1;">
@@ -62,16 +62,17 @@
 						<text class="ux-text-small ux-opacity-5">共查询到 {{trains.length}} 个车次</text>
 						<br>
 					</view>
+					<view class="tiaotu-results-grid">
 					<view v-for="(item, index) in trains" :key="item.key"
 						class="ux-bg-white ux-border-radius ux-mt-small ux-flex">
 						<view style="border-bottom-left-radius: 10rpx; border-top-left-radius:10rpx;"
 							:style="'background-color:'+item.barColor">
 							&nbsp;&nbsp;
 						</view>
-						<view class="ux-flex ux-align-items-center ux-pr ux-pt ux-pb ux-pl-small"
+						<view class="tiaotu-train-body ux-flex ux-align-items-center ux-pr ux-pt ux-pb ux-pl-small"
 							style="width:100%;">
 							<view style="width:100%;">
-								<view class="ux-flex ux-space-between">
+								<view class="tiaotu-train-info ux-flex ux-space-between">
 									<view>
 										<text class="consolas" style="font-size:40rpx;">{{item.trainCode}}</text>
 										<br>
@@ -97,6 +98,7 @@
 								</view>
 							</view>
 						</view>
+					</view>
 					</view>
 				</view>
 
@@ -224,6 +226,37 @@
 </script>
 
 <style>
+	.tiaotu-results-grid {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		column-gap: 20rpx;
+	}
+
+	.tiaotu-results-grid > view,
+	.tiaotu-train-body,
+	.tiaotu-train-info,
+	.tiaotu-train-info > view {
+		min-width: 0;
+	}
+
+	.tiaotu-train-body {
+		box-sizing: border-box;
+		flex: 1;
+	}
+
+	@media (min-width: 1000px) {
+		.tiaotu-results-grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
+	@media (max-width: 399px) {
+		.tiaotu-train-info {
+			flex-wrap: wrap;
+			row-gap: 12rpx;
+		}
+	}
+
 	.sk-list {
 		display: flex;
 		flex-direction: column;

@@ -307,6 +307,8 @@
 		"backgroundColor": "#F8F8F8",
 		"navigationStyle": "custom",
 		"enablePullDownRefresh": false,
+		"rpxCalcMaxDeviceWidth": 375,
+		"rpxCalcBaseDeviceWidth": 375,
 		"app-plus": {
 			"titleNView": false
 		}

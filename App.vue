@@ -427,6 +427,17 @@
 		font-family: "HMSans", "HarmonyOS Sans SC", "PingFang SC", "MiSans", "Microsoft YaHei", sans-serif;
 	}
 
+	.result-page {
+		width: 100%;
+		max-width: 1200px;
+		margin: 0 auto;
+		box-sizing: border-box;
+	}
+	@media (min-width: 600px) {
+		page { background-color: #eeeeee; }
+		.result-page { padding-left: 16px; padding-right: 16px; }
+	}
+
 	.consolas {
 		font-family: "DIN1451";
 	}

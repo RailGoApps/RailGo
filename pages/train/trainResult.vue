@@ -1,5 +1,5 @@
 <template>
-	<view class="ux-bg-grey5" style="min-height:100vh;">
+	<view class="ux-bg-grey5 result-page" style="min-height:100vh;">
 	<back-header></back-header>
 	<railgo-nfc></railgo-nfc><!-- TODO: preview 为 H5 临时预览开关，上线前移除 -->
 		<view class="ux-pl ux-pr ux-pb">
@@ -211,7 +211,7 @@
 				<view class="ux-bg-white ux-border-radius"
 					v-if="(carData.carOwner || '')+(carData.runner || '')+(carData.car || '')!=''">
 
-					<view v-if="carData.car && ['G','D','C','S','T','K'].includes(carData.numberKind) && carImageUrl">
+					<view class="train-car-image" v-if="carData.car && ['G','D','C','S','T','K'].includes(carData.numberKind) && carImageUrl">
 						<view class="ux-flex ux-justify-content-center">
 							<image :src="carImageUrl" @error="onImageError" mode="widthFix"
 								style="width:100%; height: auto; border-top-left-radius: 10rpx; border-top-right-radius: 10rpx; border-bottom-left-radius: 0; border-bottom-right-radius: 0;"></image>
@@ -2554,6 +2554,9 @@
 </script>
 
 <style>
+	@media (min-width: 600px) {
+		.train-car-image { max-width: 680px; margin: 0 auto; }
+	}
 	.crew-info {
 		display: flex;
 		flex-wrap: wrap;

@@ -1,5 +1,5 @@
 <template>
-	<view class="ux-bg-grey5" style="min-height:100vh; padding-bottom: 40rpx;">
+	<view class="ux-bg-grey5 result-page" style="min-height:100vh; padding-bottom: 40rpx;">
 		<back-header></back-header>
 
 		<view class="ux-padding" style="padding-top: 0px;">
@@ -454,5 +454,14 @@ export default {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
+}
+@media (min-width: 1000px) {
+	:deep(.custom-table-container .uni-table) {
+		display: grid !important;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0 16px;
+	}
+	:deep(.magic-card) { min-width: 0; }
+	.sk-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
 }
 </style>

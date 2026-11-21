@@ -1,5 +1,5 @@
 <template>
-	<view class="ux-bg-grey5" style="min-height:100vh; padding-bottom: 40rpx;">
+	<view class="ux-bg-grey5 result-page" style="min-height:100vh; padding-bottom: 40rpx;">
 		<back-header></back-header>
 		<railgo-nfc></railgo-nfc>
 
@@ -437,4 +437,12 @@ export default {
 }
 .opacity-5 { opacity: 0.5; }
 .opacity-3 { opacity: 0.3; }
+@media (min-width: 600px) {
+	.image-wrapper { max-width: 680px; margin: 0 auto; }
+	.recent-run-container { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
+}
+@media (min-width: 1000px) {
+	.facility-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+	.facility-card { width: auto; min-width: 0; margin-bottom: 0; }
+}
 </style>

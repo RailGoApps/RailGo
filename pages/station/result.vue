@@ -1,5 +1,5 @@
 <template>
-	<view class="ux-bg-grey5" style="min-height:100vh;">
+	<view class="result-page ux-bg-grey5" style="min-height:100vh;">
 		<back-header></back-header>
 		<railgo-nfc></railgo-nfc>
 		<view class="ux-padding">
@@ -69,7 +69,7 @@
 
 			<view class="ux-pt" v-if="selectIndex==0">
 				<!-- 车次列表骨架屏 -->
-				<view v-if="listSkeleton" class="sk-list">
+				<view v-if="listSkeleton" class="station-results-grid">
 					<view v-for="i in 5" :key="i" class="sk-train">
 						<skeleton w="12rpx" h="104rpx" radius="10rpx 0 0 10rpx" mr="20rpx" />
 						<view style="flex:1;">
@@ -102,6 +102,7 @@
 						<text class="ux-text-small ux-opacity-5">共查询到 {{showTrains.length}} 个车次</text>
 						<br>
 					</view>
+					<view class="station-results-grid">
 					<navigator v-for="(item,index) in showTrains" :key="index"
 											:url="'/pages/train/trainResult?keyword='+(item.number || item.code)+'&date='+getToday()">
 						<view class="ux-bg-white ux-border-radius ux-mt-small ux-flex">
@@ -109,10 +110,10 @@
 								:style="'background-color:'+colorMap[item.number.charAt(0)]">
 								&nbsp;&nbsp;
 							</view>
-							<view class="ux-flex ux-align-items-center ux-space-between ux-pr ux-pt ux-pb ux-pl-small"
+							<view class="station-train-body ux-flex ux-align-items-center ux-space-between ux-pr ux-pt ux-pb ux-pl-small"
 								style="width:100%;">
 								<view style="width:calc(100% - 60rpx);">
-									<view class="ux-flex ux-space-between">
+									<view class="station-train-info ux-flex ux-space-between">
 										<view>
 											<text class="consolas" style="font-size:40rpx;">
 												{{item.numberKind}}{{item.numberFull.join("/").replace(new RegExp(item.numberKind, 'g'), "")}}
@@ -143,6 +144,7 @@
 							</view>
 						</view>
 					</navigator>
+					</view>
 				</view>
 				<view v-if="trains.length==0 && !listSkeleton">
 					<view class="ux-padding ux-text-center">本站不办理客运业务或无列车停靠</view>
@@ -204,19 +206,17 @@
 						<uni-th align="center">{{ bigScreenKind === 'arrival' ? '出站口' : '检票口' }}</uni-th>
 					</uni-tr>
 					<uni-tr v-for="(item, index) in displayedBigScreenData" :key="item.key"> 
-						<uni-td align="center">{{ item.trainNum }}</uni-td>
+						<uni-td align="center"><view class="bs-table-cell"><overflow-marquee :text="item.trainNum" /></view></uni-td>
 						<uni-td align="center">
-							<text :style="{color: getStatusColor(item.bigScreenStatusCode)}">
-								{{ formatBigScreenStatus(item.bigScreenStatus, item.bigScreenStatusCode, item.timeDelay) }}
-							</text>
+							<view class="bs-table-cell" :style="{color: getStatusColor(item.bigScreenStatusCode)}"><overflow-marquee :text="formatBigScreenStatus(item.bigScreenStatus, item.bigScreenStatusCode, item.timeDelay)" /></view>
 						</uni-td>
-						<uni-td align="center">{{ item.trainStartStation }}</uni-td>
-						<uni-td align="center">{{ item.trainEndStation }}</uni-td>
+						<uni-td align="center"><view class="bs-table-cell"><overflow-marquee :text="item.trainStartStation" /></view></uni-td>
+						<uni-td align="center"><view class="bs-table-cell"><overflow-marquee :text="item.trainEndStation" /></view></uni-td>
 						<uni-td align="center">{{ formatDepartureTime(item.time) }}</uni-td>
 						<uni-td align="center">{{ item.platform || '-' }}</uni-td>
 						<uni-td align="center">
-							<view>{{ bigScreenKind === 'arrival' ? (item.exitPort || '-') : (item.ticketPort || '-') }}</view>
-							<view v-if="item.waitingRoom" style="opacity: 0.6; font-size: 22rpx;">{{ item.waitingRoom }}</view>
+							<view class="bs-table-cell"><overflow-marquee :text="bigScreenKind === 'arrival' ? (item.exitPort || '-') : (item.ticketPort || '-')" /></view>
+							<view v-if="item.waitingRoom" class="bs-table-cell" style="opacity: 0.6; font-size: 22rpx;"><overflow-marquee :text="item.waitingRoom" /></view>
 						</uni-td>
 					</uni-tr>
 				</uni-table>
@@ -1067,6 +1067,40 @@ let typeMatch = false;
 </script>
 
 <style>
+	.bs-table-cell { width: 92px; max-width: 100%; margin: 0 auto; }
+	.station-results-grid {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		column-gap: 20rpx;
+	}
+
+	.station-results-grid > navigator,
+	.station-results-grid > navigator > view,
+	.station-results-grid > .sk-train,
+	.station-results-grid .station-train-body,
+	.station-train-info,
+	.station-train-info > view {
+		min-width: 0;
+	}
+
+	.station-train-body {
+		box-sizing: border-box;
+		flex: 1;
+	}
+
+	@media (min-width: 1000px) {
+		.station-results-grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
+	@media (max-width: 399px) {
+		.station-train-info {
+			flex-wrap: wrap;
+			row-gap: 12rpx;
+		}
+	}
+
 	.page {
 		min-height: 100vh;
 	}

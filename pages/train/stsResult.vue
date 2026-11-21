@@ -1,5 +1,5 @@
 <template>
-	<view class="ux-bg-grey5" style="min-height:100vh;">
+	<view class="result-page ux-bg-grey5" style="min-height:100vh;">
 	<back-header></back-header>
 		<view class="ux-padding" style="padding-top: 0px;">
 			<text class="ux-h2">车次查询</text>
@@ -28,6 +28,7 @@
 				</button>
 			</view>
 			<br>
+			<view class="sts-results-grid">
 			<navigator v-for="(item, index) in this.showData" :key="index"
 				:url="'/pages/train/trainResult?keyword='+item.number+'&date='+this.date">
 				<view class="ux-bg-white ux-border-radius ux-mb-small ux-flex">
@@ -35,7 +36,7 @@
 						:style="'background-color:'+this.colorMap[item.number[0]]">
 						&nbsp;&nbsp;
 					</view>
-					<view class="ux-flex ux-align-items-center ux-space-between ux-pr ux-pt ux-pb ux-pl-small"
+					<view class="sts-train-body ux-flex ux-align-items-center ux-space-between ux-pr ux-pt ux-pb ux-pl-small"
 						style="width:100%;">
 						<view>
 							<text class="consolas" style="font-size:45rpx;">
@@ -46,7 +47,7 @@
 								{{item.timetable[item.fromPos].station}}
 							</text>
 						</view>
-						<view class="ux-text-center">
+						<view class="sts-train-center ux-text-center">
 							<view class="ux-flex ux-align-items-center ux-justify-content-center">
 								<text class="consolas" style="font-size:40rpx;">
 									{{item.numberKind + item.numberFull.join("/").replace(item.numberKind, "").replace(item.numberKind, "")}}
@@ -61,7 +62,7 @@
 									<text style="color: #432c00; font-size: 20rpx; font-weight: bold;">智</text>
 								</view>
 							</view>
-							<view style="border-top: 0.1rpx solid #757575;width:30vw;margin: 5rpx 0;"></view>
+							<view style="border-top: 0.1rpx solid #757575;width:clamp(80px, 24vw, 180px);margin: 5rpx 0;"></view>
 							
 							<view class="ux-flex ux-justify-content-center ux-align-items-center ux-opacity-5">
 								<text class="ux-text-small">{{item.passTime}}</text>
@@ -85,6 +86,7 @@
 					</view>
 				</view>
 			</navigator>
+			</view>
 			<br>
 			<view class="ux-flex ux-row ux-justify-content-center">
 				<text class="ux-text-small ux-opacity-4">—— 数据来源: RailGo.Parser ——</text>
@@ -330,6 +332,30 @@
 </script>
 
 <style>
+	.sts-results-grid {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		column-gap: 20rpx;
+	}
+
+	.sts-results-grid > navigator,
+	.sts-results-grid > navigator > view,
+	.sts-train-body,
+	.sts-train-center {
+		min-width: 0;
+	}
+
+	.sts-train-body {
+		box-sizing: border-box;
+		flex: 1;
+	}
+
+	@media (min-width: 1000px) {
+		.sts-results-grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
 	.sticky-back {
 		position: sticky;
 		top: var(--status-bar-height);

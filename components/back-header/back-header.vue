@@ -58,6 +58,15 @@
 		padding-left: 30rpx;
 		z-index: 999;
 	}
+	.bh-btn::before {
+		content: '';
+		position: absolute;
+		top: -12px;
+		left: 0;
+		right: 0;
+		height: 12px;
+		background-color: inherit;
+	}
 	.bh-btn-hover {
 		background-color: #eef0f4;
 	}

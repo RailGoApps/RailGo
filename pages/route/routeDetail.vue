@@ -1,5 +1,5 @@
 <template>
-	<view class="ux-bg-grey5" style="min-height:100vh;">
+	<view class="ux-bg-grey5 result-page" style="min-height:100vh;">
 		<back-header></back-header>
 		<view class="ux-pl ux-pr ux-pb">
 
