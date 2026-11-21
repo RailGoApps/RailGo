@@ -144,6 +144,7 @@
 				features: [
 					{ key: 'train', name: '车次', desc: '查询时刻、开行日等信息', icon: '\ue192', colorClass: 'ux-color-purple', url: '/pages/train/query' },
 					{ key: 'station', name: '车站', desc: '查询通过车次、线路等信息', icon: '\ue88a', colorClass: 'ux-color-cyan1', url: '/pages/station/query' },
+					{ key: 'railMap', name: '轨道地图', desc: '浏览铁路线路与沿线车站', icon: '\ue55b', colorClass: 'rail-map-icon', url: '/pages/railMap' },
 					{ key: 'speed', name: '实时测速', desc: '实时使用GPS进行速度测试', icon: '\ue55e', colorClass: 'ux-color-brown', url: '/pages/speed/speed' },
 					{ key: 'route', name: '行程 (Beta)', desc: '帮您记录您的美好行程足迹', icon: '\ue1b7', colorClass: 'ux-color-cyan1', url: '/pages/route/route' },
 					{ key: 'emu', name: '动车组', desc: '查询动车组配属和运行交路', icon: '\ue570', colorClass: 'ux-color-orange1', url: '/pages/emu/query' },
@@ -175,7 +176,7 @@
 			},
 			// 渐变卡片风格：次要工具（行程/测速/纪念票）；关于入口在右上角
 			toolFeatures() {
-				return this.features.filter(f => ['route', 'speed', 'memorialTicket'].includes(f.key));
+				return this.features.filter(f => ['railMap', 'route', 'speed', 'memorialTicket'].includes(f.key));
 			},
 			activeItem() {
 				return this.items[this.currentIndex] || '';
@@ -287,6 +288,7 @@
 </script>
 
 <style lang="scss">
+	.rail-map-icon { color: #008577; }
 	.ux-color-red { color: #B71C1C !important; }
 	.section-icon { font-size: 50rpx; }
 

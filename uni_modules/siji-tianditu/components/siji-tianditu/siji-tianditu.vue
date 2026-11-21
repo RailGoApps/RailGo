@@ -1,7 +1,7 @@
 <template>
 	<view class="siji-tianditu-wrapper">
 		<!-- 地图展示 -->
-		<view :id="mapId" :config="config" :change:config="SijiTianditu.init" :call="option" :change:call="SijiTianditu.call"
+		<view :id="mapId" :config="config" :change:config="SijiTianditu.init" :call="option" :change:call="SijiTianditu.onCommand"
 			class="siji-tianditu" />
 		<!-- 中心图标 -->
 		<image v-if="showCenterIcon" :src="centerIcon||defCenterIcon" class="siji-center-icon" />
@@ -125,6 +125,9 @@
 			setCenter(lon, lat, zoom) {
 				this.addEvent("setCenter", { lon, lat, zoom });
 			},
+			fitPoints(points) {
+				this.addEvent('fitPoints', { points });
+			},
 			// 绘制多条折线（路线），segments: [{ points: [[lng,lat]...], style: { color, width, opacity } }]
 			drawRoute(segments) {
 				this.addEvent("drawRoute", { segments });
@@ -214,7 +217,7 @@
 				}
 			},
 			// 通过监听call来调用渲染层方法
-			call(newValue, oldValue, ownerInstance, instance) {
+			onCommand(newValue, oldValue, ownerInstance, instance) {
 				if (this[newValue.name] && typeof this[newValue.name] === "function") {
 					this[newValue.name](newValue.data);
 				}
@@ -273,13 +276,16 @@
 					console.error('事件绑定失败:', err);
 				}
 			},
+			_fitPoints(data) {
+				const points = (data.points || []).map(p => new T.LngLat(Number(p[0]), Number(p[1])));
+				if (points.length) this._mapInstance.setViewport(points);
+			},
 			// 设置中心点
 			_setCenter(data) {
 				try {
-					this._mapInstance.panTo(
-						new T.LngLat(Number(data.lon), Number(data.lat)), 
-						data.zoom || this._mapInstance.getZoom()
-					);
+					const center = new T.LngLat(Number(data.lon), Number(data.lat));
+					if (data.zoom) this._mapInstance.centerAndZoom(center, data.zoom);
+					else this._mapInstance.panTo(center);
 				} catch (err) {
 					console.error('设置中心点失败:', err);
 				}

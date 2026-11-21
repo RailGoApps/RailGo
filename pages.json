@@ -4,6 +4,10 @@
 			"path": "pages/index/index"
 		},
 		{
+			"path": "pages/railMap",
+			"style": { "navigationStyle": "custom", "disableScroll": true }
+		},
+		{
 			"path": "pages/emu/query"
 		},
 		{
