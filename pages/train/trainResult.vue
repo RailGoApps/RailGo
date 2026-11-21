@@ -228,7 +228,7 @@
 					</view>
 					<view class="ux-padding">
 		
-						<view class="ux-flex ux-space-between" v-if="carData.runner || carData.carOwner">
+						<view class="crew-info" v-if="carData.runner || carData.carOwner || (carData.car && !['G','D','C','S','T','K'].includes(carData.numberKind))">
 							<view class="ux-flex ux-align-items-center" v-if="carData.runner">
 								<text class="ux-color-primary icon" style="font-size:60rpx;">&#xe7fd;</text>
 								<view class="ux-pl-small">
@@ -245,7 +245,7 @@
 								</view>
 							</view>
 							
-							<view class="ux-flex ux-align-items-center" v-if="carData.car, !['G','D','C','S','T','K'].includes(carData.numberKind)">
+							<view class="ux-flex ux-align-items-center crew-info-model" v-if="carData.car && !['G','D','C','S','T','K'].includes(carData.numberKind)">
 								<text class="ux-color-primary icon" style="font-size:60rpx;">&#xe570;</text>
 								<view class="ux-pl-small">
 									<text class="ux-text-small ux-opacity-5">车型</text><br>
@@ -325,7 +325,7 @@
 				</view>
 				
 
-				<view v-if="(carData.diagram || []).length > 0 && !diagramRowInline" class="ux-flex">
+				<view v-if="(carData.diagram || []).length > 0 && !diagramRowInline" class="ux-flex" style="margin-top: 24rpx;">
 					<navigator :url="'/pages/train/routeDiagram?train='+train" style="flex: 1;">
 						<button class="ux-color-white ux-bg-primary" size="mini" style="width:100%;">
 							<view class="ux-flex ux-align-items-center ux-justify-content-center">
@@ -2554,6 +2554,33 @@
 </script>
 
 <style>
+	.crew-info {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 28rpx 24rpx;
+	}
+
+	.crew-info > view {
+		flex: 1 1 calc(50% - 12rpx);
+		min-width: 0;
+	}
+
+	.crew-info > .crew-info-model {
+		flex-basis: 100%;
+	}
+
+	.crew-info .icon {
+		flex-shrink: 0;
+	}
+
+	.crew-info .ux-pl-small {
+		min-width: 0;
+		overflow-wrap: anywhere;
+	}
+
+	.crew-info .ux-text-small {
+		white-space: nowrap;
+	}
 	.page {
 		min-height: 100vh;
 	}

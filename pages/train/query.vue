@@ -1,5 +1,5 @@
 <template>
-	<view class="ux-bg-grey5" style="min-height:100vh;">
+	<view class="ux-bg-grey5" style="min-height:100vh;" @click="hideTrainKeyboard">
 		<back-header></back-header>
 
 		<view class="ux-pl ux-pr ux-pt" style="padding-top: 0px;">
@@ -23,7 +23,7 @@
 					<view style="position:relative;">
 						<view
 							class="ux-bg-white ux-border-radius-small ux-padding-small ux-flex ux-align-items-center ux-mt-small ux-mb-small"
-							@click="showTrainKeyboard"
+							@click.stop="showTrainKeyboard"
 						>
 							<text class="icon">&#xe8b6;</text>
 							&nbsp;
@@ -154,46 +154,47 @@
 			</view>
 		</view>
 		
-		<view class="train-keyboard" v-if="showKeyboard && selectIndex == 0 && isCustomKeyboardEnabled">
+		<view class="train-keyboard" :class="{ 'train-keyboard-open': showKeyboard && selectIndex == 0 && isCustomKeyboardEnabled }" @click.stop>
 			<view class="keyboard-head">
 				<text class="switch-system" @click="toggleSystemKeyboard">切换系统键盘</text>
 			</view>
 
 			<view class="keyboard-body">
-				<view class="key letter-key" @touchstart="onLetterClick('G')"><text>G</text></view>
-				<view class="key letter-key" @touchstart="onLetterClick('T')"><text>T</text></view>
-				<view class="key letter-key" @touchstart="onLetterClick('K')"><text>K</text></view>
-				<view class="key letter-key" @touchstart="onLetterClick('D')"><text>D</text></view>
+				<view hover-class="key-pressed" :hover-start-time="0" :hover-stay-time="100" class="key letter-key" @touchstart="onLetterClick('G')"><text>G</text></view>
+				<view hover-class="key-pressed" :hover-start-time="0" :hover-stay-time="100" class="key letter-key" @touchstart="onLetterClick('T')"><text>T</text></view>
+				<view hover-class="key-pressed" :hover-start-time="0" :hover-stay-time="100" class="key letter-key" @touchstart="onLetterClick('K')"><text>K</text></view>
+				<view hover-class="key-pressed" :hover-start-time="0" :hover-stay-time="100" class="key letter-key" @touchstart="onLetterClick('D')"><text>D</text></view>
 
-				<view class="key letter-key" @touchstart="onLetterClick('C')"><text>C</text></view>
-				<view class="key letter-key" @touchstart="onLetterClick('S')"><text>S</text></view>
-				<view class="key letter-key" @touchstart="onLetterClick('Z')"><text>Z</text></view>
-				<view class="key letter-key" @touchstart="onLetterClick('N')"><text>N</text></view>
+				<view hover-class="key-pressed" :hover-start-time="0" :hover-stay-time="100" class="key letter-key" @touchstart="onLetterClick('C')"><text>C</text></view>
+				<view hover-class="key-pressed" :hover-start-time="0" :hover-stay-time="100" class="key letter-key" @touchstart="onLetterClick('S')"><text>S</text></view>
+				<view hover-class="key-pressed" :hover-start-time="0" :hover-stay-time="100" class="key letter-key" @touchstart="onLetterClick('Z')"><text>Z</text></view>
+				<view hover-class="key-pressed" :hover-start-time="0" :hover-stay-time="100" class="key letter-key" @touchstart="onLetterClick('N')"><text>N</text></view>
 
-				<view class="key number-key" @touchstart="onNumberClick(1)"><text>1</text></view>
-				<view class="key number-key" @touchstart="onNumberClick(2)"><text>2</text></view>
-				<view class="key number-key" @touchstart="onNumberClick(3)"><text>3</text></view>
-				<view class="key letter-key" @touchstart="onLetterClick('V')"><text>V</text></view>
+				<view hover-class="key-pressed" :hover-start-time="0" :hover-stay-time="100" class="key number-key" @touchstart="onNumberClick(1)"><text>1</text></view>
+				<view hover-class="key-pressed" :hover-start-time="0" :hover-stay-time="100" class="key number-key" @touchstart="onNumberClick(2)"><text>2</text></view>
+				<view hover-class="key-pressed" :hover-start-time="0" :hover-stay-time="100" class="key number-key" @touchstart="onNumberClick(3)"><text>3</text></view>
+				<view hover-class="key-pressed" :hover-start-time="0" :hover-stay-time="100" class="key letter-key" @touchstart="onLetterClick('V')"><text>V</text></view>
 
-				<view class="key number-key" @touchstart="onNumberClick(4)"><text>4</text></view>
-				<view class="key number-key" @touchstart="onNumberClick(5)"><text>5</text></view>
-				<view class="key number-key" @touchstart="onNumberClick(6)"><text>6</text></view>
-				<view class="key letter-key" @touchstart="onLetterClick('Y')"><text>Y</text></view>
+				<view hover-class="key-pressed" :hover-start-time="0" :hover-stay-time="100" class="key number-key" @touchstart="onNumberClick(4)"><text>4</text></view>
+				<view hover-class="key-pressed" :hover-start-time="0" :hover-stay-time="100" class="key number-key" @touchstart="onNumberClick(5)"><text>5</text></view>
+				<view hover-class="key-pressed" :hover-start-time="0" :hover-stay-time="100" class="key number-key" @touchstart="onNumberClick(6)"><text>6</text></view>
+				<view hover-class="key-pressed" :hover-start-time="0" :hover-stay-time="100" class="key letter-key" @touchstart="onLetterClick('Y')"><text>Y</text></view>
 
-				<view class="key number-key" @touchstart="onNumberClick(7)"><text>7</text></view>
-				<view class="key number-key" @touchstart="onNumberClick(8)"><text>8</text></view>
-				<view class="key number-key" @touchstart="onNumberClick(9)"><text>9</text></view>
-				<view class="key letter-key" @touchstart="onLetterClick('L')"><text>L</text></view>
+				<view hover-class="key-pressed" :hover-start-time="0" :hover-stay-time="100" class="key number-key" @touchstart="onNumberClick(7)"><text>7</text></view>
+				<view hover-class="key-pressed" :hover-start-time="0" :hover-stay-time="100" class="key number-key" @touchstart="onNumberClick(8)"><text>8</text></view>
+				<view hover-class="key-pressed" :hover-start-time="0" :hover-stay-time="100" class="key number-key" @touchstart="onNumberClick(9)"><text>9</text></view>
+				<view hover-class="key-pressed" :hover-start-time="0" :hover-stay-time="100" class="key letter-key" @touchstart="onLetterClick('L')"><text>L</text></view>
 
-				<view class="key number-key key-wide" @touchstart="onNumberClick(0)"><text>0</text></view>
-				<view class="key delete-key"
+				<view hover-class="key-pressed" :hover-start-time="0" :hover-stay-time="100" class="key number-key key-wide" @touchstart="onNumberClick(0)"><text>0</text></view>
+				<view hover-class="key-pressed" :hover-start-time="0" :hover-stay-time="100" class="key delete-key"
 					@click="onDelete"
 					@longpress="onLongPressDelete"
 					@touchstart="deleteTouchStart"
-					@touchend="deleteTouchEnd">
+					@touchend="deleteTouchEnd"
+					@touchcancel="deleteTouchEnd">
 					<view class="backspace-icon"></view>
 				</view>
-				<view class="key confirm-key" @click="hideTrainKeyboard"><text>确认</text></view>
+				<view hover-class="key-pressed" :hover-start-time="0" :hover-stay-time="100" class="key confirm-key" @click="hideTrainKeyboard"><text>确认</text></view>
 			</view>
 		</view>
 	</view>
@@ -290,6 +291,13 @@
 			this.isCustomKeyboardEnabled = true;
 			this.showKeyboard = false;
 		},
+		onHide() {
+			this.hideTrainKeyboard();
+		},
+		onUnload() {
+			this.deleteTouchEnd();
+			clearTimeout(debounceTimer);
+		},
 		methods: {
 			isLetter(char) { return /^[A-Z]$/i.test(char); },
 			onLetterClick(letter) {
@@ -346,13 +354,16 @@
 			showTrainKeyboard: function() {
 				if (this.isCustomKeyboardEnabled) {
 					this.showKeyboard = true;
+					this.placeholderCollapsed = false;
 				}
 			},
 			hideTrainKeyboard: function() {
 				this.showKeyboard = false;
+				this.placeholderCollapsed = true;
+				this.deleteTouchEnd();
 			},
 			toggleSystemKeyboard: function() {
-				this.showKeyboard = false;
+				this.hideTrainKeyboard();
 				this.isCustomKeyboardEnabled = false;
 			},
 			back: function() {
@@ -401,6 +412,7 @@
 				}
 			},
 			fetchPlaceholder: function() {
+				this.placeholderCollapsed = false;
 				const mode = uni.getStorageSync("mode");
 				if (debounceTimer) clearTimeout(debounceTimer);
 				
@@ -437,7 +449,6 @@
 									return parseInt(numA ? numA[0] : 0) - parseInt(numB ? numB[0] : 0);
 								});
 							}
-							this.placeholderCollapsed = false;
 						} catch (error) {
 							console.error("预选词加载失败", error);
 						}
@@ -524,6 +535,17 @@
   padding: 8rpx 12rpx 12rpx;
   padding-bottom: calc(12rpx + constant(safe-area-inset-bottom));
   padding-bottom: calc(12rpx + env(safe-area-inset-bottom));
+  transform: translateY(100%);
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s 280ms;
+  box-shadow: 0 -8rpx 32rpx rgba(17, 69, 152, 0.08);
+}
+.train-keyboard-open {
+  transform: translateY(0);
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
 }
 .keyboard-head {
   display: flex;
@@ -553,10 +575,16 @@
   font-size: 40rpx;
   font-weight: 400;
   line-height: 1;
-  transition: background-color 0.08s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 3rpx 0 rgba(25, 40, 65, 0.12);
+  transition: background-color 80ms ease, transform 80ms ease, box-shadow 80ms ease;
 }
-.key:active {
-  background-color: #ececec;
+.key:active,
+.key.key-pressed {
+  background-color: #dde7f5;
+  transform: translateY(3rpx) scale(0.96);
+  box-shadow: 0 0 0 transparent;
 }
 .letter-key {
   color: #e58a2f;
