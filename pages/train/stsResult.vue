@@ -350,10 +350,14 @@
 		flex: 1;
 	}
 
-	@media (min-width: 1000px) {
+	@media (min-width: 768px) {
 		.sts-results-grid {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
+		.sts-train-center { flex: 1; margin: 0 12px; }
+		.sts-train-center > view { flex-wrap: wrap; }
+		.sts-train-center > view[style*="border-top"] { width: 100% !important; }
+		.sts-train-body { padding-top: 12px; padding-bottom: 12px; }
 	}
 
 	.sticky-back {

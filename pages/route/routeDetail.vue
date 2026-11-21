@@ -1,9 +1,9 @@
 <template>
 	<view class="ux-bg-grey5 result-page" style="min-height:100vh;">
 		<back-header></back-header>
-		<view class="ux-pl ux-pr ux-pb">
-
-			<view class="ux-bg-white ux-border-radius">
+		<view class="ux-pl ux-pr ux-pb route-layout" :class="{'route-layout--overview': selectIndex!=2}">
+			<view class="route-sidebar">
+			<view class="ux-bg-white ux-border-radius route-summary">
 				<view class="ux-flex ux-space-between ux-pt ux-pl ux-pr ux-align-items-center">
 					<view>
 						<text class="ux-bold consolas" style="font-size:60rpx;"
@@ -37,55 +37,7 @@
 					<text class="ux-bold">时刻表为乘车区间时刻表 并非车次完整时刻表</text>
 				</view>
 			</view>
-			<view class="ux-flex ux-justify-content-center">
-				<uv-tabs :list="topTabList" lineWidth="60" lineColor="#114599" :activeStyle="{
-							color: '#303133',
-							fontWeight: 'bold',
-							transform: 'scale(1.05)'
-				    	}" :inactiveStyle="{
-							color: '#606266',
-							transform: 'scale(1)'
-						}" itemStyle="height: 34px;padding-left:30px;padding-right:30px;" class="ux-mt-small"
-					@click="tabChange"></uv-tabs>
-			</view>
-
-			<view v-if="selectIndex==0">
-				<uni-section title="时刻表" type="line" style="background-color: transparent;"
-					title-font-size="28rpx"></uni-section>
-				<uni-table style="border:none">
-					<uni-tr style="border:none">
-						<uni-th style="border:none" width="10">
-							<image style="width:1px;height:1px;transform:translateY(10px) scale(40);" mode="aspectFit"
-								src="@/static/station-mark-th.png"></image>
-						</uni-th>
-						<uni-th>车站名</uni-th>
-						<uni-th width="70">车次</uni-th>
-						<uni-th width="60">到达</uni-th>
-						<uni-th width="60">出发</uni-th>
-						<uni-th width="80">里程</uni-th>
-						<uni-th width="100">区间均速</uni-th>
-						<uni-th width="60">日期</uni-th>
-						</uni-tr>
-					<uni-tr v-for="(item,index) in filteredTimetable" :key="index" style="border:none"
-						hover-class="ux-bg-grey5">
-						<uni-td style="border:none">
-							<image style="width:1px;height:1px;transform:translateY(-5px) scale(40)" mode="aspectFit"
-								src="@/static/station-mark-stop.png"></image>
-						</uni-td>
-						<uni-td style="border:none">
-							{{item.stationName || item.station || ''}}
-						</uni-td>
-						<uni-td style="border:none">{{item.trainCode || routeData.trainNum || ''}}</uni-td>
-						<uni-td style="border:none">{{item.arrive || item.arriveTime || ''}}</uni-td>
-						<uni-td style="border:none">{{item.depart || item.departTime || ''}}</uni-td>
-						<uni-td style="border:none">{{item.distance || '0'}} km</uni-td>
-						<uni-td style="border:none">{{item.speed ? item.speed.toFixed(1) : '-'}} km/h</uni-td>
-						<uni-td style="border:none">{{item.day || '当'}}日</uni-td>
-						</uni-tr>
-				</uni-table>
-			</view>
-
-			<view v-if="selectIndex==1">
+			<view class="route-crew" v-show="selectIndex==1">
 				<uni-section title="担当" type="line" style="background-color: transparent;"
 					title-font-size="28rpx"></uni-section>
 				<view class="ux-bg-white ux-border-radius"
@@ -209,7 +161,56 @@
 				</view>
 			</view>
 
-			<view class="ux-padding ux-text-center" v-if="selectIndex==2">
+			</view>
+			<view class="ux-flex ux-justify-content-center route-tabs">
+				<uv-tabs :list="topTabList" lineWidth="60" lineColor="#114599" :activeStyle="{
+							color: '#303133',
+							fontWeight: 'bold',
+							transform: 'scale(1.05)'
+				    	}" :inactiveStyle="{
+							color: '#606266',
+							transform: 'scale(1)'
+						}" itemStyle="height: 34px;padding-left:30px;padding-right:30px;" class="ux-mt-small"
+					@click="tabChange"></uv-tabs>
+			</view>
+
+			<view class="route-schedule" v-show="selectIndex==0">
+				<uni-section title="时刻表" type="line" style="background-color: transparent;"
+					title-font-size="28rpx"></uni-section>
+				<uni-table style="border:none">
+					<uni-tr style="border:none">
+						<uni-th style="border:none" width="10">
+							<image style="width:1px;height:1px;transform:translateY(10px) scale(40);" mode="aspectFit"
+								src="@/static/station-mark-th.png"></image>
+						</uni-th>
+						<uni-th>车站名</uni-th>
+						<uni-th width="70">车次</uni-th>
+						<uni-th width="60">到达</uni-th>
+						<uni-th width="60">出发</uni-th>
+						<uni-th width="80">里程</uni-th>
+						<uni-th width="100">区间均速</uni-th>
+						<uni-th width="60">日期</uni-th>
+						</uni-tr>
+					<uni-tr v-for="(item,index) in filteredTimetable" :key="index" style="border:none"
+						hover-class="ux-bg-grey5">
+						<uni-td style="border:none">
+							<image style="width:1px;height:1px;transform:translateY(-5px) scale(40)" mode="aspectFit"
+								src="@/static/station-mark-stop.png"></image>
+						</uni-td>
+						<uni-td style="border:none">
+							{{item.stationName || item.station || ''}}
+						</uni-td>
+						<uni-td style="border:none">{{item.trainCode || routeData.trainNum || ''}}</uni-td>
+						<uni-td style="border:none">{{item.arrive || item.arriveTime || ''}}</uni-td>
+						<uni-td style="border:none">{{item.depart || item.departTime || ''}}</uni-td>
+						<uni-td style="border:none">{{item.distance || '0'}} km</uni-td>
+						<uni-td style="border:none">{{item.speed ? item.speed.toFixed(1) : '-'}} km/h</uni-td>
+						<uni-td style="border:none">{{item.day || '当'}}日</uni-td>
+						</uni-tr>
+				</uni-table>
+			</view>
+
+			<view class="ux-padding ux-text-center route-other" v-if="selectIndex==2">
 				<!-- 座位号显示 -->
 				<view v-if="routeData.seat" class="ux-bg-white ux-border-radius ux-padding ux-mt">
 					<view class="ux-flex ux-space-between ux-align-items-center">
@@ -219,8 +220,8 @@
 				</view>
 			</view>
 
-			<br>
-			<view class="ux-flex ux-row ux-justify-content-center">
+			<br class="route-footer-break">
+			<view class="ux-flex ux-row ux-justify-content-center route-footer">
 				<text class="ux-text-small ux-opacity-4">—— · ——</text>
 			</view>
 		</view>
@@ -361,5 +362,71 @@ export default {
 
 	.status-bar {
 		height: var(--status-bar-height);
+	}
+
+	.route-layout { display: flex; flex-direction: column; }
+	.route-sidebar { display: contents; }
+	.route-tabs { order: 1; }
+	.route-schedule, .route-crew, .route-other { order: 2; min-width: 0; }
+	.route-footer-break, .route-footer { order: 3; }
+
+	@media (min-width: 840px) {
+		.route-layout {
+			display: grid;
+			grid-template-columns: clamp(280px, 30vw, 320px) minmax(0, 1fr);
+			grid-template-rows: auto 1fr auto;
+			gap: 0 20px;
+			align-items: start;
+			font-size: 15px;
+		}
+		.route-sidebar {
+			display: block;
+			grid-column: 1;
+			grid-row: 1 / 3;
+			min-width: 0;
+			overflow-wrap: anywhere;
+		}
+		.route-tabs { grid-column: 2; grid-row: 1; min-width: 0; }
+		.route-schedule, .route-other {
+			grid-column: 2;
+			grid-row: 2;
+			overflow-x: auto;
+		}
+		/* Override v-show for the combined overview, retaining the third tab. */
+		.route-layout--overview .route-schedule,
+		.route-layout--overview .route-crew { display: block !important; }
+		.route-summary > .ux-flex {
+			flex-wrap: wrap;
+			gap: 8px;
+			padding: 12px !important;
+		}
+		.route-summary .consolas { font-size: 28px !important; }
+		.route-summary .ux-text-small, .route-crew .ux-text-small { font-size: 12px; }
+		.route-sidebar .ux-h6 { font-size: 13px; line-height: 1.6; }
+		.route-crew image {
+			max-width: 100%;
+			height: 180px !important;
+			max-height: 180px;
+			object-fit: contain;
+		}
+		.route-crew .ux-padding { padding: 12px; }
+		.route-crew .ux-pl, .route-crew .ux-pr {
+			padding-left: 12px;
+			padding-right: 12px;
+		}
+		.route-crew .ux-pt, .route-crew .ux-pb {
+			padding-top: 12px;
+			padding-bottom: 12px;
+		}
+		.route-crew .ux-space-between { flex-wrap: wrap; gap: 10px; }
+		.route-crew .ux-padding .ux-space-between > view {
+			width: 100% !important;
+			min-width: 0;
+		}
+		.route-crew .ux-align-items-center > .ux-pl-small { min-width: 0; flex: 1; }
+		.route-crew .icon { font-size: 24px !important; flex-shrink: 0; }
+		.route-crew .consolas { font-size: 20px !important; }
+		.route-footer-break { display: none; }
+		.route-footer { grid-column: 1 / -1; grid-row: 3; margin-top: 16px; }
 	}
 </style>

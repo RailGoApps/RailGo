@@ -3,7 +3,8 @@
 		<back-header></back-header>
 		<railgo-nfc></railgo-nfc>
 
-		<view class="ux-pl ux-pr ux-pb" v-if="!loading && emuData.id">
+		<view class="ux-pl ux-pr ux-pb emu-workspace" v-if="!loading && emuData.id">
+			<view class="emu-sidebar">
 			<view class="ux-bg-white ux-border-radius">
 				<view class="ux-flex ux-space-between ux-pt ux-pl ux-pr ux-align-items-center">
 					<view>
@@ -51,6 +52,8 @@
 				</view>
 			</view>
 
+			</view>
+			<view class="emu-main">
 			<block v-if="recentRuns && recentRuns.length > 0">
 				<uni-section title="最近运行动态" type="line" style="background-color: transparent;" title-font-size="28rpx" class="section-title"></uni-section>
 				
@@ -144,6 +147,7 @@
 
 		</view>
 
+		</view>
 		<view v-if="!loading && !emuData.id" class="ux-text-center ux-padding" style="margin-top: 100rpx;">
 			<text class="ux-opacity-5">—— 未检索到该车组的详细档案 ——</text>
 		</view>
@@ -441,8 +445,25 @@ export default {
 	.image-wrapper { max-width: 680px; margin: 0 auto; }
 	.recent-run-container { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
 }
-@media (min-width: 1000px) {
-	.facility-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-	.facility-card { width: auto; min-width: 0; margin-bottom: 0; }
+@media (min-width: 840px) {
+	.emu-workspace { display: grid; grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); gap: 24px; align-items: start; }
+	.emu-sidebar, .emu-main { min-width: 0; }
+	.emu-sidebar { position: sticky; top: calc(var(--status-bar-height, 0px) + 81px); }
+	.emu-sidebar > .ux-row { flex-wrap: wrap; }
+	.emu-sidebar .image-wrapper { max-width: none; }
+	.emu-sidebar .info-bar { margin-bottom: 16px !important; }
+	.emu-main > .section-title:first-child { margin-top: 0; }
+	.emu-main .section-title { margin-top: 20px; margin-bottom: 8px; }
+	.recent-run-container { grid-template-columns: minmax(0, 1fr); }
+	.run-magic-card { margin-bottom: 8px !important; }
+	.run-magic-card > view { padding-top: 10px; padding-bottom: 10px; }
+	.facility-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+	.facility-card { width: auto; min-width: 0; margin-bottom: 0; padding: 14px; }
+	.tech-row { gap: 16px; }
+	.tech-row .val { text-align: right; overflow-wrap: anywhere; }
+}
+@media (min-width: 1200px) {
+	.recent-run-container { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+	.run-magic-card > view { flex-wrap: wrap; gap: 8px; }
 }
 </style>

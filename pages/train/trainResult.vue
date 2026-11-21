@@ -2,9 +2,11 @@
 	<view class="ux-bg-grey5 result-page" style="min-height:100vh;">
 	<back-header></back-header>
 	<railgo-nfc></railgo-nfc><!-- TODO: preview 为 H5 临时预览开关，上线前移除 -->
-		<view class="ux-pl ux-pr ux-pb">
+		<view class="ux-pl ux-pr ux-pb result-layout" :class="{ 'result-layout--overview': selectIndex !== 2 }">
+			<scroll-view :show-scrollbar="false" class="result-sidebar" :scroll-y="isWide" :style="isWide ? { height: paneHeight + 'px' } : {}">
+			<view class="result-sidebar-content">
 
-			<view class="ux-bg-white ux-border-radius" style="overflow:hidden;">
+			<view class="ux-bg-white ux-border-radius result-summary" style="overflow:hidden;">
 				<view class="ux-flex ux-space-between ux-pl ux-pr ux-align-items-center" style="padding-top:36rpx;padding-bottom:28rpx;">
 					<view>
 						<text class="ux-bold consolas" style="font-size:60rpx;"
@@ -35,7 +37,7 @@
 				</view>
 			</view>
 			<!-- 按钮行：与原版对齐——等高、留间隙，左描边提示 + 右实心加入行程 -->
-			<view class="ux-flex" style="margin-top:36rpx;align-items:stretch;">
+			<view class="ux-flex result-actions" style="margin-top:36rpx;align-items:stretch;">
 				<view class="ux-flex1 ux-flex ux-align-items-center ux-justify-content-center ux-h6"
 					style="height:76rpx;box-sizing:border-box;background-color:#e9eef5;border:2rpx solid #114598;border-radius:10rpx;color:#114598;">
 					<text class="ux-bold">信息仅供参考 请以实际为准</text>
@@ -55,157 +57,13 @@
 					<text class="ux-bold">此车次在选定日期计划不开行 请注意核对信息</text>
 				</view>
 			</view>
-			<view class="ux-flex ux-justify-content-center">
-				<uv-tabs :list="topTabList" lineWidth="60" lineColor="#114599" :activeStyle="{
-							color: '#303133',
-							fontWeight: 'bold',
-							transform: 'scale(1.05)'
-				    	}" :inactiveStyle="{
-							color: '#606266',
-							transform: 'scale(1)'
-						}" itemStyle="height: 34px;padding-left:30px;padding-right:30px;" class="ux-mt-small"
-					@click="tabChange"></uv-tabs>
+			<view v-if="!isWide" class="ux-flex ux-justify-content-center result-mobile-tabs">
+				<uv-tabs :list="topTabList" :current="selectIndex" lineWidth="60" lineColor="#114598"
+					:activeStyle="{ color: '#303133', fontWeight: 'bold', transform: 'scale(1.05)' }"
+					:inactiveStyle="{ color: '#606266', transform: 'scale(1)' }"
+					itemStyle="height: 34px;padding-left:30px;padding-right:30px;" class="ux-mt-small" @click="tabChange" />
 			</view>
-
-			<view v-if="selectIndex==0">
-				<uni-section title="时刻表" type="line" style="background-color: transparent;"
-					title-font-size="28rpx"></uni-section>
-				<uni-table style="border:none">
-					<uni-tr style="border:none">
-						<uni-th style="border:none" width="10">
-							<image style="width:1px;height:1px;transform:translateY(10px) scale(40);" mode="aspectFit"
-								src="@/static/station-mark-th.png"></image>
-						</uni-th>
-						<uni-th>车站名</uni-th>
-						<uni-th width="70">车次</uni-th>
-						<uni-th width="60">到达</uni-th>
-						<uni-th width="60">出发</uni-th>
-						<uni-th width="80">里程</uni-th>
-						<uni-th width="100">区间均速</uni-th>
-						<uni-th width="60">日期</uni-th>
-						</uni-tr>
-					<uni-tr v-for="(item,index) in (carData.timetable || [])" :key="index" style="border:none"
-						hover-class="ux-bg-grey5">
-						<uni-td style="border:none">
-							<image style="width:1px;height:1px;transform:translateY(-5px) scale(40)" mode="aspectFit"
-								:src="index > 0 && item.trainCode !== carData.timetable[index - 1].trainCode ? '/static/station-mark-interchange.png' : '/static/station-mark-stop.png'"></image>
-						</uni-td>
-						<uni-td style="border:none">
-							<navigator
-								:url="'/pages/station/result?keyword='+(item.stationTelecode || '')+'&vague=false'">
-								{{item.station || ''}}
-							</navigator>
-						</uni-td>
-						<uni-td style="border:none">{{item.trainCode || ''}}</uni-td>
-						<uni-td style="border:none">{{item.arrive || ''}}</uni-td>
-						<uni-td style="border:none">{{item.depart || ''}}</uni-td>
-						<uni-td style="border:none">{{item.distance || '0'}} km</uni-td>
-						<uni-td style="border:none">{{item.speed ? item.speed.toFixed(1) : '-'}} km/h</uni-td>
-						<uni-td style="border:none">{{item.day || '当'}}日</uni-td>
-						</uni-tr>
-				</uni-table>
-
-				<!-- 日期在±3天范围内才显示正晚点和停台信息 -->
-				<view v-if="isWithinDelayDays">
-					<uni-section title="正晚点" type="line" style="background-color: transparent;"
-						title-font-size="28rpx"></uni-section>
-
-					<!-- 大卡：卡片内直接展开明细，停台信息按站数自动/一键加载 -->
-					<block v-if="delayCardStyle === 'big'">
-						<view v-if="showLoadAllButton" class="ux-pb-small">
-							<button @click="loadAllPlatforms" type="primary" size="mini"
-								style="margin: 0; padding: 0 15px; font-size: 14px; line-height: 30px;">
-								一键全部加载停台信息 (共{{(carData.timetable || []).length}}站)
-							</button>
-						</view>
-
-						<view v-for="(item,index) in combinedDelayData" :key="index"
-							class="ux-bg-white ux-border-radius ux-mt-small">
-							<view class="ux-flex">
-								<view style="border-bottom-left-radius: 10rpx; border-top-left-radius:10rpx; width: 12rpx;"
-									:style="getDelayStatusBackground(item.delayStatusCode)">
-								</view>
-								<view class="ux-flex ux-space-between ux-pt ux-pl ux-pr ux-align-items-center" style="width: 100%;">
-									<text class="ux-bold" style="font-size: 32rpx;">{{item.stationName || ''}}</text>
-									<text :style="getDelayStatusColor(item.delayStatusCode, item.delayTime)" class="ux-bold" style="font-size: 28rpx;">
-										{{formatDelayStatus(item.delayStatusCode, item.delayTime)}}
-									</text>
-								</view>
-							</view>
-							<view class="ux-pl ux-pr ux-pb">
-								<view class="ux-flex ux-space-between ux-mt-small">
-									<text class="ux-text-small ux-opacity-7">预计时间</text>
-									<text class="ux-text-small">{{item.arrivalTime || '-'}}/{{item.departureTime || '-'}}</text>
-								</view>
-								<view class="ux-flex ux-space-between ux-mt">
-									<text class="ux-text-small ux-opacity-7">实际时间</text>
-									<text class="ux-text-small">{{calculateActualTime(item.arrivalTime, item.delayStatusCode, item.delayTime)}}/{{calculateActualTime(item.departureTime, item.delayStatusCode, item.delayTime)}}</text>
-								</view>
-								<view class="ux-flex ux-space-between ux-mt">
-									<text class="ux-text-small ux-opacity-7">停站时间</text>
-									<text class="ux-text-small">{{formatStopMinutes(item)}}</text>
-								</view>
-								<view class="ux-flex ux-space-between ux-mt">
-									<text class="ux-text-small ux-opacity-7">停台/检票口</text>
-									<text class="ux-text-small">
-										<text v-if="item.platform">{{formatDelayPlatform(item)}}</text>
-										<button v-else-if="showLoadAllButton"
-											@click="loadPlatformByStationName(item.stationName)"
-											size="mini" type="primary"
-											style="margin: 0; padding: 0 5px; font-size: 10px; line-height: 20px; display: inline;">
-											查询
-										</button>
-										<text v-else>-</text>
-									</text>
-								</view>
-							</view>
-						</view>
-
-						<view v-if="delay.length === 0" class="ux-bg-white ux-border-radius ux-padding ux-text-center">
-							<text v-if="isOnlyOfflineMode" class="ux-color-gray">仅离线模式下无法使用该功能</text>
-							<text v-else>暂无正晚点信息或加载失败</text>
-						</view>
-					</block>
-
-					<!-- 小卡：仅站点名与状态，点击后在底部弹层看明细 -->
-					<block v-else>
-					<view v-for="(item,index) in combinedDelayData" :key="index"
-						class="ux-bg-white ux-border-radius ux-mt-small"
-						@click="openDelaySheet(item, index)"
-						hover-class="ux-tap">
-						<view class="ux-flex">
-							<view style="border-bottom-left-radius: 10rpx; border-top-left-radius:10rpx; width: 12rpx;"
-								:style="getDelayStatusBackground(item.delayStatusCode)">
-							</view>
-							<view class="ux-flex ux-space-between ux-padding ux-align-items-center" style="width: 100%;">
-								<text class="ux-bold" style="font-size: 32rpx;">{{item.stationName || ''}}</text>
-								<text :style="getDelayStatusColor(item.delayStatusCode, item.delayTime)" class="ux-bold" style="font-size: 28rpx;">
-									{{formatDelayStatus(item.delayStatusCode, item.delayTime)}}
-								</text>
-							</view>
-						</view>
-					</view>
-					<view v-if="delay.length === 0" v-for="(item,index) in (carData.timetable || [])" :key="index"
-						class="ux-bg-white ux-border-radius ux-mt-small"
-						@click="openDelaySheet(item, index)"
-						hover-class="ux-tap">
-						<view class="ux-flex">
-							<view style="border-bottom-left-radius: 10rpx; border-top-left-radius:10rpx; width: 12rpx;"
-								:style="'background-color: #606266;'">
-							</view>
-							<view class="ux-flex ux-space-between ux-padding ux-align-items-center" style="width: 100%;">
-								<text class="ux-bold" style="font-size: 32rpx;">{{item.station || ''}}</text>
-								<text :style="'color: #606266; font-weight: bold;'" class="ux-bold" style="font-size: 28rpx;">
-									未维护
-								</text>
-							</view>
-						</view>
-					</view>
-					</block>
-				</view>
-			</view>
-
-			<view v-if="selectIndex==1">
+			<view class="result-crew" v-show="selectIndex==1">
 				<uni-section title="担当" type="line" style="background-color: transparent;"
 					title-font-size="28rpx"></uni-section>
 				<view class="ux-bg-white ux-border-radius"
@@ -380,7 +238,159 @@
 
 			</view>
 
-			<view v-if="selectIndex==2">
+			</view>
+			</scroll-view>
+
+			<view class="result-wide-tabs">
+				<uv-tabs :list="[{ name: '时刻' }, { name: '路径' }]" :current="selectIndex === 2 ? 1 : 0"
+					lineWidth="60" lineColor="#114598"
+					:activeStyle="{ color: '#303133', fontWeight: 'bold', transform: 'scale(1.05)' }"
+					:inactiveStyle="{ color: '#606266', transform: 'scale(1)' }"
+					itemStyle="height: 34px;padding-left:30px;padding-right:30px;"
+					@click="tabChange({ index: $event.index === 1 ? 2 : 0 })" />
+			</view>
+
+			<scroll-view :show-scrollbar="false" class="result-schedule" v-show="selectIndex==0 || (isWide && selectIndex===1)" :scroll-y="isWide"
+				:style="isWide ? { height: rightPaneHeight + 'px' } : {}">
+				<uni-section title="时刻表" type="line" style="background-color: transparent;"
+					title-font-size="28rpx"></uni-section>
+				<uni-table style="border:none">
+					<uni-tr style="border:none">
+						<uni-th style="border:none" width="10">
+							<image style="width:1px;height:1px;transform:translateY(10px) scale(40);" mode="aspectFit"
+								src="@/static/station-mark-th.png"></image>
+						</uni-th>
+						<uni-th>车站名</uni-th>
+						<uni-th width="70">车次</uni-th>
+						<uni-th width="60">到达</uni-th>
+						<uni-th width="60">出发</uni-th>
+						<uni-th width="80">里程</uni-th>
+						<uni-th width="100">区间均速</uni-th>
+						<uni-th width="60">日期</uni-th>
+						</uni-tr>
+					<uni-tr v-for="(item,index) in (carData.timetable || [])" :key="index" style="border:none"
+						hover-class="ux-bg-grey5">
+						<uni-td style="border:none">
+							<image style="width:1px;height:1px;transform:translateY(-5px) scale(40)" mode="aspectFit"
+								:src="index > 0 && item.trainCode !== carData.timetable[index - 1].trainCode ? '/static/station-mark-interchange.png' : '/static/station-mark-stop.png'"></image>
+						</uni-td>
+						<uni-td style="border:none">
+							<navigator
+								:url="'/pages/station/result?keyword='+(item.stationTelecode || '')+'&vague=false'">
+								{{item.station || ''}}
+							</navigator>
+						</uni-td>
+						<uni-td style="border:none">{{item.trainCode || ''}}</uni-td>
+						<uni-td style="border:none">{{item.arrive || ''}}</uni-td>
+						<uni-td style="border:none">{{item.depart || ''}}</uni-td>
+						<uni-td style="border:none">{{item.distance || '0'}} km</uni-td>
+						<uni-td style="border:none">{{item.speed ? item.speed.toFixed(1) : '-'}} km/h</uni-td>
+						<uni-td style="border:none">{{item.day || '当'}}日</uni-td>
+						</uni-tr>
+				</uni-table>
+
+				<!-- 日期在±3天范围内才显示正晚点和停台信息 -->
+				<view v-if="isWithinDelayDays">
+					<uni-section title="正晚点" type="line" style="background-color: transparent;"
+						title-font-size="28rpx"></uni-section>
+
+					<!-- 大卡：卡片内直接展开明细，停台信息按站数自动/一键加载 -->
+					<block v-if="delayCardStyle === 'big'">
+						<view v-if="showLoadAllButton" class="ux-pb-small">
+							<button @click="loadAllPlatforms" type="primary" size="mini"
+								style="margin: 0; padding: 0 15px; font-size: 14px; line-height: 30px;">
+								一键全部加载停台信息 (共{{(carData.timetable || []).length}}站)
+							</button>
+						</view>
+
+						<view v-for="(item,index) in combinedDelayData" :key="index"
+							class="ux-bg-white ux-border-radius ux-mt-small">
+							<view class="ux-flex">
+								<view style="border-bottom-left-radius: 10rpx; border-top-left-radius:10rpx; width: 12rpx;"
+									:style="getDelayStatusBackground(item.delayStatusCode)">
+								</view>
+								<view class="ux-flex ux-space-between ux-pt ux-pl ux-pr ux-align-items-center" style="width: 100%;">
+									<text class="ux-bold" style="font-size: 32rpx;">{{item.stationName || ''}}</text>
+									<text :style="getDelayStatusColor(item.delayStatusCode, item.delayTime)" class="ux-bold" style="font-size: 28rpx;">
+										{{formatDelayStatus(item.delayStatusCode, item.delayTime)}}
+									</text>
+								</view>
+							</view>
+							<view class="ux-pl ux-pr ux-pb">
+								<view class="ux-flex ux-space-between ux-mt-small">
+									<text class="ux-text-small ux-opacity-7">预计时间</text>
+									<text class="ux-text-small">{{item.arrivalTime || '-'}}/{{item.departureTime || '-'}}</text>
+								</view>
+								<view class="ux-flex ux-space-between ux-mt">
+									<text class="ux-text-small ux-opacity-7">实际时间</text>
+									<text class="ux-text-small">{{calculateActualTime(item.arrivalTime, item.delayStatusCode, item.delayTime)}}/{{calculateActualTime(item.departureTime, item.delayStatusCode, item.delayTime)}}</text>
+								</view>
+								<view class="ux-flex ux-space-between ux-mt">
+									<text class="ux-text-small ux-opacity-7">停站时间</text>
+									<text class="ux-text-small">{{formatStopMinutes(item)}}</text>
+								</view>
+								<view class="ux-flex ux-space-between ux-mt">
+									<text class="ux-text-small ux-opacity-7">停台/检票口</text>
+									<text class="ux-text-small">
+										<text v-if="item.platform">{{formatDelayPlatform(item)}}</text>
+										<button v-else-if="showLoadAllButton"
+											@click="loadPlatformByStationName(item.stationName)"
+											size="mini" type="primary"
+											style="margin: 0; padding: 0 5px; font-size: 10px; line-height: 20px; display: inline;">
+											查询
+										</button>
+										<text v-else>-</text>
+									</text>
+								</view>
+							</view>
+						</view>
+
+						<view v-if="delay.length === 0" class="ux-bg-white ux-border-radius ux-padding ux-text-center">
+							<text v-if="isOnlyOfflineMode" class="ux-color-gray">仅离线模式下无法使用该功能</text>
+							<text v-else>暂无正晚点信息或加载失败</text>
+						</view>
+					</block>
+
+					<!-- 小卡：仅站点名与状态，点击后在底部弹层看明细 -->
+					<block v-else>
+					<view v-for="(item,index) in combinedDelayData" :key="index"
+						class="ux-bg-white ux-border-radius ux-mt-small"
+						@click="openDelaySheet(item, index)"
+						hover-class="ux-tap">
+						<view class="ux-flex">
+							<view style="border-bottom-left-radius: 10rpx; border-top-left-radius:10rpx; width: 12rpx;"
+								:style="getDelayStatusBackground(item.delayStatusCode)">
+							</view>
+							<view class="ux-flex ux-space-between ux-padding ux-align-items-center" style="width: 100%;">
+								<text class="ux-bold" style="font-size: 32rpx;">{{item.stationName || ''}}</text>
+								<text :style="getDelayStatusColor(item.delayStatusCode, item.delayTime)" class="ux-bold" style="font-size: 28rpx;">
+									{{formatDelayStatus(item.delayStatusCode, item.delayTime)}}
+								</text>
+							</view>
+						</view>
+					</view>
+					<view v-if="delay.length === 0" v-for="(item,index) in (carData.timetable || [])" :key="index"
+						class="ux-bg-white ux-border-radius ux-mt-small"
+						@click="openDelaySheet(item, index)"
+						hover-class="ux-tap">
+						<view class="ux-flex">
+							<view style="border-bottom-left-radius: 10rpx; border-top-left-radius:10rpx; width: 12rpx;"
+								:style="'background-color: #606266;'">
+							</view>
+							<view class="ux-flex ux-space-between ux-padding ux-align-items-center" style="width: 100%;">
+								<text class="ux-bold" style="font-size: 32rpx;">{{item.station || ''}}</text>
+								<text :style="'color: #606266; font-weight: bold;'" class="ux-bold" style="font-size: 28rpx;">
+									未维护
+								</text>
+							</view>
+						</view>
+					</view>
+					</block>
+				</view>
+			</scroll-view>
+
+			<scroll-view :show-scrollbar="false" class="result-path" v-if="selectIndex==2" :scroll-y="isWide"
+				:style="isWide ? { height: rightPaneHeight + 'px' } : {}">
 				<!-- 模式切换：地图 / 简图 -->
 				<view class="path-toolbar">
 					<view class="path-mode-tabs">
@@ -508,10 +518,10 @@
 						<text class="path-time-note">{{pathTimeNote}}</text>
 					</view>
 				</block>
-			</view>
+			</scroll-view>
 
-			<br>
-			<view class="ux-flex ux-row ux-justify-content-center">
+			<br class="result-footer-break">
+			<view class="ux-flex ux-row ux-justify-content-center result-footer">
 				<text class="ux-text-small ux-opacity-4">—— · ——</text>
 			</view>
 		</view>
@@ -644,6 +654,9 @@
 					name: '路径'
 				}],
 				"selectIndex": 0,
+				isWide: false,
+				paneHeight: 0,
+				rightPaneHeight: 0,
 				"isOnlyOfflineMode": false,
 				"carImageUrl": "", 
 				"defaultImageUrl": "",
@@ -785,7 +798,11 @@
 				return {};
 			}
 		},
+		onResize() {
+			this.updatePaneLayout();
+		},
 		onLoad(options) {
+			this.updatePaneLayout();
 			// 在此统一处理 train_num 和 number
 			this.train = options.keyword ? options.keyword.split("/")[0].toUpperCase() : '';
 			this.keyword = options.keyword ? options.keyword.toUpperCase() : '';
@@ -852,6 +869,12 @@
 			}
 		},
 		methods: {
+			updatePaneLayout() {
+				const info = uni.getSystemInfoSync();
+				this.isWide = info.windowWidth >= 840;
+				this.paneHeight = Math.max(0, info.windowHeight - (info.statusBarHeight || 0) - uni.upx2px(90) - 24 - uni.upx2px(30));
+				this.rightPaneHeight = Math.max(0, this.paneHeight - 42);
+			},
 			/**
 			 * 计算地图高度，占满屏幕剩余空间
 			 */
@@ -2552,6 +2575,175 @@
 		}
 	}
 </script>
+
+<style scoped>
+	.result-layout :deep(.uni-scroll-view) { scrollbar-width: none; }
+	.result-layout :deep(.uni-scroll-view::-webkit-scrollbar) { display: none; width: 0; height: 0; }
+	.result-layout {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.result-sidebar {
+		display: block;
+	}
+
+	.result-mobile-tabs {
+		order: 1;
+	}
+
+	.result-schedule,
+	.result-crew,
+	.result-path {
+		order: 2;
+		min-width: 0;
+	}
+
+	.result-wide-tabs {
+		display: none;
+	}
+
+	.result-footer-break,
+	.result-footer {
+		order: 3;
+	}
+
+	@media (min-width: 840px) {
+		.result-layout {
+			display: grid;
+			grid-template-columns: clamp(300px, 30vw, 340px) minmax(0, 1fr);
+			grid-template-rows: auto minmax(0, 1fr);
+			gap: 0 24px;
+			align-items: stretch;
+			height: calc(100vh - var(--status-bar-height, 0px) - 90rpx - 24px);
+			height: calc(100dvh - var(--status-bar-height, 0px) - 90rpx - 24px);
+			box-sizing: border-box;
+			overflow: hidden;
+			font-size: 15px;
+		}
+
+		.result-sidebar {
+			display: block;
+			grid-column: 1;
+			grid-row: 1 / 3;
+			min-width: 0;
+			min-height: 0;
+			overflow: hidden;
+			overscroll-behavior-y: contain;
+			overflow-wrap: anywhere;
+			padding-bottom: 0;
+		}
+
+		.result-mobile-tabs {
+			display: none;
+		}
+
+		.result-wide-tabs {
+			display: flex;
+			justify-content: center;
+			grid-column: 2;
+			grid-row: 1;
+			padding-bottom: 8px;
+		}
+
+		.result-schedule,
+		.result-path {
+			grid-column: 2;
+			grid-row: 2;
+			min-height: 0;
+			overflow: hidden;
+			overscroll-behavior-y: contain;
+			padding-bottom: 0;
+		}
+
+		.result-footer-break,
+		.result-footer { display: none; }
+
+		.result-layout--overview .result-schedule,
+		.result-crew {
+			display: block !important;
+		}
+
+		.result-summary > .ux-flex {
+			flex-wrap: wrap;
+			gap: 8px;
+			padding: 14px !important;
+		}
+
+		.result-summary .consolas {
+			font-size: 28px !important;
+		}
+
+		.result-summary .ux-text-small {
+			font-size: 12px;
+		}
+
+		.result-actions {
+			flex-wrap: wrap;
+			gap: 8px;
+			margin-top: 12px !important;
+		}
+
+		.result-actions > .ux-flex1 {
+			flex: 1 1 100%;
+			height: auto !important;
+			min-height: 38px;
+			padding: 8px;
+			font-size: 13px;
+			text-align: center;
+		}
+
+		.result-actions > button {
+			flex: 1 1 100%;
+			margin: 0 !important;
+			height: 38px !important;
+			padding: 0 12px !important;
+			font-size: 14px;
+		}
+
+		.result-crew .ux-padding {
+			padding: 12px;
+		}
+
+		.result-crew .ux-pl,
+		.result-crew .ux-pr {
+			padding-left: 12px;
+			padding-right: 12px;
+		}
+
+		.result-crew .ux-pt,
+		.result-crew .ux-pb {
+			padding-top: 12px;
+			padding-bottom: 12px;
+		}
+
+		.result-crew .crew-info {
+			gap: 12px;
+		}
+
+		.result-crew .crew-info > view {
+			flex-basis: 100%;
+		}
+
+		.result-crew .icon {
+			font-size: 24px !important;
+		}
+
+		.result-crew .consolas {
+			font-size: 20px !important;
+		}
+
+		.result-crew .ux-text-small {
+			font-size: 12px;
+		}
+
+		.result-crew button {
+			padding-left: 8px;
+			padding-right: 8px;
+			font-size: 13px;
+		}
+	}
+</style>
 
 <style>
 	@media (min-width: 600px) {

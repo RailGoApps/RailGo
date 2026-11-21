@@ -2,7 +2,8 @@
 	<view class="result-page ux-bg-grey5" style="min-height:100vh;">
 		<back-header></back-header>
 		<railgo-nfc></railgo-nfc>
-		<view class="ux-padding">
+		<view class="ux-padding station-workspace">
+			<scroll-view :show-scrollbar="false" class="station-sidebar" :scroll-y="isWide" :style="isWide ? { height: paneHeight + 'px' } : {}">
 			<!-- 头部卡片骨架屏 -->
 			<view v-if="headerSkeleton" class="ux-bg-white ux-border-radius sk-header">
 				<view class="sk-row sk-header-top" style="justify-content: space-between;">
@@ -55,8 +56,8 @@
 			</view>
 
 			<!-- 车站类型确定前不渲染选项卡，避免“路线”等临时标签闪现 -->
-			<view v-if="!headerSkeleton" class="ux-flex ux-justify-content-center">
-				<uv-tabs :list="topTabList" lineWidth="60" lineColor="#114598" :activeStyle="{
+			<view v-if="!headerSkeleton && !isWide" class="ux-flex ux-justify-content-center">
+				<uv-tabs :list="topTabList" :current="selectIndex" lineWidth="60" lineColor="#114598" :activeStyle="{
 							color: '#303133',
 							fontWeight: 'bold',
 							transform: 'scale(1.05)'
@@ -67,6 +68,72 @@
 					@click="tabChange"></uv-tabs>
 			</view>
 
+			<view v-show="isWide || activeTabName === '交通'" class="ux-pt station-traffic">
+				<uni-section v-if="isWide && trafficData !== null" title="交通信息" type="line" title-font-size="28rpx" style="background-color: transparent;" />
+				<view v-if="trafficData === null" class="sk-list" style="margin-top:20rpx;">
+					<view class="sk-row">
+						<skeleton v-for="c in 4" :key="c" flex w="0" h="56rpx" radius="10rpx" mr="12rpx" />
+					</view>
+					<view v-for="i in 3" :key="i" class="sk-traffic">
+						<skeleton w="34%" h="32rpx" />
+						<skeleton w="60%" h="22rpx" mt="16rpx" />
+						<view class="sk-row" style="margin-top: 20rpx;">
+							<skeleton w="90rpx" h="36rpx" radius="30rpx" mr="12rpx" />
+							<skeleton w="90rpx" h="36rpx" radius="30rpx" mr="12rpx" />
+							<skeleton w="90rpx" h="36rpx" radius="30rpx" mr="0" />
+						</view>
+					</view>
+				</view>
+				<view v-else-if="trafficData && trafficData.tabList && trafficData.nodeList && trafficData.nodeList.length > 0" class="traffic-container">
+					<view class="traffic-tabs">
+						<view v-for="(tab, index) in trafficData.tabList" :key="index" class="traffic-tab"
+							:class="{ active: selectedTrafficTab === index }" @click="selectTrafficTab(index)">
+							{{ tab.tabName }}
+						</view>
+					</view>
+					<view class="traffic-content">
+						<template v-for="(node, index) in trafficData.nodeList" :key="index">
+							<view v-if="!trafficData.tabList[selectedTrafficTab] || node.nodeType === trafficData.tabList[selectedTrafficTab].tabType"
+								class="traffic-item ux-bg-white ux-border-radius ux-mt-small">
+								<view class="ux-padding">
+									<view class="ux-flex ux-space-between ux-align-items-center">
+										<view>
+											<text class="ux-h5">{{ node.nodeName }}</text>
+											<text class="ux-text-small ux-opacity-7 ux-ml-small">{{ node.typeName }}</text>
+											<br>
+											<text class="ux-text-small ux-opacity-6">{{ node.des }}</text>
+										</view>
+									</view>
+									<view v-if="node.nodeList && node.nodeList.length > 0" class="ux-mt-small">
+										<view class="ux-flex ux-wrap">
+											<view v-for="(subNode, subIndex) in node.nodeList" :key="subIndex" class="sub-node-item"
+												:style="subNode.color ? 'background-color: ' + subNode.color + ';' : ''">
+												{{ subNode.nodeName }}
+											</view>
+										</view>
+									</view>
+								</view>
+							</view>
+						</template>
+					</view>
+				</view>
+				<view v-else-if="trafficData === false" class="ux-padding ux-text-center">
+					<text>暂无本站交通信息</text>
+				</view>
+				<view v-else class="ux-padding ux-text-center">
+					<text>暂无交通信息</text>
+				</view>
+			</view>
+			</scroll-view>
+			<scroll-view :show-scrollbar="false" v-show="isWide || activeTabName !== '交通'" class="station-main" :scroll-y="isWide" :style="isWide ? { height: paneHeight + 'px' } : {}"
+				:lower-threshold="100" @scrolltolower="onMainScroll">
+				<view v-if="!headerSkeleton && isWide" class="ux-flex ux-justify-content-center station-main-tabs">
+					<uv-tabs :list="wideTabList" :current="wideTabIndex" lineWidth="60" lineColor="#114598"
+						:activeStyle="{ color: '#303133', fontWeight: 'bold', transform: 'scale(1.05)' }"
+						:inactiveStyle="{ color: '#606266', transform: 'scale(1)' }"
+						itemStyle="height: 34px;padding-left:30px;padding-right:30px;" class="ux-mt-small"
+						@click="wideTabChange"></uv-tabs>
+				</view>
 			<view class="ux-pt" v-if="selectIndex==0">
 				<!-- 车次列表骨架屏 -->
 				<view v-if="listSkeleton" class="station-results-grid">
@@ -84,7 +151,7 @@
 					</view>
 				</view>
 				<view v-if="trains.length!=0 && !listSkeleton">
-					<view class="ux-flex">
+					<view class="ux-flex station-mobile-controls">
 						<button class="ux-flex1 ux-mr-small ux-bg-primary ux-color-white" size="mini"
 							@click="openSortMenu()">
 							<view class="ux-flex ux-align-items-center ux-justify-content-center">
@@ -238,87 +305,8 @@
 				<text>暂未开放，敬请期待</text>
 			</view> -->
 			
-			<!-- 交通选项卡 -->
-			<view class="ux-pt" v-if="topTabList[selectIndex] && topTabList[selectIndex].name === '交通'">
-				<!-- 交通骨架屏 -->
-				<view v-if="trafficData === null" class="sk-list" style="margin-top:20rpx;">
-					<view class="sk-row">
-						<skeleton v-for="c in 4" :key="c" flex w="0" h="56rpx" radius="10rpx" mr="12rpx" />
-					</view>
-					<view v-for="i in 3" :key="i" class="sk-traffic">
-						<skeleton w="34%" h="32rpx" />
-						<skeleton w="60%" h="22rpx" mt="16rpx" />
-						<view class="sk-row" style="margin-top: 20rpx;">
-							<skeleton w="90rpx" h="36rpx" radius="30rpx" mr="12rpx" />
-							<skeleton w="90rpx" h="36rpx" radius="30rpx" mr="12rpx" />
-							<skeleton w="90rpx" h="36rpx" radius="30rpx" mr="0" />
-						</view>
-					</view>
-				</view>
-
-				<view v-else-if="trafficData && trafficData.tabList && trafficData.nodeList && trafficData.nodeList.length > 0" class="traffic-container">
-					<!-- 显示交通设施选项卡 -->
-					<view class="traffic-tabs">
-						<view 
-							v-for="(tab, index) in trafficData.tabList" 
-							:key="index"
-							class="traffic-tab"
-							:class="{ 'active': selectedTrafficTab === index || (selectedTrafficTab === 0 && index === 0) }"
-							@click="selectTrafficTab(index)"
-						>
-							{{ tab.tabName }}
-						</view>
-					</view>
-					
-					<!-- 显示交通设施详情 -->
-					<view class="traffic-content">
-						<template 
-							v-for="(node, index) in trafficData.nodeList" 
-							:key="index"
-						>
-							<view 
-								v-if="!trafficData.tabList[selectedTrafficTab] || node.nodeType === trafficData.tabList[selectedTrafficTab].tabType"
-								class="traffic-item ux-bg-white ux-border-radius ux-mt-small"
-							>
-								<view class="ux-padding">
-									<view class="ux-flex ux-space-between ux-align-items-center">
-										<view>
-											<text class="ux-h5">{{ node.nodeName }}</text>
-											<text class="ux-text-small ux-opacity-7 ux-ml-small">{{ node.typeName }}</text>
-											<br>
-											<text class="ux-text-small ux-opacity-6">{{ node.des }}</text>
-										</view>
-									</view>
-									
-									<!-- 显示子节点信息（如地铁线路、公交线路等） -->
-									<view v-if="node.nodeList && node.nodeList.length > 0" class="ux-mt-small">
-										<view class="ux-flex ux-wrap">
-											<view 
-												v-for="(subNode, subIndex) in node.nodeList" 
-												:key="subIndex"
-												class="sub-node-item"
-												:style="subNode.color ? 'background-color: ' + subNode.color + ';' : ''"
-											>
-												{{ subNode.nodeName }}
-											</view>
-										</view>
-									</view>
-								</view>
-							</view>
-						</template>
-					</view>
-				</view>
-
-				
-				<view v-else-if="trafficData === false" class="ux-padding ux-text-center">
-					<text>暂无本站交通信息</text>
-				</view>
-				
-				<view v-else class="ux-padding ux-text-center">
-					<text>暂无交通信息</text>
-				</view>
-			</view>
-		</view>
+		</scroll-view>
+	</view>
 	<uni-popup ref="menu_sort" border-radius="10rpx 10rpx 0 0">
 		<view class="popup-content">
 			<view class="ux-bg-white ux-padding ux-border-radius" style="width:70vw;">
@@ -459,6 +447,8 @@
 					name: '路线'
 				}],
 				selectIndex: 0,
+				isWide: false,
+				paneHeight: 0,
 				trains: [],
 				showTrains: [],
 				colorMap: TRAIN_KIND_COLOR_MAP,
@@ -488,8 +478,20 @@
 				trafficDataLoaded: false, // 标记交通数据是否已加载
 			}
 		},
+		computed: {
+			activeTabName() {
+				return this.topTabList[this.selectIndex]?.name || '';
+			},
+			wideTabList() {
+				return this.topTabList.filter(tab => tab.name === '车次' || tab.name === '大屏');
+			},
+			wideTabIndex() {
+				return Math.max(0, this.wideTabList.findIndex(tab => tab.name === this.activeTabName));
+			}
+		},
 		onLoad(options) {
 			this.keyword = options.keyword;
+			this.updateLayout(uni.getSystemInfoSync().windowWidth);
 			const mode = uni.getStorageSync("mode");
 			const c = uni.getStorageSync("search");
 			uni.setStorage({
@@ -498,6 +500,9 @@
 			});
 
 			this.fillInData(mode);
+		},
+		onResize(event) {
+			this.updateLayout(event.size.windowWidth);
 		},
 		/**
 		 * 监听页面滚动到底部，实现大屏数据加载
@@ -522,6 +527,37 @@
 			this.stopAutoRefresh();
 		},
 		methods: {
+			updateLayout(width) {
+				const info = uni.getSystemInfoSync();
+				this.paneHeight = Math.max(0, info.windowHeight - (info.statusBarHeight || 0) - uni.upx2px(90) - 24 - uni.upx2px(60));
+				this.isWide = width >= 840;
+				if (this.isWide) {
+					if (this.activeTabName !== '车次' && this.activeTabName !== '大屏') {
+						this.tabChange({ index: 0 });
+					}
+					if (!this.headerSkeleton) this.ensureTrafficData();
+				}
+			},
+			wideTabChange(event) {
+				const tab = this.wideTabList[event.index];
+				const index = this.topTabList.findIndex(item => item.name === tab?.name);
+				if (index >= 0) this.tabChange({ index });
+			},
+			onMainScroll() {
+				if (this.isWide && this.activeTabName === '大屏') this.loadMoreBigScreenData();
+			},
+			ensureTrafficData() {
+				if (this.headerSkeleton || this.trafficDataLoaded) return;
+				const isPassengerStation = Array.isArray(this.data.type) && this.data.type.includes('客');
+				if (!isPassengerStation || !this.trains[0]?.number || uni.getStorageSync('ol') === true ||
+					!this.data.name || !this.data.telecode) {
+					this.trafficData = false;
+					return;
+				}
+				// 在请求前加锁，避免切换标签与窗口调整并发请求。
+				this.trafficDataLoaded = true;
+				this.getTrafficData();
+			},
 			back: function() {
 				uni.navigateBack();
 			},
@@ -602,6 +638,7 @@
 				this.headerSkeleton = false;
 				this.listSkeleton = false;
 				this.applySortingAndFiltering();
+				if (this.isWide) this.ensureTrafficData();
 				if (success) {
 					// 1. 检查是否为客运站
 					const isPassengerStation = Array.isArray(this.data.type) && this.data.type.includes("客");
@@ -718,22 +755,7 @@
 						this.loadMoreBigScreenData();
 					}
 				}
-				// NEW: 切换到交通时，加载交通数据（如果尚未加载）
-				if (this.topTabList[e.index].name === '交通') {
-					// 检查是否为客运站并有列车数据
-					const isPassengerStation = Array.isArray(this.data.type) && this.data.type.includes("客");
-					const trainForTraffic = this.trains.length > 0 ? this.trains[0].number : '';
-					if (isPassengerStation && trainForTraffic) {
-						// 只有当交通数据尚未加载时才加载
-						if (!this.trafficDataLoaded) {
-							this.trafficDataLoaded = true; // 标记为已加载
-							this.getTrafficData();
-						}
-					} else {
-						// 如果不是客运站或没有列车数据，设置为false显示无数据提示
-						this.trafficData = false;
-					}
-				}
+				if (this.activeTabName === '交通') this.ensureTrafficData();
 			},
 			// --- 获取大屏数据的方法（V2 API） ---
 			getBigScreenData: async function() {
@@ -1067,6 +1089,8 @@ let typeMatch = false;
 </script>
 
 <style>
+	.station-workspace .uni-scroll-view { scrollbar-width: none; }
+	.station-workspace .uni-scroll-view::-webkit-scrollbar { display: none; width: 0; height: 0; }
 	.bs-table-cell { width: 92px; max-width: 100%; margin: 0 auto; }
 	.station-results-grid {
 		display: grid;
@@ -1088,10 +1112,37 @@ let typeMatch = false;
 		flex: 1;
 	}
 
-	@media (min-width: 1000px) {
-		.station-results-grid {
-			grid-template-columns: repeat(2, minmax(0, 1fr));
+	/* 手机仍按头卡、标签、当前内容的顺序参与页面滚动。 */
+	.station-sidebar { display: block; }
+	@media (min-width: 840px) {
+		.station-workspace {
+			display: grid;
+			grid-template-columns: 280px minmax(0, 1fr);
+			gap: 24px;
+			align-items: stretch;
+			box-sizing: border-box;
+			/* 与 back-header 的占位高度一致，包含工作区上下 padding。 */
+			height: calc(100vh - var(--status-bar-height, 0px) - 90rpx - 24px);
+			height: calc(100dvh - var(--status-bar-height, 0px) - 90rpx - 24px);
+			overflow: hidden;
 		}
+		.station-sidebar, .station-main {
+			min-width: 0;
+			min-height: 0;
+			overflow: hidden;
+			overscroll-behavior-y: contain;
+		}
+		.station-sidebar { display: block; }
+		.station-main { padding-bottom: 0; }
+		.station-main > .ux-pt { padding-top: 12px; }
+		.station-main-tabs { padding-bottom: 12px; }
+		.station-train-body { padding-top: 12px; padding-bottom: 12px; }
+		.station-sidebar .traffic-tabs { flex-wrap: wrap; }
+		.station-sidebar .traffic-tab { flex: 1 0 25%; box-sizing: border-box; }
+		.station-main .dark-table-wrapper { margin-top: 12px !important; }
+	}
+	@media (min-width: 1200px) {
+		.station-workspace { grid-template-columns: 300px minmax(0, 1fr); }
 	}
 
 	@media (max-width: 399px) {

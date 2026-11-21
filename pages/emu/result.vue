@@ -455,7 +455,7 @@ export default {
 	flex-direction: row;
 	align-items: center;
 }
-@media (min-width: 1000px) {
+@media (min-width: 768px) {
 	:deep(.custom-table-container .uni-table) {
 		display: grid !important;
 		grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -244,7 +244,7 @@
 		flex: 1;
 	}
 
-	@media (min-width: 1000px) {
+	@media (min-width: 768px) {
 		.tiaotu-results-grid {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
