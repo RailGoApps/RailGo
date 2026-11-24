@@ -1,6 +1,8 @@
 <template>
 	<view class="rail-map-page" :style="{ '--map-status-height': statusBarHeight + 'px' }">
-		<siji-tianditu ref="map" :map-key="mapKey" :lonlat="[104.5, 35.5]" :zoom="5" :on-loaded="onMapReady" class="rail-map" />
+		<view class="rail-map">
+			<siji-tianditu ref="map" :map-key="mapKey" :lonlat="[104.5, 35.5]" :zoom="5" :on-loaded="onMapReady" />
+		</view>
 		<view class="map-toolbar">
 			<view class="map-back" hover-class="ux-tap" @click="back"><text class="icon">&#xe5c4;</text></view>
 			<view class="map-search">
@@ -119,7 +121,8 @@ export default {
 
 <style scoped>
 .rail-map-page { position: fixed; inset: 0; background: #e8edf1; }
-.rail-map { width: 100%; height: 100%; }
+.rail-map { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+.map-toolbar, .map-lines, .map-detail { z-index: 1; }
 .map-toolbar { position: absolute; top: calc(max(var(--map-status-height, 0px), var(--status-bar-height, 0px), env(safe-area-inset-top, 0px)) + 24px); left: 16px; right: 16px; display: flex; gap: 10px; }
 .map-back, .map-search { background: #fff; border-radius: 10px; box-shadow: 0 2px 12px #172f4d20; }
 .map-back { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 23px; color: #114598; }

@@ -50,7 +50,7 @@
 			<br>
 			<view class="ux-padding-small ux-mb ux-h6 ux-text-center"
 				style="background-color:#e9eef5;border:1px solid #114598;border-radius:10rpx;color:#114598;">
-				<text class="ux-bold">定位服务由系统提供，测速信息仅供参考</text>
+				<text class="ux-bold">定位服务由系统提供，测速信息仅供参考<br>我们推荐您使用我们专为测速开发的软件RailVelo，进群了解详情：693025014</text>
 			</view>
 		</view>
 	</view>

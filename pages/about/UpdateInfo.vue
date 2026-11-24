@@ -47,6 +47,15 @@
 				nowIcon: uni.getStorageSync("nowIcon") || 'crh',
 				updateLogs: [
 					{
+						version: "v2.1.1 (20101)",
+						date: "2026-11-21",
+						items: [
+							"Feature: 铁道地图",
+							"Fixed: 一些已知问题",
+							"Feature: 针对大屏设备适配"
+						]
+					},
+					{
 						version: "v2.1.0 (20100)",
 						date: "2026-11-09",
 						items: [
